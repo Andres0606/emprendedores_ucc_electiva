@@ -1,0 +1,325 @@
+/* =============================================
+   login.module.css — EmprendedoresUCC
+   Azul #009FE3 · Verde #8DC63F
+   ============================================= */
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  font-family: var(--font-body);
+}
+
+/* ══════════════════════════════
+   LADO MARCA (izquierda)
+══════════════════════════════ */
+.brand {
+  position: relative;
+  background: linear-gradient(145deg, #003865 0%, #005a9e 55%, #009FE3 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.5rem;
+  overflow: hidden;
+}
+
+.brandBg {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+.brand::before {
+  content: "";
+  position: absolute;
+  bottom: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(141,198,63,0.15), transparent 65%);
+  pointer-events: none;
+}
+
+/* Logo top-left */
+.brandLogo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  position: relative;
+  z-index: 1;
+}
+.brandName {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+/* Centro de la marca */
+.brandCenter {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.brandTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.brandGreen { color: #8DC63F; }
+.brandDesc {
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.75;
+  max-width: 340px;
+}
+
+/* Stats */
+.brandStats {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+.brandStat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.brandStatVal {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.brandStatLbl {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
+}
+.brandDivider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255,255,255,0.2);
+}
+
+.brandFooter {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.35);
+  position: relative;
+  z-index: 1;
+}
+
+/* ══════════════════════════════
+   LADO FORMULARIO (derecha)
+══════════════════════════════ */
+.formSide {
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+}
+
+.formBox {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.formHead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.formTitle {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1a2e44;
+  letter-spacing: -0.02em;
+}
+.formSub {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* ── Formulario ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.01em;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forgotLink {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #009FE3;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.forgotLink:hover { color: #0087c2; }
+
+/* Input con ícono */
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.inputIcon {
+  position: absolute;
+  left: 0.85rem;
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.input {
+  width: 100%;
+  padding: 0.72rem 0.9rem 0.72rem 2.6rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: #1a2e44;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.input::placeholder { color: #b0bec5; }
+.input:focus {
+  border-color: #009FE3;
+  box-shadow: 0 0 0 3px rgba(0,159,227,0.1);
+}
+
+.togglePass {
+  position: absolute;
+  right: 0.85rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.togglePass svg { width: 17px; height: 17px; }
+.togglePass:hover { color: #009FE3; }
+
+/* Botón principal */
+.submitBtn {
+  width: 100%;
+  background: #009FE3;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.82rem;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
+  box-shadow: 0 2px 10px rgba(0,159,227,0.28);
+}
+.submitBtn:hover {
+  background: #0087c2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,159,227,0.35);
+}
+.submitBtn:active { transform: none; }
+
+/* Divisor */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.divider span {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+.divider p {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Botón Google */
+.googleBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  background: #fff;
+  color: #374151;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.googleBtn:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+/* Switch */
+.switchText {
+  text-align: center;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+.switchLink {
+  color: #009FE3;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.switchLink:hover { color: #0087c2; }
+
+/* ── Responsive ── */
+@media (max-width: 820px) {
+  .wrapper { grid-template-columns: 1fr; }
+  .brand { display: none; }
+  .formSide { padding: 2rem 1.25rem; }
+}
