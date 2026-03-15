@@ -1,11 +1,9 @@
-"use client";
-
-import CarLoadingAnimation from './Components/page';
+import HomePage from './Components/page';
 
 const AlquilerPage: React.FC = () => {
     return (
-        <main className="min-h-screen text-foreground font-sans overflow-hidden relative">
-          <CarLoadingAnimation />
+        <main>
+          <HomePage />
         </main>
     );
 };
