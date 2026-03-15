@@ -1,6 +1,6 @@
 "use client";
 
-import CarLoadingAnimation from './Components/CarLoadingAnimacion';
+import CarLoadingAnimation from './Components/page';
 
 const AlquilerPage: React.FC = () => {
     return (
