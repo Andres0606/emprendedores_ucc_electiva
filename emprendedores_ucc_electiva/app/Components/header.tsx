@@ -49,7 +49,7 @@ export default function Header() {
             </svg>
             Ingresar
           </Link>
-          <Link href="/autenticacion/register" className={styles.ctaBtn}>
+          <Link href="/miemprendimiento" className={styles.ctaBtn}>
             Publicar emprendimiento →
           </Link>
         </div>
@@ -83,7 +83,7 @@ export default function Header() {
           <Link href="/autenticacion/login" className={styles.mobileLogin} onClick={() => setMenuOpen(false)}>
             Ingresar
           </Link>
-          <Link href="/autenticacion/register" className={styles.mobileCta} onClick={() => setMenuOpen(false)}>
+          <Link href="/miemprendimiento" className={styles.mobileCta} onClick={() => setMenuOpen(false)}>
             Publicar emprendimiento →
           </Link>
         </div>
