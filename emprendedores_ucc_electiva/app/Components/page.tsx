@@ -115,7 +115,7 @@ export default function HomePage() {
               <Link href="/emprendimientos" className={styles.btnWhite}>
                 Explorar emprendimientos
               </Link>
-              <Link href="/emprendimientos/nuevo" className={styles.btnGhost}>
+              <Link href="/miemprendimiento" className={styles.btnGhost}>
                 Publicar el mío →
               </Link>
             </div>
@@ -295,7 +295,7 @@ export default function HomePage() {
                 y accede a recursos de la Universidad Cooperativa de Colombia.
               </p>
               <div className={styles.ctaButtons}>
-                <Link href="/emprendimientos/nuevo" className={styles.ctaBtnWhite}>
+                <Link href="/miemprendimiento" className={styles.ctaBtnWhite}>
                   Publicar mi emprendimiento
                 </Link>
                 <Link href="/nosotros" className={styles.ctaBtnGhost}>

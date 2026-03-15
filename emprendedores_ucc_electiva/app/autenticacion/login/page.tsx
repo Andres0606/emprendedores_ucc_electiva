@@ -3,8 +3,11 @@ import Link from "next/link";
 import { useState } from "react";
 import styles from "../../css/Autenticación/login.module.css";
 
+
 export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
+  
+
 
   return (
     <div className={styles.wrapper}>
@@ -49,6 +52,7 @@ export default function LoginPage() {
             <p className={styles.formSub}>Ingresa con tu correo institucional UCC</p>
           </div>
 
+          
           <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
 
             {/* Correo */}
@@ -102,9 +106,9 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button type="submit" className={styles.submitBtn}>
+            <Link href="/inicioemprendedor" className={styles.submitBtn}>
               Iniciar sesión
-            </button>
+            </Link>
 
    
 

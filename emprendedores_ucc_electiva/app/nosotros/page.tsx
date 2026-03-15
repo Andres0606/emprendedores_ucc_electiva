@@ -4,17 +4,41 @@ import Footer from "../Components/footer";
 import styles from "../css/nosotros/page.module.css";
 
 const valores = [
-  { icon: "🤝", title: "Cooperativismo",   desc: "Trabajo colectivo y solidaridad como base del crecimiento." },
-  { icon: "💡", title: "Innovación",        desc: "Ideas que transforman comunidades desde la academia." },
-  { icon: "🌱", title: "Sostenibilidad",    desc: "Impacto social y ambiental positivo en cada proyecto." },
-  { icon: "🎓", title: "Formación Integral",desc: "Conocimiento académico aplicado a la realidad empresarial." },
+  {
+    icon: "🤝",
+    title: "Cooperativismo",
+    desc: "Creemos en el poder del trabajo colectivo. En EmprendedoresUCC, cada estudiante no compite — colabora. Compartimos recursos, conocimiento y redes para que todos crezcan juntos, siguiendo el espíritu fundacional de la Universidad Cooperativa de Colombia.",
+    tag: "Pilar fundamental",
+    color: "#009FE3",
+  },
+  {
+    icon: "💡",
+    title: "Innovación",
+    desc: "No basta con tener una idea — hay que desarrollarla, probarla y mejorarla. Fomentamos el pensamiento creativo y disruptivo en nuestros estudiantes, dándoles las herramientas para convertir sus proyectos en soluciones reales para su comunidad.",
+    tag: "Motor de cambio",
+    color: "#8DC63F",
+  },
+  {
+    icon: "🌱",
+    title: "Sostenibilidad",
+    desc: "Cada emprendimiento que publicamos tiene una responsabilidad con el entorno. Priorizamos proyectos que generen impacto social y ambiental positivo, porque entendemos que el éxito empresarial y el bienestar colectivo no son conceptos opuestos.",
+    tag: "Compromiso social",
+    color: "#009FE3",
+  },
+  {
+    icon: "🎓",
+    title: "Formación Integral",
+    desc: "La academia y la práctica empresarial van de la mano. Nuestros estudiantes aplican lo que aprenden en el aula al mundo real, desarrollando competencias que van más allá del currículo: liderazgo, resiliencia, comunicación y visión estratégica.",
+    tag: "Educación aplicada",
+    color: "#8DC63F",
+  },
 ];
 
 const cifras = [
-  { val: "2020",  lbl: "Año de fundación" },
-  { val: "120+",  lbl: "Emprendimientos" },
-  { val: "3.200+",lbl: "Estudiantes" },
-  { val: "8",     lbl: "Facultades" },
+  { val: "2020",   lbl: "Año de fundación" },
+  { val: "120+",   lbl: "Emprendimientos" },
+  { val: "3.200+", lbl: "Estudiantes" },
+  { val: "8",      lbl: "Facultades" },
 ];
 
 export default function NosotrosPage() {
@@ -29,7 +53,7 @@ export default function NosotrosPage() {
           <div className={styles.heroContent}>
             <span className={styles.pill}>
               <span className={styles.pillDot} />
-              Universidad Cooperativa de Colombia · Medellín
+              Universidad Cooperativa de Colombia · Villavicencio
             </span>
             <h1 className={styles.heroTitle}>
               Sobre <span className={styles.heroGreen}>EmprendedoresUCC</span>
@@ -40,8 +64,6 @@ export default function NosotrosPage() {
               talento, ideas e innovación en un solo lugar.
             </p>
           </div>
-
-          {/* Cifras en el hero */}
           <div className={styles.heroCifras}>
             {cifras.map((c) => (
               <div key={c.lbl} className={styles.heroCifra}>
@@ -55,15 +77,13 @@ export default function NosotrosPage() {
         {/* ══ MISIÓN Y VISIÓN ══ */}
         <section className={styles.mvSection}>
           <div className={styles.mvInner}>
-
-            {/* Misión */}
             <div className={styles.mvCard}>
               <div className={styles.mvIconWrap}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
                   <circle cx="14" cy="14" r="13" stroke="#009FE3" strokeWidth="2"/>
                   <circle cx="14" cy="14" r="7"  stroke="#009FE3" strokeWidth="2"/>
                   <circle cx="14" cy="14" r="2.5" fill="#8DC63F"/>
-                  <line x1="14" y1="1" x2="14" y2="5"   stroke="#009FE3" strokeWidth="2" strokeLinecap="round"/>
+                  <line x1="14" y1="1"  x2="14" y2="5"  stroke="#009FE3" strokeWidth="2" strokeLinecap="round"/>
                   <line x1="14" y1="23" x2="14" y2="27" stroke="#009FE3" strokeWidth="2" strokeLinecap="round"/>
                   <line x1="1"  y1="14" x2="5"  y2="14" stroke="#009FE3" strokeWidth="2" strokeLinecap="round"/>
                   <line x1="23" y1="14" x2="27" y2="14" stroke="#009FE3" strokeWidth="2" strokeLinecap="round"/>
@@ -84,7 +104,6 @@ export default function NosotrosPage() {
               </ul>
             </div>
 
-            {/* Visión */}
             <div className={`${styles.mvCard} ${styles.mvCardDark}`}>
               <div className={`${styles.mvIconWrap} ${styles.mvIconGreen}`}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -106,7 +125,6 @@ export default function NosotrosPage() {
                 <li>Alianzas con el sector productivo y gubernamental</li>
               </ul>
             </div>
-
           </div>
         </section>
 
@@ -123,34 +141,29 @@ export default function NosotrosPage() {
             </div>
             <div className={styles.valoresGrid}>
               {valores.map((v, i) => (
-                <div key={v.title} className={styles.valorCard}>
-                  <div className={styles.valorNum}>0{i + 1}</div>
-                  <div className={styles.valorIcon}>{v.icon}</div>
-                  <h3 className={styles.valorTitle}>{v.title}</h3>
-                  <p className={styles.valorDesc}>{v.desc}</p>
+                <div key={v.title} className={styles.valorItem}>
+                  <div className={styles.valorLeft}>
+                    <div className={styles.valorIconBox} style={{background: `${v.color}15`, border: `1.5px solid ${v.color}30`}}>
+                      <span className={styles.valorIcon}>{v.icon}</span>
+                    </div>
+                    <div className={styles.valorLine} />
+                  </div>
+                  <div className={styles.valorRight}>
+                    <div className={styles.valorMeta}>
+                      <span className={styles.valorNum}>0{i + 1}</span>
+                      <span className={styles.valorTag} style={{color: v.color, background: `${v.color}12`, border: `1px solid ${v.color}25`}}>
+                        {v.tag}
+                      </span>
+                    </div>
+                    <h3 className={styles.valorTitle}>{v.title}</h3>
+                    <p className={styles.valorDesc}>{v.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ══ CTA ══ */}
-        <section className={styles.cta}>
-          <div className={styles.ctaInner}>
-            <h2 className={styles.ctaTitle}>¿Listo para emprender?</h2>
-            <p className={styles.ctaDesc}>
-              Únete a la comunidad y publica tu emprendimiento hoy.
-            </p>
-            <div className={styles.ctaBtns}>
-              <Link href="/autenticacion/register" className={styles.ctaBtnPrimary}>
-                Crear mi cuenta
-              </Link>
-              <Link href="/emprendimientos" className={styles.ctaBtnGhost}>
-                Ver emprendimientos
-              </Link>
-            </div>
-          </div>
-        </section>
 
       </main>
       <Footer />
