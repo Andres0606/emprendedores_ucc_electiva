@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "../../css/Autenticación/register.module.css";
 
 const facultades = [
@@ -18,32 +19,88 @@ const facultades = [
 ];
 
 const tiposUsuario = [
-  { value: "estudiante",  label: "Estudiante" },
+  { value: "estudiante", label: "Estudiante" },
   { value: "emprendedor", label: "Emprendedor" },
-  { value: "comprador",   label: "Administrativo" },
+  { value: "administrativo", label: "Administrativo" },
 ];
 
 export default function RegisterPage() {
-  const [showPass, setShowPass]       = useState(false);
+
+  const router = useRouter();
+
+  const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [carrera, setCarrera] = useState("");
   const [tipoUsuario, setTipoUsuario] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const registrarUsuario = async (e: any) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      alert("Las contraseñas no coinciden");
+      return;
+    }
+
+    const usuario = {
+      nombre,
+      apellido,
+      telefono,
+      correo,
+      carrera,
+      tipoUsuario,
+      saldo: 0,
+    };
+
+    try {
+      const res = await fetch("http://localhost:8080/api/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(usuario),
+      });
+
+      if (res.ok) {
+        alert("Usuario registrado correctamente");
+        router.push("/autenticacion/login");
+      } else {
+        alert("Error al registrar usuario");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error de conexión con el servidor");
+    }
+  };
+
+  const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
+
+  const EyeOffIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
 
   return (
     <div className={styles.wrapper}>
 
-      {/* ── Lado izquierdo — marca ── */}
       <div className={styles.brand}>
         <div className={styles.brandBg} aria-hidden />
 
         <Link href="/" className={styles.brandLogo}>
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="11" fill="rgba(255,255,255,0.12)"/>
-            <rect x="6"  y="6"  width="11" height="20" rx="3" fill="#fff"/>
-            <rect x="6"  y="20" width="11" height="5"  rx="2" fill="rgba(255,255,255,0.5)"/>
-            <rect x="19" y="6"  width="11" height="20" rx="3" fill="#8DC63F"/>
-            <circle cx="34" cy="10" r="4.5" fill="none" stroke="#8DC63F" strokeWidth="2"/>
-            <circle cx="34" cy="10" r="1.8" fill="#fff"/>
-          </svg>
           <span className={styles.brandName}>EmprendedoresUCC</span>
         </Link>
 
@@ -52,28 +109,11 @@ export default function RegisterPage() {
             Tu idea merece<br />
             <span className={styles.brandGreen}>ser vista.</span>
           </h2>
-          <p className={styles.brandDesc}>
-            Crea tu cuenta y empieza a publicar tus productos y
-            servicios ante toda la comunidad UCC.
-          </p>
-          <div className={styles.brandSteps}>
-            {[
-              { n: "01", txt: "Crea tu cuenta" },
-              { n: "02", txt: "Publica tu emprendimiento" },
-              { n: "03", txt: "Conecta con tu comunidad" },
-            ].map((s) => (
-              <div key={s.n} className={styles.brandStep}>
-                <span className={styles.brandStepNum}>{s.n}</span>
-                <span className={styles.brandStepTxt}>{s.txt}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
         <p className={styles.brandFooter}>© 2025 EmprendedoresUCC · UCC Villavicencio</p>
       </div>
 
-      {/* ── Lado derecho — formulario ── */}
       <div className={styles.formSide}>
         <div className={styles.formBox}>
 
@@ -82,9 +122,9 @@ export default function RegisterPage() {
             <p className={styles.formSub}>Únete a la comunidad emprendedora de la UCC</p>
           </div>
 
-          <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
+          <form className={styles.form} onSubmit={registrarUsuario}>
 
-            {/* Tipo de usuario */}
+            {/* Tipo usuario */}
             <div className={styles.field}>
               <label className={styles.label}>Tipo de usuario</label>
               <div className={styles.tipoGrid}>
@@ -101,91 +141,83 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Nombre + Apellido */}
+            {/* Nombre y Apellido */}
             <div className={styles.row}>
               <div className={styles.field}>
                 <label className={styles.label}>Nombre</label>
-                <div className={styles.inputWrap}>
-                  <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                    <circle cx="10" cy="7" r="3.5"/>
-                    <path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" strokeLinecap="round"/>
-                  </svg>
-                  <input type="text" placeholder="Juan" className={styles.input} autoComplete="given-name"/>
-                </div>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                />
               </div>
               <div className={styles.field}>
                 <label className={styles.label}>Apellido</label>
-                <div className={styles.inputWrap}>
-                  <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                    <circle cx="10" cy="7" r="3.5"/>
-                    <path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" strokeLinecap="round"/>
-                  </svg>
-                  <input type="text" placeholder="Pérez" className={styles.input} autoComplete="family-name"/>
-                </div>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
+                />
               </div>
             </div>
 
-            {/* Teléfono solo */}
+            {/* Teléfono */}
             <div className={styles.field}>
               <label className={styles.label}>Teléfono</label>
-              <div className={styles.inputWrap}>
-                <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <rect x="5" y="2" width="10" height="16" rx="2"/>
-                  <circle cx="10" cy="15.5" r="0.8" fill="currentColor" stroke="none"/>
-                </svg>
-                <input type="tel" placeholder="300 000 0000" className={styles.input} autoComplete="tel"/>
-              </div>
+              <input
+                type="tel"
+                className={styles.input}
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+              />
             </div>
 
             {/* Correo */}
             <div className={styles.field}>
-              <label className={styles.label}>Correo institucional</label>
-              <div className={styles.inputWrap}>
-                <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <rect x="2" y="4" width="16" height="13" rx="2"/>
-                  <path d="M2 7l8 5 8-5" strokeLinecap="round"/>
-                </svg>
-                <input type="email" placeholder="tu.nombre@campusucc.edu.co" className={styles.input} autoComplete="email"/>
-              </div>
+              <label className={styles.label}>Correo</label>
+              <input
+                type="email"
+                className={styles.input}
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value)}
+              />
             </div>
 
-            {/* Facultad */}
+            {/* Carrera */}
             <div className={styles.field}>
               <label className={styles.label}>Facultad / Programa</label>
-              <div className={styles.inputWrap}>
-                <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M10 2L2 7l8 5 8-5-8-5z"/>
-                  <path d="M2 12l8 5 8-5" strokeLinecap="round"/>
-                </svg>
-                <select className={`${styles.input} ${styles.select}`} defaultValue="">
-                  <option value="" disabled>Selecciona tu programa</option>
-                  {facultades.map((f) => (
-                    <option key={f} value={f}>{f}</option>
-                  ))}
-                </select>
-              </div>
+              <select
+                className={styles.input}
+                value={carrera}
+                onChange={(e) => setCarrera(e.target.value)}
+              >
+                <option value="">Selecciona</option>
+                {facultades.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
             </div>
 
             {/* Contraseña */}
             <div className={styles.field}>
               <label className={styles.label}>Contraseña</label>
               <div className={styles.inputWrap}>
-                <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <rect x="4" y="9" width="12" height="9" rx="2"/>
-                  <path d="M7 9V6a3 3 0 016 0v3" strokeLinecap="round"/>
-                </svg>
                 <input
                   type={showPass ? "text" : "password"}
-                  placeholder="Mínimo 8 caracteres"
                   className={styles.input}
-                  autoComplete="new-password"
+                  style={{ paddingLeft: "0.9rem", paddingRight: "2.8rem" }}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
-                <button type="button" className={styles.togglePass} onClick={() => setShowPass(!showPass)} aria-label="Ver contraseña">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                    <path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/>
-                    <circle cx="10" cy="10" r="2.5"/>
-                    {showPass && <line x1="3" y1="3" x2="17" y2="17" strokeLinecap="round"/>}
-                  </svg>
+                <button
+                  type="button"
+                  className={styles.togglePass}
+                  onClick={() => setShowPass(!showPass)}
+                  aria-label={showPass ? "Ocultar contraseña" : "Ver contraseña"}
+                >
+                  {showPass ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
             </div>
@@ -194,37 +226,23 @@ export default function RegisterPage() {
             <div className={styles.field}>
               <label className={styles.label}>Confirmar contraseña</label>
               <div className={styles.inputWrap}>
-                <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <rect x="4" y="9" width="12" height="9" rx="2"/>
-                  <path d="M7 9V6a3 3 0 016 0v3" strokeLinecap="round"/>
-                  <path d="M7 14l2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
                 <input
                   type={showConfirm ? "text" : "password"}
-                  placeholder="Repite tu contraseña"
                   className={styles.input}
-                  autoComplete="new-password"
+                  style={{ paddingLeft: "0.9rem", paddingRight: "2.8rem" }}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                 />
-                <button type="button" className={styles.togglePass} onClick={() => setShowConfirm(!showConfirm)} aria-label="Ver contraseña">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                    <path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/>
-                    <circle cx="10" cy="10" r="2.5"/>
-                    {showConfirm && <line x1="3" y1="3" x2="17" y2="17" strokeLinecap="round"/>}
-                  </svg>
+                <button
+                  type="button"
+                  className={styles.togglePass}
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  aria-label={showConfirm ? "Ocultar contraseña" : "Ver contraseña"}
+                >
+                  {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
             </div>
-
-            {/* Términos */}
-            <label className={styles.checkRow}>
-              <input type="checkbox" className={styles.checkbox}/>
-              <span className={styles.checkText}>
-                Acepto los{" "}
-                <Link href="/terminos" className={styles.checkLink}>términos y condiciones</Link>
-                {" "}y la{" "}
-                <Link href="/privacidad" className={styles.checkLink}>política de privacidad</Link>
-              </span>
-            </label>
 
             <button type="submit" className={styles.submitBtn}>
               Crear cuenta
@@ -234,8 +252,11 @@ export default function RegisterPage() {
 
           <p className={styles.switchText}>
             ¿Ya tienes cuenta?{" "}
-            <Link href="/autenticacion/login" className={styles.switchLink}>Inicia sesión</Link>
+            <Link href="/autenticacion/login" className={styles.switchLink}>
+              Inicia sesión
+            </Link>
           </p>
+
         </div>
       </div>
     </div>
