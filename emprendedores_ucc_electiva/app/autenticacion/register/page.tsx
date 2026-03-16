@@ -55,6 +55,7 @@ export default function RegisterPage() {
       correo,
       carrera,
       tipoUsuario,
+      password,
       saldo: 0,
     };
 
