@@ -12,49 +12,46 @@ export default function LoginPage() {
 
   const router = useRouter();
 
-  const login = async () => {
+ // login.tsx - Modifica la función login
+const login = async () => {
+  if (!correo || !password) {
+    alert("Por favor completa todos los campos");
+    return;
+  }
 
-    if (!correo || !password) {
-      alert("Por favor completa todos los campos");
+  try {
+    const res = await fetch("http://localhost:8080/api/usuarios/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        correo,
+        password
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Correo o contraseña incorrectos");
       return;
     }
 
-    try {
+    // Guardar usuario en sesión (incluyendo el ID correctamente)
+    sessionStorage.setItem("usuario", JSON.stringify(data));
+    
+    // También guarda el ID por separado para fácil acceso
+    sessionStorage.setItem("usuarioId", data.id || data._id);
 
-      const res = await fetch("http://localhost:8080/api/usuarios/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          correo,
-          password
-        })
-      });
+    alert("Inicio de sesión correcto");
+    router.push("/inicioemprendedor");
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Correo o contraseña incorrectos");
-        return;
-      }
-
-      // guardar usuario en sesión
-      sessionStorage.setItem("usuario", JSON.stringify(data));
-
-      const usuario = sessionStorage.getItem("usuario");
-
-      alert("Inicio de sesión correcto");
-      //verificar si esta logueado
-      alert("Bienvenido " + usuario);
-
-      router.push("/inicioemprendedor");
-
-    } catch (error) {
-      console.error(error);
-      alert("Error de conexión con el servidor");
-    }
-  };
+  } catch (error) {
+    console.error(error);
+    alert("Error de conexión con el servidor");
+  }
+};
 
   return (
     <div className={styles.wrapper}>
