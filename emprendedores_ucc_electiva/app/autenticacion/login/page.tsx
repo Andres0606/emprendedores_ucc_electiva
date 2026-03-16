@@ -42,7 +42,11 @@ export default function LoginPage() {
       // guardar usuario en sesión
       sessionStorage.setItem("usuario", JSON.stringify(data));
 
+      const usuario = sessionStorage.getItem("usuario");
+
       alert("Inicio de sesión correcto");
+      //verificar si esta logueado
+      alert("Bienvenido " + usuario);
 
       router.push("/inicioemprendedor");
 

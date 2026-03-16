@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "../css/miemprendimiento/page.module.css";
 
@@ -18,6 +19,32 @@ type Producto = {
 
 export default function MiEmprendimientoPage() {
   const [paso, setPaso] = useState(1);
+  const router = useRouter();
+
+  // ── Verificar sesión al entrar ──
+  useEffect(() => {
+    const usuarioGuardado = sessionStorage.getItem("usuario");
+
+    if (!usuarioGuardado) {
+      alert("Debes iniciar sesión");
+      router.push("/autenticacion/login");
+      return;
+    }
+
+    const usuario = JSON.parse(usuarioGuardado);
+    if (!usuario.id && !usuario._id) {
+      alert("Sesión inválida. Vuelve a iniciar sesión.");
+      router.push("/autenticacion/login");
+    }
+  }, []);
+
+  // ── Obtener usuario una sola vez ──
+  const usuarioGuardado =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("usuario")
+      : null;
+
+  const usuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
 
   // Paso 1
   const [nombre, setNombre]           = useState("");
@@ -59,15 +86,24 @@ export default function MiEmprendimientoPage() {
 
   const publicarEmprendimiento = async () => {
 
-    // ✅ localStorage solo se lee al hacer clic, nunca en el servidor
-    const usuario = JSON.parse(sessionStorage.getItem("usuario") || "{}");   
- const usuarioId = usuario?._id;
-  console.log(usuario.nombre);
-  console.log(usuario.tipoUsuario);
-    if (!usuarioId) {
+    // ── Verificar sesión antes de publicar ──
+    const usuarioGuardado = sessionStorage.getItem("usuario");
+
+    if (!usuarioGuardado) {
       alert("Debes iniciar sesión primero");
       return;
     }
+
+    const usuario = JSON.parse(usuarioGuardado);
+    const usuarioId = usuario.id ?? usuario._id; // el backend devuelve "id", no "_id"
+
+    if (!usuarioId) {
+      alert("No se encontró el ID del usuario. Vuelve a iniciar sesión.");
+      return;
+    }
+
+    console.log(usuario.nombre);
+    console.log(usuario.tipoUsuario);
 
     const data = {
       nombre,
