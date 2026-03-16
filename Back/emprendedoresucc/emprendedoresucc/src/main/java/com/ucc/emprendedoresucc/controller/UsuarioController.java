@@ -38,4 +38,16 @@ public class UsuarioController {
     public Usuario crearUsuario(@RequestBody Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
+
+    @PostMapping("/login")
+public Usuario login(@RequestBody Usuario request) {
+
+    Usuario usuario = usuarioRepository.findByCorreo(request.getCorreo());
+
+    if (usuario != null && usuario.getPassword().equals(request.getPassword())) {
+        return usuario;
+    }
+
+    throw new RuntimeException("Correo o contraseña incorrectos");
+}
 }

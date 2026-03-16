@@ -21,30 +21,35 @@ export default function LoginPage() {
 
     try {
 
-      const res = await fetch(`http://localhost:8080/api/usuarios/correo/${correo}`);
+      const res = await fetch("http://localhost:8080/api/usuarios/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          correo,
+          password
+        })
+      });
+
+      const data = await res.json();
 
       if (!res.ok) {
-        alert("Error al conectar con el servidor");
+        alert(data.message || "Correo o contraseña incorrectos");
         return;
       }
 
-      const usuario = await res.json();
+      // guardar usuario en sesión
+      sessionStorage.setItem("usuario", JSON.stringify(data));
 
-      if (usuario && usuario.correo) {
+      alert("Inicio de sesión correcto");
 
-        sessionStorage.setItem("usuario", JSON.stringify(usuario));
-        alert("Inicio de sesión correcto");
-        router.push("/inicioemprendedor");
-
-      } else {
-        alert("Usuario no encontrado");
-      }
+      router.push("/inicioemprendedor");
 
     } catch (error) {
       console.error(error);
       alert("Error de conexión con el servidor");
     }
-
   };
 
   return (
@@ -150,7 +155,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* BOTÓN LOGIN */}
             <button type="submit" className={styles.submitBtn}>
               Iniciar sesión
             </button>
