@@ -1,28 +1,41 @@
 package com.ucc.emprendedoresucc.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.ucc.emprendedoresucc.model.Usuario;
-import com.ucc.emprendedoresucc.service.UsuarioService;
+import com.ucc.emprendedoresucc.repository.UsuarioRepository;
 
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping("/api/usuarios")
+@CrossOrigin(origins = "*")
 public class UsuarioController {
 
     @Autowired
-    private UsuarioService usuarioService;
+    private UsuarioRepository usuarioRepository;
 
-    // REGISTRO
-    @PostMapping("/registro")
-    public Usuario registrar(@RequestBody Usuario usuario) {
-        return usuarioService.registrarUsuario(usuario);
+    // Obtener todos los usuarios
+    @GetMapping
+    public List<Usuario> obtenerUsuarios() {
+        return usuarioRepository.findAll();
     }
 
-    // LOGIN
-    @PostMapping("/login")
-    public Usuario login(@RequestBody Usuario usuario) {
-        return usuarioService.login(usuario.getCorreo(), usuario.getPassword());
+    // Buscar usuario por correo
+    @GetMapping("/correo/{correo}")
+    public Usuario buscarPorCorreo(@PathVariable String correo) {
+
+        return usuarioRepository.findAll()
+                .stream()
+                .filter(u -> u.getCorreo().equals(correo))
+                .findFirst()
+                .orElse(null);
     }
 
+    // Crear usuario
+    @PostMapping
+    public Usuario crearUsuario(@RequestBody Usuario usuario) {
+        return usuarioRepository.save(usuario);
+    }
 }
