@@ -57,6 +57,55 @@ export default function MiEmprendimientoPage() {
   const eliminarImagen = (i: number) =>
     setImagenes(imagenes.filter((_, idx) => idx !== i));
 
+  const publicarEmprendimiento = async () => {
+
+    // ✅ localStorage solo se lee al hacer clic, nunca en el servidor
+    const usuario = JSON.parse(sessionStorage.getItem("usuario") || "{}");   
+ const usuarioId = usuario?._id;
+  console.log(usuario.nombre);
+  console.log(usuario.tipoUsuario);
+    if (!usuarioId) {
+      alert("Debes iniciar sesión primero");
+      return;
+    }
+
+    const data = {
+      nombre,
+      descripcion,
+      categoriaId: "69adb8d5781c765dca3ab5f0",
+      usuarioId: usuarioId,
+      estado,
+      imagenes,
+      productos: productos.map(p => ({
+        nombre: p.nombre,
+        precio: Number(p.precio),
+        stock: Number(p.stock),
+        imagen: p.imagen
+      }))
+    };
+
+    try {
+      const res = await fetch("http://localhost:8080/api/emprendimientos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      console.log(result);
+
+      if (res.ok) {
+        alert("¡Emprendimiento publicado correctamente!");
+      } else {
+        alert("Error al publicar el emprendimiento");
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert("Error de conexión con el servidor");
+    }
+  };
+
   const pasos = [
     { n: 1, label: "Información general" },
     { n: 2, label: "Productos" },
@@ -104,7 +153,9 @@ export default function MiEmprendimientoPage() {
                     <span className={styles.stepLabel}>{p.label}</span>
                   </div>
                 </div>
-                {idx < pasos.length - 1 && <div className={`${styles.stepConnector} ${paso > p.n ? styles.stepConnectorDone : ""}`} />}
+                {idx < pasos.length - 1 && (
+                  <div className={`${styles.stepConnector} ${paso > p.n ? styles.stepConnectorDone : ""}`} />
+                )}
               </div>
             ))}
           </div>
@@ -196,7 +247,6 @@ export default function MiEmprendimientoPage() {
                 <p className={styles.formSub}>Agrega los productos de tu emprendimiento</p>
               </div>
 
-              {/* Formulario agregar producto */}
               <div className={styles.prodForm}>
                 <div className={styles.row}>
                   <div className={styles.field}>
@@ -251,7 +301,6 @@ export default function MiEmprendimientoPage() {
                 </button>
               </div>
 
-              {/* Lista de productos */}
               {productos.length > 0 && (
                 <div className={styles.prodList}>
                   <p className={styles.prodListTitle}>{productos.length} producto{productos.length > 1 ? "s" : ""} agregado{productos.length > 1 ? "s" : ""}</p>
@@ -348,7 +397,11 @@ export default function MiEmprendimientoPage() {
 
               <div className={styles.formActions}>
                 <button type="button" className={styles.btnBack} onClick={() => setPaso(2)}>← Atrás</button>
-                <button type="button" className={styles.btnSubmit}>
+                <button
+                  type="button"
+                  className={styles.btnSubmit}
+                  onClick={publicarEmprendimiento}
+                >
                   🚀 Publicar emprendimiento
                 </button>
               </div>

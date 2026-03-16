@@ -1,10 +1,12 @@
 package com.ucc.emprendedoresucc.model;
 
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
+@Data
 @Document(collection = "emprendimientos")
 public class Emprendimiento {
 
@@ -13,8 +15,10 @@ public class Emprendimiento {
 
     private String nombre;
     private String descripcion;
+
     private String categoriaId;
     private String usuarioId;
+
     private String estado;
 
     private List<String> imagenes;

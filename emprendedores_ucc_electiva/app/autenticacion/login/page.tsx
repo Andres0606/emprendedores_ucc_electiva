@@ -31,8 +31,11 @@ export default function LoginPage() {
       const usuario = await res.json();
 
       if (usuario && usuario.correo) {
+
+        sessionStorage.setItem("usuario", JSON.stringify(usuario));
         alert("Inicio de sesión correcto");
         router.push("/inicioemprendedor");
+
       } else {
         alert("Usuario no encontrado");
       }
