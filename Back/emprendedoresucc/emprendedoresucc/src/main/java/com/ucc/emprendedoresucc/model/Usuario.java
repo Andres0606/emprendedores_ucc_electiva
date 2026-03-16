@@ -15,9 +15,10 @@ public class Usuario {
     private String telefono;
     private String tipoUsuario;
     private String carrera;
+    private String password;
     private double saldo;
 
-    public Usuario(){}
+    public Usuario() {}
 
     public String getId() {
         return id;
@@ -73,6 +74,14 @@ public class Usuario {
 
     public void setCarrera(String carrera) {
         this.carrera = carrera;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public double getSaldo() {
