@@ -52,7 +52,7 @@ export default function Footer() {
             </p>
             <div className={styles.socialRow}>
               {/* Instagram */}
-              <a href="#" className={styles.socialIcon} aria-label="Instagram">
+              <a href="https://www.instagram.com/ucc_villavicencio/" className={styles.socialIcon} aria-label="Instagram">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="2" width="20" height="20" rx="5" />
                   <circle cx="12" cy="12" r="4" />
@@ -60,13 +60,13 @@ export default function Footer() {
                 </svg>
               </a>
               {/* Facebook */}
-              <a href="#" className={styles.socialIcon} aria-label="Facebook">
+              <a href="https://www.facebook.com/UCCVillavo/" className={styles.socialIcon} aria-label="Facebook">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                 </svg>
               </a>
               {/* LinkedIn */}
-              <a href="#" className={styles.socialIcon} aria-label="LinkedIn">
+              <a href="https://www.linkedin.com/school/universidad-cooperativa-de-colombia/?originalSubdomain=co" className={styles.socialIcon} aria-label="LinkedIn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
                   <rect x="2" y="9" width="4" height="12" />
@@ -108,13 +108,13 @@ export default function Footer() {
           <div className={styles.contactCol}>
             <h4 className={styles.colTitle}>Contacto</h4>
             <p className={styles.contactItem}>
-              <span>📍</span> Calle 50A #4-197, Bello, Antioquia
+              <span></span> Calle 50A #4-197, Bello, Antioquia
             </p>
             <p className={styles.contactItem}>
-              <span>📧</span> emprendedores@ucc.edu.co
+              <span></span> emprendedores@ucc.edu.co
             </p>
             <p className={styles.contactItem}>
-              <span>📞</span> (604) 444 3700
+              <span></span> (604) 444 3700
             </p>
             <div className={styles.badge}>
               <span>Programa de Emprendimiento</span>

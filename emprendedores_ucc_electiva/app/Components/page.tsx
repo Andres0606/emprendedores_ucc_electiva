@@ -47,30 +47,30 @@ const featuredVentures = [
 ];
 
 const stats = [
-  { value: "120+", label: "Emprendimientos activos", icon: "🏢" },
-  { value: "400+", label: "Productos publicados",    icon: "📦" },
-  { value: "8",    label: "Facultades participantes",icon: "🎓" },
-  { value: "3.200+",label: "Estudiantes conectados", icon: "👥" },
+  { value: "120+", label: "Emprendimientos activos", },
+  { value: "400+", label: "Productos publicados",    },
+  { value: "8",    label: "Facultades participantes",},
+  { value: "3.200+",label: "Estudiantes conectados", },
 ];
 
 const values = [
   {
-    icon: "🤝",
+    icon: "",
     title: "Cooperativismo",
     desc: "Fomentamos la solidaridad y el trabajo colectivo como base del crecimiento económico y social.",
   },
   {
-    icon: "💡",
+    icon: "",
     title: "Innovación",
     desc: "Impulsamos ideas disruptivas que transforman comunidades desde la academia hacia la realidad.",
   },
   {
-    icon: "🌱",
+    icon: "",
     title: "Sostenibilidad",
     desc: "Priorizamos emprendimientos con impacto social y ambiental positivo para las generaciones futuras.",
   },
   {
-    icon: "🎓",
+    icon: "",
     title: "Formación integral",
     desc: "Combinamos el conocimiento académico con la experiencia empresarial para formar líderes completos.",
   },
@@ -131,7 +131,6 @@ export default function HomePage() {
           <div className={styles.statsInner}>
             {stats.map((s) => (
               <div key={s.label} className={styles.statCard}>
-                <span className={styles.statIcon}>{s.icon}</span>
                 <span className={styles.statValue}>{s.value}</span>
                 <span className={styles.statLabel}>{s.label}</span>
               </div>
@@ -259,7 +258,6 @@ export default function HomePage() {
               {featuredVentures.map((v) => (
                 <div key={v.id} className={styles.ventureCard}>
                   <div className={styles.ventureTop}>
-                    <span className={styles.ventureEmoji}>{v.emoji}</span>
                     <span className={styles.ventureCat}>{v.category}</span>
                   </div>
                   <h3 className={styles.ventureName}>{v.name}</h3>
@@ -283,9 +281,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ══════════════════════════════
-            CTA FINAL
-        ══════════════════════════════ */}
         <section className={styles.cta}>
           <div className={styles.ctaInner}>
             <div className={styles.ctaLeft}>
@@ -304,7 +299,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className={styles.ctaRight} aria-hidden>
-              <span>🚀</span>
+              <span></span>
             </div>
           </div>
         </section>
