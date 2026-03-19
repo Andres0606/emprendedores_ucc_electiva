@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import styles from "../../css/inicioemprendedor/page.module.css";
+import styles from "../../css/inicioemprendedor/Topbar.module.css";
 
 const navItems = [
   { icon: "🏠", label: "Dashboard",         id: "dashboard"      },

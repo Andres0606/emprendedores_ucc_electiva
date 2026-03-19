@@ -1,5 +1,5 @@
 "use client";
-import styles from "../../css/inicioemprendedor/page.module.css";
+import styles from "../../css/inicioemprendedor/ConfiguracionSection.module.css";
 
 interface Campo {
   label: string;

@@ -1,0 +1,109 @@
+/* =============================================
+   ConfiguracionSection.module.css
+   ============================================= */
+
+.content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  flex: 1;
+}
+
+.welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.welcomeTitle {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a2e44;
+  letter-spacing: -0.02em;
+}
+
+.welcomeDesc { font-size: 0.88rem; color: #64748b; margin-top: 0.2rem; }
+
+/* Config Card */
+.configCard {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.configAvatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: #003865;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.configFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.configField { display: flex; flex-direction: column; gap: 0.35rem; }
+
+/* Labels y valores (compartidos con editCard) */
+.editLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.editValue {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a2e44;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  padding: 0.65rem 0.9rem;
+}
+
+/* Botón editar */
+.btnEditar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a2e44;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.btnEditar:hover { border-color: #009FE3; color: #009FE3; background: rgba(0,159,227,0.06); }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .configFields { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 580px) {
+  .content { padding: 1.25rem; }
+}

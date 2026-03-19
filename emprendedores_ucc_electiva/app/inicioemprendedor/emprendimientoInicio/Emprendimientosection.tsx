@@ -2,7 +2,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import styles from "../../css/inicioemprendedor/page.module.css";
+import styles from "../../css/inicioemprendedor/EmprendimientoSection.module.css";
 
 interface Emprendimiento {
   id?: string;

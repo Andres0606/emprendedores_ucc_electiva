@@ -4,10 +4,10 @@ import styles from "../css/inicioemprendedor/page.module.css";
 
 import Sidebar               from "./components/Sidebar";
 import Topbar                from "./components/Topbar";
-import DashboardSection      from "./components/Dashboardsection";
-import EmprendimientoSection from "./components/Emprendimientosection";
-import ProductosSection      from "./components/Productossection";
-import ConfiguracionSection  from "./components/Configuracionsection";
+import DashboardSection      from "./dashboardInicio/Dashboardsection";
+import EmprendimientoSection from "./emprendimientoInicio/Emprendimientosection";
+import ProductosSection      from "./productosInicio/Productossection";
+import ConfiguracionSection  from "./inicioConfig/Configuracionsection";
 
 type Seccion  = "dashboard" | "emprendimiento" | "productos" | "config";
 type EstadoEmp = "activo" | "pausado";

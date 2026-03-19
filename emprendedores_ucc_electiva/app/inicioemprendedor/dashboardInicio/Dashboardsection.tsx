@@ -1,5 +1,5 @@
 "use client";
-import styles from "../../css/inicioemprendedor/page.module.css";
+import styles from "../../css/inicioemprendedor/DashboardSection.module.css";
 
 interface Stat {
   icon: string;

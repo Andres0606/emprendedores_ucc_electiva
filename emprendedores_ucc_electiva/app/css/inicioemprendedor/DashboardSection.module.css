@@ -1,0 +1,263 @@
+/* =============================================
+   DashboardSection.module.css
+   ============================================= */
+
+/* ── Shared layout ── */
+.content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  flex: 1;
+}
+
+.welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.welcomeTitle {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a2e44;
+  letter-spacing: -0.02em;
+}
+
+.welcomeDesc { font-size: 0.88rem; color: #64748b; margin-top: 0.2rem; }
+
+/* Estado badge */
+.estadoBadge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+}
+
+.estadoActivo  { color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; }
+.estadoPausado { color: #d97706; background: #fffbeb; border: 1px solid #fde68a; }
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.statCard {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.statCard:hover {
+  box-shadow: 0 4px 16px rgba(0,56,101,0.08);
+  transform: translateY(-2px);
+}
+
+.statTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statIcon { font-size: 1.35rem; }
+
+.statChange {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 100px;
+}
+
+.statUp   { color: #16a34a; background: #f0fdf4; }
+.statDown { color: #dc2626; background: #fef2f2; }
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1a2e44;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Emprendimiento Card */
+.empCard {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.empCardLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex: 1;
+}
+
+.empEmoji { font-size: 3rem; flex-shrink: 0; }
+
+.empNombre {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1a2e44;
+  margin-bottom: 0.2rem;
+}
+
+.empDesc { font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 0.5rem; }
+
+.empMeta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+.empCat {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #009FE3;
+  background: rgba(0,159,227,0.08);
+  border: 1px solid rgba(0,159,227,0.2);
+  padding: 0.18rem 0.6rem;
+  border-radius: 100px;
+}
+
+.empFecha { font-size: 0.75rem; color: #94a3b8; }
+
+.empActions { display: flex; gap: 0.65rem; flex-shrink: 0; }
+
+/* Botones compartidos */
+.btnEditar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a2e44;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.btnEditar:hover { border-color: #009FE3; color: #009FE3; background: rgba(0,159,227,0.06); }
+
+.btnEstado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 9px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.btnPausar  { background: #fffbeb; color: #d97706; }
+.btnPausar:hover  { background: #fef3c7; }
+.btnActivar { background: #f0fdf4; color: #16a34a; }
+.btnActivar:hover { background: #dcfce7; }
+
+/* Sección productos recientes */
+.section { display: flex; flex-direction: column; gap: 1rem; }
+
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a2e44;
+}
+
+.sectionLink {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #009FE3;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.sectionLink:hover { color: #0087c2; }
+
+/* Prod Grid (mini cards) */
+.prodGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+}
+
+.prodCard {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: box-shadow 0.15s;
+}
+
+.prodCard:hover { box-shadow: 0 2px 10px rgba(0,56,101,0.08); }
+
+.prodEmoji { font-size: 1.5rem; }
+
+.prodInfo { flex: 1; display: flex; flex-direction: column; gap: 0.1rem; }
+
+.prodNombre { font-size: 0.88rem; font-weight: 700; color: #1a2e44; }
+
+.prodPrecio { font-size: 0.78rem; color: #8DC63F; font-weight: 700; }
+
+.prodEstado {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  padding: 0.18rem 0.5rem;
+  border-radius: 100px;
+  flex-shrink: 0;
+}
+
+.prodActivo  { color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; }
+.prodPausado { color: #d97706; background: #fffbeb; border: 1px solid #fde68a; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .prodGrid  { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 580px) {
+  .statsGrid { grid-template-columns: 1fr 1fr; }
+  .content   { padding: 1.25rem; }
+  .empCard   { flex-direction: column; align-items: flex-start; }
+}
