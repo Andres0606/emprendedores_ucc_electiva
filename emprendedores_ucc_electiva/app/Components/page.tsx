@@ -1,98 +1,235 @@
+'use client';
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import styles from "../css/modulos/page.module.css";
 import Header from "./header";
 import Footer from "./footer";
 
-const featuredVentures = [
-  {
-    id: 1,
-    name: "EcoTech Soluciones",
-    category: "Tecnología",
-    description: "Apps móviles y soluciones digitales para pequeños negocios locales.",
-    price: "Desde $150.000",
-    emoji: "💻",
-    author: "Carlos Muñoz",
-    semester: "7°",
-  },
-  {
-    id: 2,
-    name: "Sabor Costeño",
-    category: "Gastronomía",
-    description: "Comida tradicional costeña con entrega a domicilio en Medellín.",
-    price: "Desde $12.000",
-    emoji: "🍽️",
-    author: "Daniela Herrera",
-    semester: "5°",
-  },
-  {
-    id: 3,
-    name: "Studio Hilo",
-    category: "Moda y Diseño",
-    description: "Ropa sostenible y accesorios hechos a mano con telas recicladas.",
-    price: "Desde $45.000",
-    emoji: "🧵",
-    author: "Valentina Ríos",
-    semester: "8°",
-  },
-  {
-    id: 4,
-    name: "MindBalance",
-    category: "Salud y Bienestar",
-    description: "Sesiones de meditación guiada y coaching de bienestar personal.",
-    price: "Desde $30.000",
-    emoji: "🧘",
-    author: "Andrés Palacio",
-    semester: "6°",
-  },
-];
+// Mapeo de categorías (igual que en tu otro componente)
+const categorias: Record<string, string> = {
+  "69adb8d5781c765dca3ab5f0": "Tecnología",
+  "69adb8d5781c765dca3ab5f1": "Gastronomía",
+  "69adb8d5781c765dca3ab5f2": "Moda y Diseño",
+  "69adb8d5781c765dca3ab5f3": "Salud y Bienestar",
+  "69adb8d5781c765dca3ab5f4": "Arte y Cultura",
+  "69adb8d5781c765dca3ab5f5": "Servicios",
+};
 
-const stats = [
-  { value: "120+", label: "Emprendimientos activos", },
-  { value: "400+", label: "Productos publicados",    },
-  { value: "8",    label: "Facultades participantes",},
-  { value: "3.200+",label: "Estudiantes conectados", },
-];
+// Emojis por categoría
+const emojisPorCategoria: Record<string, string> = {
+  "69adb8d5781c765dca3ab5f0": "💻",
+  "69adb8d5781c765dca3ab5f1": "🍽️",
+  "69adb8d5781c765dca3ab5f2": "🧵",
+  "69adb8d5781c765dca3ab5f3": "🧘",
+  "69adb8d5781c765dca3ab5f4": "🎨",
+  "69adb8d5781c765dca3ab5f5": "🛠️",
+};
 
-const values = [
-  {
-    icon: "",
-    title: "Cooperativismo",
-    desc: "Fomentamos la solidaridad y el trabajo colectivo como base del crecimiento económico y social.",
-  },
-  {
-    icon: "",
-    title: "Innovación",
-    desc: "Impulsamos ideas disruptivas que transforman comunidades desde la academia hacia la realidad.",
-  },
-  {
-    icon: "",
-    title: "Sostenibilidad",
-    desc: "Priorizamos emprendimientos con impacto social y ambiental positivo para las generaciones futuras.",
-  },
-  {
-    icon: "",
-    title: "Formación integral",
-    desc: "Combinamos el conocimiento académico con la experiencia empresarial para formar líderes completos.",
-  },
-];
+interface Emprendimiento {
+  id?: string;
+  _id?: string;
+  nombre: string;
+  descripcion: string;
+  categoriaId: string;
+  usuarioId: string;
+  estado: string;
+  imagenes: string[];
+  productos: Array<{
+    nombre: string;
+    precio: number;
+    stock: number;
+    imagen: string;
+  }>;
+}
 
-const categories = [
-  { label: "Tecnología",       icon: "💻", count: 28 },
-  { label: "Gastronomía",      icon: "🍽️", count: 22 },
-  { label: "Moda y Diseño",    icon: "🧵", count: 18 },
-  { label: "Salud y Bienestar",icon: "🧘", count: 15 },
-  { label: "Arte y Cultura",   icon: "🎨", count: 12 },
-  { label: "Servicios",        icon: "🛠️", count: 25 },
-];
+interface Usuario {
+  id?: string;
+  _id?: string;
+  nombre: string;
+  apellido: string;
+  carrera: string;
+}
 
 export default function HomePage() {
+  const [featuredVentures, setFeaturedVentures] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [usuarios, setUsuarios] = useState<Map<string, Usuario>>(new Map());
+  
+  // Estadísticas reales
+  const [stats, setStats] = useState([
+    { value: "0", label: "Emprendimientos activos" },
+    { value: "0", label: "Productos publicados" },
+    { value: "8", label: "Facultades participantes" },
+    { value: "0", label: "Estudiantes conectados" },
+  ]);
+
+  // Categorías con conteos reales
+  const [categories, setCategories] = useState([
+    { label: "Tecnología", icon: "💻", count: 0, id: "69adb8d5781c765dca3ab5f0" },
+    { label: "Gastronomía", icon: "🍽️", count: 0, id: "69adb8d5781c765dca3ab5f1" },
+    { label: "Moda y Diseño", icon: "🧵", count: 0, id: "69adb8d5781c765dca3ab5f2" },
+    { label: "Salud y Bienestar", icon: "🧘", count: 0, id: "69adb8d5781c765dca3ab5f3" },
+    { label: "Arte y Cultura", icon: "🎨", count: 0, id: "69adb8d5781c765dca3ab5f4" },
+    { label: "Servicios", icon: "🛠️", count: 0, id: "69adb8d5781c765dca3ab5f5" },
+  ]);
+
+  // Función para obtener un usuario por ID
+  const obtenerUsuario = async (usuarioId: string): Promise<Usuario | null> => {
+    try {
+      const respuesta = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+      if (!respuesta.ok) return null;
+      return await respuesta.json();
+    } catch (error) {
+      console.error("Error al obtener usuario:", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+        
+        // Obtener todos los emprendimientos
+        const respuesta = await fetch("http://localhost:8080/api/emprendimientos");
+        
+        if (!respuesta.ok) {
+          throw new Error(`Error ${respuesta.status}: ${respuesta.statusText}`);
+        }
+        
+        const emprendimientos: Emprendimiento[] = await respuesta.json();
+        
+        // Filtrar solo los activos para mostrar
+        const activos = emprendimientos.filter(emp => emp.estado === "activo");
+        
+        // Obtener información de los usuarios de cada emprendimiento
+        const usuariosMap = new Map<string, Usuario>();
+        const usuariosIds = [...new Set(activos.map(emp => emp.usuarioId))];
+        
+        for (const usuarioId of usuariosIds) {
+          const usuario = await obtenerUsuario(usuarioId);
+          if (usuario) {
+            usuariosMap.set(usuarioId, usuario);
+          }
+        }
+        
+        setUsuarios(usuariosMap);
+        
+        // Transformar emprendimientos para mostrar
+       // Transformar emprendimientos para mostrar (limitado a 5)
+const venturesDisplay = activos.slice(0, 5).map(emp => {
+  const usuario = usuariosMap.get(emp.usuarioId);
+  const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido}` : "Estudiante UCC";
+  const carrera = usuario?.carrera || "";
+  const semestre = carrera ? extraerSemestre(carrera) : "Estudiante";
+  
+  // Obtener el precio más bajo de los productos
+  const precios = emp.productos?.map(p => p.precio) || [];
+  const precioMin = precios.length > 0 ? Math.min(...precios) : 0;
+  const precioFormateado = precioMin > 0 ? `Desde $${precioMin.toLocaleString()}` : "Consultar";
+  
+  return {
+    id: emp.id || emp._id,
+    name: emp.nombre,
+    category: categorias[emp.categoriaId] || "Sin categoría",
+    description: emp.descripcion,
+    price: precioFormateado,
+    emoji: emojisPorCategoria[emp.categoriaId] || "🚀",
+    author: nombreCompleto,
+    semester: semestre,
+    images: emp.imagenes || []
+  };
+});
+
+setFeaturedVentures(venturesDisplay); // Aquí ya solo tendrás máximo 5
+        
+        // Calcular estadísticas reales
+        const totalActivos = emprendimientos.filter(emp => emp.estado === "activo").length;
+        const totalProductos = emprendimientos.reduce((sum, emp) => sum + (emp.productos?.length || 0), 0);
+        const usuariosUnicos = new Set(emprendimientos.map(emp => emp.usuarioId)).size;
+        
+        setStats([
+          { value: totalActivos.toString(), label: "Emprendimientos activos" },
+          { value: totalProductos.toString(), label: "Productos publicados" },
+          { value: "8", label: "Facultades participantes" },
+          { value: usuariosUnicos.toString(), label: "Estudiantes conectados" },
+        ]);
+        
+        // Calcular conteos por categoría
+        const conteosCategorias = categories.map(cat => ({
+          ...cat,
+          count: emprendimientos.filter(emp => emp.categoriaId === cat.id && emp.estado === "activo").length
+        }));
+        setCategories(conteosCategorias);
+        
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        setError("No se pudieron cargar los emprendimientos. Por favor, intenta de nuevo.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    cargarDatos();
+  }, []);
+
+  // Función auxiliar para extraer semestre de la carrera
+  const extraerSemestre = (carrera: string): string => {
+    // Esto es un ejemplo, ajusta según cómo guardes la información del semestre
+    return "Estudiante";
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className={styles.main}>
+          <div style={{ textAlign: "center", padding: "4rem" }}>
+            <div>Cargando emprendimientos...</div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Header />
+        <main className={styles.main}>
+          <div style={{ textAlign: "center", padding: "4rem", color: "#dc2626" }}>
+            <p>❌ {error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              style={{
+                marginTop: "1rem",
+                padding: "0.5rem 1rem",
+                backgroundColor: "#3b82f6",
+                color: "white",
+                border: "none",
+                borderRadius: "0.5rem",
+                cursor: "pointer"
+              }}
+            >
+              Reintentar
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Header />
       <main className={styles.main}>
 
         {/* ══════════════════════════════
-            HERO
+            HERO (sin cambios)
         ══════════════════════════════ */}
         <section className={styles.hero}>
           <div className={styles.heroBg} aria-hidden />
@@ -120,12 +257,10 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-
-
         </section>
 
         {/* ══════════════════════════════
-            ESTADÍSTICAS
+            ESTADÍSTICAS (con datos reales)
         ══════════════════════════════ */}
         <section className={styles.stats}>
           <div className={styles.statsInner}>
@@ -139,7 +274,7 @@ export default function HomePage() {
         </section>
 
         {/* ══════════════════════════════
-            QUIÉNES SOMOS
+            QUIÉNES SOMOS (sin cambios)
         ══════════════════════════════ */}
         <section className={styles.about}>
           <div className={styles.aboutInner}>
@@ -189,7 +324,7 @@ export default function HomePage() {
         </section>
 
         {/* ══════════════════════════════
-            VALORES / FINES
+            VALORES / FINES (sin cambios)
         ══════════════════════════════ */}
         <section className={styles.values}>
           <div className={styles.valuesInner}>
@@ -215,7 +350,7 @@ export default function HomePage() {
         </section>
 
         {/* ══════════════════════════════
-            CATEGORÍAS
+            CATEGORÍAS (con conteos reales)
         ══════════════════════════════ */}
         <section className={styles.categories}>
           <div className={styles.categoriesInner}>
@@ -240,7 +375,7 @@ export default function HomePage() {
         </section>
 
         {/* ══════════════════════════════
-            EMPRENDIMIENTOS DESTACADOS
+            EMPRENDIMIENTOS DESTACADOS (con datos reales)
         ══════════════════════════════ */}
         <section className={styles.featured}>
           <div className={styles.featuredInner}>
@@ -267,7 +402,7 @@ export default function HomePage() {
                       <span className={styles.ventureAvatarLetter}>{v.author.charAt(0)}</span>
                       <div>
                         <p className={styles.ventureAuthorName}>{v.author}</p>
-                        <p className={styles.ventureAuthorSem}>Semestre {v.semester}</p>
+                        <p className={styles.ventureAuthorSem}>{v.semester}</p>
                       </div>
                     </div>
                     <span className={styles.venturePrice}>{v.price}</span>
@@ -281,6 +416,9 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ══════════════════════════════
+            CTA (sin cambios)
+        ══════════════════════════════ */}
         <section className={styles.cta}>
           <div className={styles.ctaInner}>
             <div className={styles.ctaLeft}>
@@ -309,3 +447,27 @@ export default function HomePage() {
     </>
   );
 }
+
+// Datos estáticos que mantienes igual
+const values = [
+  {
+    icon: "",
+    title: "Cooperativismo",
+    desc: "Fomentamos la solidaridad y el trabajo colectivo como base del crecimiento económico y social.",
+  },
+  {
+    icon: "",
+    title: "Innovación",
+    desc: "Impulsamos ideas disruptivas que transforman comunidades desde la academia hacia la realidad.",
+  },
+  {
+    icon: "",
+    title: "Sostenibilidad",
+    desc: "Priorizamos emprendimientos con impacto social y ambiental positivo para las generaciones futuras.",
+  },
+  {
+    icon: "",
+    title: "Formación integral",
+    desc: "Combinamos el conocimiento académico con la experiencia empresarial para formar líderes completos.",
+  },
+];
