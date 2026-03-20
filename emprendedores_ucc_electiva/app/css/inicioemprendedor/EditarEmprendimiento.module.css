@@ -1,0 +1,310 @@
+/* =============================================
+   EditarEmprendimiento.module.css
+   Azul #009FE3 · Verde #8DC63F · Navy #003865
+   ============================================= */
+
+/* ── Fondo y centrado ── */
+.container {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* ── Tarjeta principal ── */
+.formCard {
+  max-width: 680px;
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header con gradiente navy ── */
+.header {
+  background: linear-gradient(160deg, #003865 0%, #005a9e 60%, #009FE3 100%);
+  padding: 2rem 2rem 2.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Patrón de puntos decorativo (igual al sidebar) */
+.header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+  pointer-events: none;
+}
+
+/* Blob decorativo verde */
+.header::before {
+  content: "";
+  position: absolute;
+  bottom: -40px; right: -40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(141,198,63,0.18), transparent 65%);
+  pointer-events: none;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  transition: color 0.15s;
+  position: relative;
+  z-index: 1;
+}
+
+.backButton:hover { color: #8DC63F; }
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.55);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Formulario ── */
+.form {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+/* ── Inputs ── */
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: var(--font-body, inherit);
+  color: #1a2e44;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+
+.input:hover,
+.select:hover,
+.textarea:hover {
+  border-color: #cbd5e1;
+  background: #fff;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  background: #fff;
+  border-color: #009FE3;
+  box-shadow: 0 0 0 3px rgba(0,159,227,0.12);
+}
+
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.6;
+}
+
+.helperText {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.1rem;
+}
+
+/* ── Vista previa de imágenes ── */
+.imagePreview {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.imageItem {
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  transition: border-color 0.15s;
+}
+
+.imageItem:hover { border-color: #009FE3; }
+
+.imageItem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Info box ── */
+.infoBox {
+  padding: 0.9rem 1rem;
+  background: rgba(0,159,227,0.06);
+  border: 1px solid rgba(0,159,227,0.18);
+  border-left: 3px solid #009FE3;
+  border-radius: 0 10px 10px 0;
+  font-size: 0.83rem;
+  color: #0369a1;
+  line-height: 1.5;
+}
+
+/* ── Acciones ── */
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.btnGuardar {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  background: #8DC63F;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body, inherit);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btnGuardar:hover:not(:disabled) {
+  background: #7ab32e;
+}
+
+.btnGuardar:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btnGuardar:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btnCancelar {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnCancelar:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #1a2e44;
+}
+
+/* Botón volver (estado de error) */
+.btnVolver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  padding: 0.6rem 1.25rem;
+  background: #8DC63F;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+
+.btnVolver:hover { background: #7ab32e; }
+
+/* ── Spinner ── */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #8DC63F;
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 580px) {
+  .container { padding: 1rem 0.75rem; }
+  .header    { padding: 1.5rem 1.25rem 1.75rem; }
+  .form      { padding: 1.25rem; gap: 1.25rem; }
+  .actions   { flex-direction: column; }
+  .title     { font-size: 1.35rem; }
+}

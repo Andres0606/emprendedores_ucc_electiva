@@ -378,7 +378,7 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
 
           <div className={styles.editActions}>
             <Link 
-              href={`/miemprendimiento/${emprendimientoActual.id || emprendimientoActual._id}`} 
+              href={`/inicioemprendedor/editarEmprendimiento/${emprendimientoActual.id || emprendimientoActual._id}`} 
               className={styles.btnEditar}
             >
               ✏️ Editar este emprendimiento

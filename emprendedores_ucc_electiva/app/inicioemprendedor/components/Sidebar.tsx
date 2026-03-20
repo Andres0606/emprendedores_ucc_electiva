@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import styles from "../../css/inicioemprendedor/Sidebar.module.css";
 
 interface NavItem {
@@ -22,7 +24,96 @@ interface SidebarProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
+interface Usuario {
+  id?: string;
+  _id?: string;
+  nombre: string;
+  apellido: string;
+  correo: string;
+  telefono: string;
+  tipoUsuario: string;
+  carrera: string;
+  semestre?: string;
+}
+
 export default function Sidebar({ seccion, setSeccion, sidebarOpen, setSidebarOpen }: SidebarProps) {
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [cargando, setCargando] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const cargarUsuario = async () => {
+      try {
+        // Obtener usuario de sessionStorage
+        const usuarioGuardado = sessionStorage.getItem("usuario");
+        
+        if (!usuarioGuardado) {
+          setCargando(false);
+          return;
+        }
+
+        const usuarioData = JSON.parse(usuarioGuardado);
+        const usuarioId = usuarioData.id || usuarioData._id;
+        
+        if (!usuarioId) {
+          setCargando(false);
+          return;
+        }
+
+        // Obtener datos actualizados del backend
+        const respuesta = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+        
+        if (!respuesta.ok) {
+          throw new Error(`Error ${respuesta.status}`);
+        }
+        
+        const usuarioActualizado = await respuesta.json();
+        setUsuario(usuarioActualizado);
+        
+      } catch (error) {
+        console.error("Error al cargar usuario en sidebar:", error);
+        // Si hay error, intentar usar los datos de sessionStorage
+        const usuarioGuardado = sessionStorage.getItem("usuario");
+        if (usuarioGuardado) {
+          setUsuario(JSON.parse(usuarioGuardado));
+        }
+      } finally {
+        setCargando(false);
+      }
+    };
+    
+    cargarUsuario();
+  }, []);
+
+  // Función para obtener la inicial del nombre
+  const obtenerInicial = () => {
+    if (!usuario) return "?";
+    return usuario.nombre.charAt(0).toUpperCase();
+  };
+
+  // Función para obtener el nombre completo
+  const obtenerNombreCompleto = () => {
+    if (!usuario) return "Usuario";
+    return `${usuario.nombre} ${usuario.apellido}`;
+  };
+
+  // Función para obtener el rol y semestre/carrera
+  const obtenerRolInfo = () => {
+    if (!usuario) return "Emprendedor UCC";
+    
+    const tipo = usuario.tipoUsuario === "estudiante" ? "Emprendedor" : "Emprendedor";
+    const carrera = usuario.carrera ? ` · ${usuario.carrera}` : "";
+    
+    return `${tipo}${carrera}`;
+  };
+
+  // Función para cerrar sesión
+  const cerrarSesion = () => {
+    sessionStorage.removeItem("usuario");
+    sessionStorage.removeItem("usuarioId");
+    router.push("/");
+  };
+
   return (
     <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}>
       <div className={styles.sidebarBg} aria-hidden />
@@ -40,12 +131,18 @@ export default function Sidebar({ seccion, setSeccion, sidebarOpen, setSidebarOp
         <span className={styles.sidebarLogoText}>EmprendedoresUCC</span>
       </Link>
 
-      {/* Perfil */}
+      {/* Perfil - con datos reales */}
       <div className={styles.sidebarProfile}>
-        <div className={styles.sidebarAvatar}>C</div>
+        <div className={styles.sidebarAvatar}>
+          {cargando ? "..." : obtenerInicial()}
+        </div>
         <div className={styles.sidebarProfileInfo}>
-          <span className={styles.sidebarProfileName}>Carlos Muñoz</span>
-          <span className={styles.sidebarProfileRole}>Emprendedor · Sem. 7°</span>
+          <span className={styles.sidebarProfileName}>
+            {cargando ? "Cargando..." : obtenerNombreCompleto()}
+          </span>
+          <span className={styles.sidebarProfileRole}>
+            {cargando ? "..." : obtenerRolInfo()}
+          </span>
         </div>
       </div>
 
@@ -67,13 +164,13 @@ export default function Sidebar({ seccion, setSeccion, sidebarOpen, setSidebarOp
       </nav>
 
       {/* Cerrar sesión */}
-      <Link href="/" className={styles.sidebarLogout}>
+      <button onClick={cerrarSesion} className={styles.sidebarLogout}>
         <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d="M13 15l4-5-4-5M17 10H7" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3" strokeLinecap="round" />
         </svg>
         Cerrar sesión
-      </Link>
+      </button>
     </aside>
   );
 }
