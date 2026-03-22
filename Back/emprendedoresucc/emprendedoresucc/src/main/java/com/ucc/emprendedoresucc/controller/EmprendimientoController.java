@@ -1,11 +1,9 @@
-// EmprendimientoController.java (actualizado)
 package com.ucc.emprendedoresucc.controller;
 
 import com.ucc.emprendedoresucc.model.Emprendimiento;
 import com.ucc.emprendedoresucc.service.EmprendimientoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,90 +21,88 @@ public class EmprendimientoController {
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody Emprendimiento emprendimiento) {
         try {
-            Emprendimiento nuevoEmprendimiento = emprendimientoService.crearEmprendimiento(emprendimiento);
-            return new ResponseEntity<>(nuevoEmprendimiento, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            Emprendimiento nuevo = emprendimientoService.crearEmprendimiento(emprendimiento);
+            return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error al crear el emprendimiento", HttpStatus.INTERNAL_SERVER_ERROR);
+            e.printStackTrace();
+            return new ResponseEntity<>("Error al crear emprendimiento", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Obtener todos los emprendimientos
+    // 🔥 ESTE ES EL IMPORTANTE (CORREGIDO)
     @GetMapping
-    public ResponseEntity<List<Emprendimiento>> obtenerTodos() {
-        List<Emprendimiento> emprendimientos = emprendimientoService.obtenerTodos();
-        return ResponseEntity.ok(emprendimientos);
+    public ResponseEntity<?> obtenerTodos() {
+        try {
+            List<Emprendimiento> lista = emprendimientoService.obtenerTodos();
+            return ResponseEntity.ok(lista);
+        } catch (Exception e) {
+            e.printStackTrace(); // 👈 VER ERROR REAL EN CONSOLA
+            return ResponseEntity.status(500).body("Error interno en emprendimientos");
+        }
     }
 
-    // Obtener emprendimiento por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Emprendimiento> obtenerPorId(@PathVariable String id) {
-        return emprendimientoService.obtenerPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> obtenerPorId(@PathVariable String id) {
+        try {
+            return emprendimientoService.obtenerPorId(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al buscar emprendimiento");
+        }
     }
 
-    // Obtener emprendimientos por usuarioId
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<?> obtenerPorUsuario(@PathVariable String usuarioId) {
         try {
-            List<Emprendimiento> emprendimientos = emprendimientoService.obtenerPorUsuarioId(usuarioId);
-            return ResponseEntity.ok(emprendimientos);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    // Obtener emprendimientos por categoría
-    @GetMapping("/categoria/{categoriaId}")
-    public ResponseEntity<List<Emprendimiento>> obtenerPorCategoria(@PathVariable String categoriaId) {
-        List<Emprendimiento> emprendimientos = emprendimientoService.obtenerPorCategoriaId(categoriaId);
-        return ResponseEntity.ok(emprendimientos);
-    }
-
-    // Actualizar emprendimiento completo
-    @PutMapping("/{id}")
-    public ResponseEntity<?> actualizar(@PathVariable String id, @RequestBody Emprendimiento emprendimiento) {
-        try {
-            Emprendimiento actualizado = emprendimientoService.actualizarEmprendimiento(id, emprendimiento);
-            return ResponseEntity.ok(actualizado);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return ResponseEntity.ok(emprendimientoService.obtenerPorUsuarioId(usuarioId));
         } catch (Exception e) {
-            return new ResponseEntity<>("Error al actualizar el emprendimiento", HttpStatus.INTERNAL_SERVER_ERROR);
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error interno");
         }
     }
 
-    // Actualizar solo el estado
-    @PatchMapping("/{id}/estado")
-    public ResponseEntity<?> actualizarEstado(@PathVariable String id, @RequestBody Map<String, String> request) {
+    @GetMapping("/categoria/{categoriaId}")
+    public ResponseEntity<?> obtenerPorCategoria(@PathVariable String categoriaId) {
         try {
-            String nuevoEstado = request.get("estado");
-            Emprendimiento actualizado = emprendimientoService.actualizarEstado(id, nuevoEstado);
-            return ResponseEntity.ok(actualizado);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return ResponseEntity.ok(emprendimientoService.obtenerPorCategoriaId(categoriaId));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error interno");
         }
     }
 
-    // Eliminar emprendimiento
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizar(@PathVariable String id, @RequestBody Emprendimiento emp) {
+        try {
+            return ResponseEntity.ok(emprendimientoService.actualizarEmprendimiento(id, emp));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al actualizar");
+        }
+    }
+
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<?> actualizarEstado(@PathVariable String id, @RequestBody Map<String, String> req) {
+        try {
+            return ResponseEntity.ok(
+                    emprendimientoService.actualizarEstado(id, req.get("estado"))
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al actualizar estado");
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable String id) {
         try {
             emprendimientoService.eliminarEmprendimiento(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al eliminar");
         }
-    }
-
-    // Verificar propiedad
-    @GetMapping("/{id}/propietario/{usuarioId}")
-    public ResponseEntity<Boolean> esPropietario(@PathVariable String id, @PathVariable String usuarioId) {
-        boolean esPropietario = emprendimientoService.esPropietario(id, usuarioId);
-        return ResponseEntity.ok(esPropietario);
     }
 }

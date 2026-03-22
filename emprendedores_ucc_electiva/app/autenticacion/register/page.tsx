@@ -60,17 +60,29 @@ export default function RegisterPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:8080/api/usuarios", {
+      const res = await fetch("http://localhost:8080/api/usuarios/registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(usuario),
       });
 
+      // 🔥 CORRECCIÓN: Manejar diferentes tipos de respuesta
+      const contentType = res.headers.get("content-type");
+      let data;
+      
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        data = await res.text();
+      }
+
       if (res.ok) {
         alert("Usuario registrado correctamente");
         router.push("/autenticacion/login");
       } else {
-        alert("Error al registrar usuario");
+        // Mostrar el mensaje de error (puede ser string o JSON)
+        const errorMessage = typeof data === 'string' ? data : data.message || "Error al registrar usuario";
+        alert(errorMessage);
       }
     } catch (error) {
       console.error(error);
@@ -151,6 +163,7 @@ export default function RegisterPage() {
                   className={styles.input}
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
+                  required
                 />
               </div>
               <div className={styles.field}>
@@ -160,6 +173,7 @@ export default function RegisterPage() {
                   className={styles.input}
                   value={apellido}
                   onChange={(e) => setApellido(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -172,6 +186,7 @@ export default function RegisterPage() {
                 className={styles.input}
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
+                required
               />
             </div>
 
@@ -183,6 +198,7 @@ export default function RegisterPage() {
                 className={styles.input}
                 value={correo}
                 onChange={(e) => setCorreo(e.target.value)}
+                required
               />
             </div>
 
@@ -193,6 +209,7 @@ export default function RegisterPage() {
                 className={styles.input}
                 value={carrera}
                 onChange={(e) => setCarrera(e.target.value)}
+                required
               >
                 <option value="">Selecciona</option>
                 {facultades.map((f) => (
@@ -211,6 +228,7 @@ export default function RegisterPage() {
                   style={{ paddingLeft: "0.9rem", paddingRight: "2.8rem" }}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -233,6 +251,7 @@ export default function RegisterPage() {
                   style={{ paddingLeft: "0.9rem", paddingRight: "2.8rem" }}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"

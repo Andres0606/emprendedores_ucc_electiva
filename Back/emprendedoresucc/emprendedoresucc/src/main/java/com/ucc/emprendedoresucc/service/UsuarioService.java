@@ -15,12 +15,44 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // REGISTRO
+    // REGISTRO - Mejorado con más validaciones
     public Usuario registrarUsuario(Usuario usuario) {
+        // Validar campos requeridos
+        if (usuario.getCorreo() == null || usuario.getCorreo().trim().isEmpty()) {
+            throw new RuntimeException("El correo es obligatorio");
+        }
+        
+        if (usuario.getPassword() == null || usuario.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("La contraseña es obligatoria");
+        }
+        
+        if (usuario.getNombre() == null || usuario.getNombre().trim().isEmpty()) {
+            throw new RuntimeException("El nombre es obligatorio");
+        }
+        
+        if (usuario.getApellido() == null || usuario.getApellido().trim().isEmpty()) {
+            throw new RuntimeException("El apellido es obligatorio");
+        }
+        
+        // Validar formato de correo
+        if (!usuario.getCorreo().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            throw new RuntimeException("El formato del correo no es válido");
+        }
+        
+        // Verificar si el correo ya existe
         Usuario existente = usuarioRepository.findByCorreo(usuario.getCorreo());
         if (existente != null) {
             throw new RuntimeException("El correo ya está registrado");
         }
+        
+        // Validar longitud de contraseña
+        if (usuario.getPassword().length() < 4) {
+            throw new RuntimeException("La contraseña debe tener al menos 4 caracteres");
+        }
+        
+        // Aquí deberías encriptar la contraseña antes de guardar
+        // usuario.setPassword(encriptarPassword(usuario.getPassword()));
+        
         return usuarioRepository.save(usuario);
     }
 
