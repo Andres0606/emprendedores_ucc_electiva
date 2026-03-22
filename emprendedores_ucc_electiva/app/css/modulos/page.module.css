@@ -752,3 +752,84 @@
   .valuesInner, .categoriesInner, .featuredInner,
   .aboutInner { padding: 3rem 1.25rem; }
 }
+/* ── Botones de la venture card ── */
+.ventureButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.ventureBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: var(--gray-light);
+  color: var(--navy);
+  text-decoration: none;
+  font-size: 0.83rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.ventureBtn:hover {
+  background: var(--blue);
+  color: var(--white);
+  border-color: var(--blue);
+}
+
+/* Botón WhatsApp — en reposo verde suave, hover verde sólido */
+.whatsappBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: #f0fdf4;
+  color: #15803d;
+  text-decoration: none;
+  font-size: 0.83rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1.5px solid #bbf7d0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+  box-sizing: border-box;
+}
+
+.whatsappBtn:hover {
+  background: #25D366;
+  color: #fff;
+  border-color: #25D366;
+  transform: translateY(-1px);
+}
+
+.whatsappBtn:active {
+  transform: scale(0.98);
+}
+
+.whatsappIcon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+/* Ajuste responsive para móviles */
+@media (max-width: 768px) {
+  .ventureButtons {
+    gap: 0.5rem;
+  }
+  
+  .ventureBtn,
+  .whatsappBtn {
+    padding: 0.625rem;
+    font-size: 0.875rem;
+  }
+}
