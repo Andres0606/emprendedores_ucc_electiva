@@ -9,6 +9,16 @@ const categorias = [
   "Salud y Bienestar", "Arte y Cultura", "Servicios",
 ];
 
+// 🔥 MAPEO DE CATEGORÍAS A IDs DE MONGODB
+const categoriaToId: Record<string, string> = {
+  "Tecnología": "69adb8d5781c765dca3ab5f0",
+  "Gastronomía": "69bf25148374500218c043ee",
+  "Moda y Diseño": "69bf25148374500218c043ef",
+  "Salud y Bienestar": "69bf25148374500218c043f0",
+  "Arte y Cultura": "69bf25148374500218c043f1",
+  "Servicios": "69bf25148374500218c043f2",
+};
+
 type Producto = {
   id: string;
   nombre: string;
@@ -150,15 +160,27 @@ export default function MiEmprendimientoPage() {
       return;
     }
 
+    // 🔥 OBTENER EL ID CORRECTO DE LA CATEGORÍA SELECCIONADA
+    const categoriaId = categoriaToId[categoria];
+    
+    if (!categoriaId) {
+      alert("⚠️ Por favor selecciona una categoría válida");
+      setPaso(1);
+      setIsPublishing(false);
+      return;
+    }
+
     console.log("Publicando emprendimiento...");
     console.log("Usuario:", usuario.nombre);
     console.log("Tipo:", usuario.tipoUsuario);
     console.log("Teléfono:", telefonoLimpio);
+    console.log("Categoría seleccionada:", categoria);
+    console.log("Categoría ID:", categoriaId);
 
     const data = {
       nombre,
       descripcion,
-      categoriaId: "69adb8d5781c765dca3ab5f0",
+      categoriaId: categoriaId, // 🔥 AHORA USA EL ID CORRECTO
       usuarioId: usuarioId,
       estado,
       telefono: telefonoLimpio,
