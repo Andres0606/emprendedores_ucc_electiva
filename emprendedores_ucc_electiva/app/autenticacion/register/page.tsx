@@ -40,6 +40,30 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // 👈 Función para validar teléfono (solo números y máximo 10 dígitos)
+  const validarTelefono = (telefono: string) => {
+    // Eliminar cualquier caracter que no sea número
+    const soloNumeros = telefono.replace(/\D/g, '');
+    
+    // Verificar que tenga máximo 10 dígitos
+    if (soloNumeros.length > 10) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  // 👈 Función para formatear teléfono (solo números)
+  const manejarCambioTelefono = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let valor = e.target.value;
+    // Eliminar cualquier caracter que no sea número
+    valor = valor.replace(/\D/g, '');
+    // Limitar a máximo 10 dígitos
+    if (valor.length <= 10) {
+      setTelefono(valor);
+    }
+  };
+
   const registrarUsuario = async (e: any) => {
     e.preventDefault();
 
@@ -48,12 +72,37 @@ export default function RegisterPage() {
       return;
     }
 
+    // 👈 Validar teléfono
+    if (!telefono) {
+      alert("Por favor ingresa tu número de teléfono");
+      return;
+    }
+
+    if (telefono.length < 7) {
+      alert("El teléfono debe tener al menos 7 dígitos");
+      return;
+    }
+
+    if (telefono.length > 10) {
+      alert("El teléfono no puede tener más de 10 dígitos");
+      return;
+    }
+
+    // Si es administrativo, enviar "administrativo" como carrera
+    const carreraEnviar = tipoUsuario === "administrativo" ? "administrativo" : carrera;
+
+    // Validar que si NO es administrativo, haya seleccionado una carrera
+    if (tipoUsuario !== "administrativo" && !carrera) {
+      alert("Por favor selecciona tu facultad/programa");
+      return;
+    }
+
     const usuario = {
       nombre,
       apellido,
-      telefono,
+      telefono,  // Ya viene solo con números
       correo,
-      carrera,
+      carrera: carreraEnviar,
       tipoUsuario,
       password,
       saldo: 0,
@@ -66,7 +115,6 @@ export default function RegisterPage() {
         body: JSON.stringify(usuario),
       });
 
-      // 🔥 CORRECCIÓN: Manejar diferentes tipos de respuesta
       const contentType = res.headers.get("content-type");
       let data;
       
@@ -80,7 +128,6 @@ export default function RegisterPage() {
         alert("Usuario registrado correctamente");
         router.push("/autenticacion/login");
       } else {
-        // Mostrar el mensaje de error (puede ser string o JSON)
         const errorMessage = typeof data === 'string' ? data : data.message || "Error al registrar usuario";
         alert(errorMessage);
       }
@@ -146,7 +193,13 @@ export default function RegisterPage() {
                     key={t.value}
                     type="button"
                     className={`${styles.tipoBtn} ${tipoUsuario === t.value ? styles.tipoBtnActive : ""}`}
-                    onClick={() => setTipoUsuario(t.value)}
+                    onClick={() => {
+                      setTipoUsuario(t.value);
+                      // Si selecciona administrativo, limpiar carrera
+                      if (t.value === "administrativo") {
+                        setCarrera("");
+                      }
+                    }}
                   >
                     {t.label}
                   </button>
@@ -180,14 +233,26 @@ export default function RegisterPage() {
 
             {/* Teléfono */}
             <div className={styles.field}>
-              <label className={styles.label}>Teléfono</label>
-              <input
-                type="tel"
-                className={styles.input}
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                required
-              />
+              <label className={styles.label}>
+                Teléfono 
+                <span className={styles.labelHint}>(Máximo 10 dígitos)</span>
+              </label>
+              <div className={styles.inputWrap}>
+                <input
+                  type="tel"
+                  className={styles.input}
+                  placeholder="Ej: 3102474495"
+                  value={telefono}
+                  onChange={manejarCambioTelefono}
+                  required
+                  maxLength={10}
+                />
+              </div>
+              {telefono && telefono.length > 0 && (
+                <small className={styles.helperText}>
+                  {telefono.length} / 10 dígitos
+                </small>
+              )}
             </div>
 
             {/* Correo */}
@@ -202,21 +267,23 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Carrera */}
-            <div className={styles.field}>
-              <label className={styles.label}>Facultad / Programa</label>
-              <select
-                className={styles.input}
-                value={carrera}
-                onChange={(e) => setCarrera(e.target.value)}
-                required
-              >
-                <option value="">Selecciona</option>
-                {facultades.map((f) => (
-                  <option key={f} value={f}>{f}</option>
-                ))}
-              </select>
-            </div>
+            {/* Campo de carrera: solo visible si NO es administrativo */}
+            {tipoUsuario !== "administrativo" && (
+              <div className={styles.field}>
+                <label className={styles.label}>Facultad / Programa</label>
+                <select
+                  className={styles.input}
+                  value={carrera}
+                  onChange={(e) => setCarrera(e.target.value)}
+                  required={tipoUsuario !== "administrativo"}
+                >
+                  <option value="">Selecciona</option>
+                  {facultades.map((f) => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Contraseña */}
             <div className={styles.field}>
