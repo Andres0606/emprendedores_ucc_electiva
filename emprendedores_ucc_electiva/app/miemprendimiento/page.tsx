@@ -51,6 +51,7 @@ export default function MiEmprendimientoPage() {
   const [descripcion, setDescripcion] = useState("");
   const [categoria, setCategoria]     = useState("");
   const [estado, setEstado]           = useState("activo");
+  const [telefono, setTelefono]       = useState("");
 
   // Paso 2
   const [productos, setProductos]   = useState<Producto[]>([]);
@@ -95,7 +96,7 @@ export default function MiEmprendimientoPage() {
     }
 
     const usuario = JSON.parse(usuarioGuardado);
-    const usuarioId = usuario.id ?? usuario._id; // el backend devuelve "id", no "_id"
+    const usuarioId = usuario.id ?? usuario._id;
 
     if (!usuarioId) {
       alert("No se encontró el ID del usuario. Vuelve a iniciar sesión.");
@@ -111,6 +112,7 @@ export default function MiEmprendimientoPage() {
       categoriaId: "69adb8d5781c765dca3ab5f0",
       usuarioId: usuarioId,
       estado,
+      telefono,
       imagenes,
       productos: productos.map(p => ({
         nombre: p.nombre,
@@ -235,6 +237,23 @@ export default function MiEmprendimientoPage() {
                   />
                 </div>
 
+                {/* ── Teléfono de contacto ── */}
+                <div className={styles.field}>
+                  <label className={styles.label}>Teléfono de contacto *</label>
+                  <div className={styles.inputWrap}>
+                    <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+                      <path d="M4 2h4l1.5 4-2 1.2a11 11 0 005.3 5.3L14 10.5 18 12v4a2 2 0 01-2 2C6.1 18 2 13.9 2 4a2 2 0 012-2z" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <input
+                      type="tel"
+                      placeholder="Ej: +57 300 123 4567"
+                      className={styles.input}
+                      value={telefono}
+                      onChange={(e) => setTelefono(e.target.value)}
+                    />
+                  </div>
+                </div>
+
                 <div className={styles.row}>
                   <div className={styles.field}>
                     <label className={styles.label}>Categoría *</label>
@@ -249,25 +268,18 @@ export default function MiEmprendimientoPage() {
                     </div>
                   </div>
 
-                  <div className={styles.field}>
-                    <label className={styles.label}>Estado</label>
-                    <div className={styles.estadoGroup}>
-                      {["activo","inactivo","pausado"].map((e) => (
-                        <button key={e} type="button"
-                          className={`${styles.estadoBtn} ${estado === e ? styles.estadoBtnActive : ""}`}
-                          onClick={() => setEstado(e)}>
-                          {e.charAt(0).toUpperCase() + e.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+          
                 </div>
               </div>
 
               <div className={styles.formActions}>
                 <Link href="/" className={styles.btnBack}>← Cancelar</Link>
-                <button type="button" className={styles.btnNext}
-                  onClick={() => setPaso(2)} disabled={!nombre || !descripcion || !categoria}>
+                <button
+                  type="button"
+                  className={styles.btnNext}
+                  onClick={() => setPaso(2)}
+                  disabled={!nombre || !descripcion || !categoria || !telefono}
+                >
                   Siguiente: Productos →
                 </button>
               </div>
@@ -423,6 +435,10 @@ export default function MiEmprendimientoPage() {
                   <div className={styles.resumenItem}>
                     <span className={styles.resumenLbl}>Estado</span>
                     <span className={`${styles.resumenVal} ${styles.resumenEstado}`}>{estado}</span>
+                  </div>
+                  <div className={styles.resumenItem}>
+                    <span className={styles.resumenLbl}>Teléfono</span>
+                    <span className={styles.resumenVal}>{telefono}</span>
                   </div>
                   <div className={styles.resumenItem}>
                     <span className={styles.resumenLbl}>Productos</span>

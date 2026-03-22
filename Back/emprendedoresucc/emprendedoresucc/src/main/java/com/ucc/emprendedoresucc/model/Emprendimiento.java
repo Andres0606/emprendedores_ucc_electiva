@@ -17,6 +17,7 @@ public class Emprendimiento {
     private String categoriaId;
     private String usuarioId;
     private String estado;
+    private String telefono;  // 👈 NUEVO CAMPO
 
     // 🔥 NUNCA NULL
     private List<String> imagenes = new ArrayList<>();
@@ -43,6 +44,9 @@ public class Emprendimiento {
 
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+
+    public String getTelefono() { return telefono; }  // 👈 GETTER
+    public void setTelefono(String telefono) { this.telefono = telefono; }  // 👈 SETTER
 
     public List<String> getImagenes() { return imagenes; }
     public void setImagenes(List<String> imagenes) {

@@ -16,10 +16,16 @@ public class EmprendimientoService {
     private EmprendimientoRepository emprendimientoRepository;
 
     // Crear un nuevo emprendimiento
+    // En EmprendimientoService.java - actualizar crearEmprendimiento()
     public Emprendimiento crearEmprendimiento(Emprendimiento emprendimiento) {
 
         if (emprendimiento.getNombre() == null || emprendimiento.getNombre().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del emprendimiento es obligatorio");
+        }
+
+        // 👈 VALIDAR TELÉFONO
+        if (emprendimiento.getTelefono() == null || emprendimiento.getTelefono().trim().isEmpty()) {
+            throw new IllegalArgumentException("El teléfono de contacto es obligatorio");
         }
 
         if (emprendimiento.getEstado() == null || emprendimiento.getEstado().trim().isEmpty()) {
@@ -183,4 +189,6 @@ public class EmprendimientoService {
                 .map(emp -> usuarioId.equals(emp.getUsuarioId()))
                 .orElse(false);
     }
+
+    
 }
