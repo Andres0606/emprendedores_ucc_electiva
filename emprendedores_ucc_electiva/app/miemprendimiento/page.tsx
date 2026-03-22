@@ -250,11 +250,28 @@ export default function MiEmprendimientoPage() {
       return;
     }
 
+    // 🔥 OBTENER EL ID CORRECTO DE LA CATEGORÍA SELECCIONADA
+    const categoriaId = categoriaToId[categoria];
+    
+    if (!categoriaId) {
+      alert("⚠️ Por favor selecciona una categoría válida");
+      setPaso(1);
+      setIsPublishing(false);
+      return;
+    }
+
+    console.log("Publicando emprendimiento...");
+    console.log("Usuario:", usuario.nombre);
+    console.log("Tipo:", usuario.tipoUsuario);
+    console.log("Teléfono:", telefonoLimpio);
+    console.log("Categoría seleccionada:", categoria);
+    console.log("Categoría ID:", categoriaId);
+
     const data = {
       nombre,
       descripcion,
-      categoriaId: "69adb8d5781c765dca3ab5f0",
-      usuarioId,
+      categoriaId: categoriaId,
+      usuarioId: usuarioId,
       estado,
       telefono: telefonoLimpio,
       imagenes: imagenesValidas,
