@@ -16,7 +16,6 @@ public class Usuario {
     private String tipoUsuario;
     private String carrera;
     private String password;
-    private double saldo;
 
     public Usuario() {}
 
@@ -82,13 +81,5 @@ public class Usuario {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public double getSaldo() {
-        return saldo;
-    }
-
-    public void setSaldo(double saldo) {
-        this.saldo = saldo;
     }
 }
