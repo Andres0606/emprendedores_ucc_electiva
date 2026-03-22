@@ -50,6 +50,17 @@ public class UsuarioService {
             throw new RuntimeException("La contraseña debe tener al menos 4 caracteres");
         }
         
+        // Validar teléfono (exactamente 10 dígitos)
+        if (usuario.getTelefono() != null && !usuario.getTelefono().trim().isEmpty()) {
+            String telefonoLimpio = usuario.getTelefono().replaceAll("\\D", "");
+            if (telefonoLimpio.length() != 10) {
+                throw new RuntimeException("El teléfono debe tener exactamente 10 dígitos");
+            }
+            usuario.setTelefono(telefonoLimpio);
+        } else {
+            throw new RuntimeException("El teléfono es obligatorio");
+        }
+        
         // Aquí deberías encriptar la contraseña antes de guardar
         // usuario.setPassword(encriptarPassword(usuario.getPassword()));
         

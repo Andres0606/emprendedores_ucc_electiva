@@ -9,6 +9,16 @@ const categorias = [
   "Salud y Bienestar", "Arte y Cultura", "Servicios",
 ];
 
+// 🔥 MAPEO DE CATEGORÍAS A IDs DE MONGODB
+const categoriaToId: Record<string, string> = {
+  "Tecnología": "69adb8d5781c765dca3ab5f0",
+  "Gastronomía": "69bf25148374500218c043ee",
+  "Moda y Diseño": "69bf25148374500218c043ef",
+  "Salud y Bienestar": "69bf25148374500218c043f0",
+  "Arte y Cultura": "69bf25148374500218c043f1",
+  "Servicios": "69bf25148374500218c043f2",
+};
+
 type Producto = {
   id: string;
   nombre: string;
@@ -17,6 +27,115 @@ type Producto = {
   imagen: string;
 };
 
+// ── Componente reutilizable para el helper de imagen ──
+function ImageHelper() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div style={{ marginTop: "8px", width: "100%" }}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: "6px 10px",
+          borderRadius: "8px",
+          fontSize: "13px",
+          fontWeight: 500,
+          color: "#6366f1",
+          transition: "background 0.2s",
+          width: "100%",
+          textAlign: "left",
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = "#f0f0ff")}
+        onMouseLeave={e => (e.currentTarget.style.background = "none")}
+      >
+        <span style={{ fontSize: "15px" }}>📸</span>
+        ¿Cómo obtener la URL de mi imagen?
+        <span style={{
+          marginLeft: "auto",
+          display: "inline-flex",
+          transition: "transform 0.25s",
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2.5">
+            <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
+      </button>
+
+      {open && (
+        <div style={{
+          marginTop: "6px",
+          background: "linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%)",
+          border: "1px solid #e0e4ff",
+          borderRadius: "12px",
+          padding: "16px 20px",
+          fontSize: "13px",
+          color: "#444",
+          lineHeight: "1.75",
+          animation: "fadeIn 0.2s ease",
+          width: "100%",
+          boxSizing: "border-box",
+        }}>
+          <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+
+          <p style={{ margin: "0 0 10px", fontWeight: 600, color: "#6366f1", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Guía paso a paso
+          </p>
+
+          <ol style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "5px" }}>
+            <li>Ve a{" "}
+              <a href="https://postimages.org/es/" target="_blank" rel="noopener noreferrer"
+                style={{ color: "#6366f1", fontWeight: 600, textDecoration: "none" }}>
+                PostImages.org ↗
+              </a>
+            </li>
+            <li>Inicia sesión o crea una cuenta gratuita</li>
+            <li>Verás <strong>"Mi galería (1)"</strong> — déjalo así</li>
+            <li>Cambia el tamaño a <strong style={{ color: "#6366f1" }}>"320x240 — tamaño para web"</strong></li>
+            <li>Deja <strong>"Sin caducidad"</strong> seleccionado</li>
+            <li>Selecciona tu imagen y haz clic en <strong>"Subir"</strong></li>
+            <li>Busca la opción <strong style={{ color: "#6366f1" }}>"Miniatura para sitios web"</strong></li>
+            <li>Copia SOLO la URL dentro de <code style={{ background: "#e8eaff", borderRadius: "4px", padding: "1px 5px", fontSize: "12px" }}>src='...'</code></li>
+          </ol>
+
+          <div style={{
+            marginTop: "12px",
+            background: "#fff",
+            border: "1px dashed #c7caff",
+            borderRadius: "8px",
+            padding: "10px 14px",
+          }}>
+            <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.4px" }}>Ejemplo</p>
+            <code style={{ fontSize: "12px", color: "#555", display: "block", marginBottom: "6px", wordBreak: "break-all" }}>
+              {`<img src='https://i.postimg.cc/xxxx/imagen.jpg' .../>`}
+            </code>
+            <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#888" }}>Copias solo:</p>
+            <span style={{
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "#6366f1",
+              background: "#f0f0ff",
+              borderRadius: "6px",
+              padding: "3px 8px",
+              wordBreak: "break-all",
+              display: "inline-block",
+            }}>
+              https://i.postimg.cc/xxxx/imagen.jpg
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MiEmprendimientoPage() {
   const [paso, setPaso] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,40 +143,30 @@ export default function MiEmprendimientoPage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const router = useRouter();
 
-  // ── Verificar sesión al entrar ──
   useEffect(() => {
     const usuarioGuardado = sessionStorage.getItem("usuario");
-
     if (!usuarioGuardado) {
       alert("Debes iniciar sesión");
       router.push("/autenticacion/login");
       return;
     }
-
     const usuario = JSON.parse(usuarioGuardado);
     if (!usuario.id && !usuario._id) {
       alert("Sesión inválida. Vuelve a iniciar sesión.");
       router.push("/autenticacion/login");
       return;
     }
-
-    // VERIFICAR QUE SEA EMPRENDEDOR
     if (usuario.tipoUsuario !== "emprendedor") {
       alert("⚠️ Solo los usuarios registrados como EMPRENDEDORES pueden crear emprendimientos.\n\nTu tipo de usuario es: " + usuario.tipoUsuario);
       router.push("/");
       return;
     }
-
     setIsAuthorized(true);
     setIsLoading(false);
   }, [router]);
 
-  // ── Obtener usuario una sola vez ──
   const usuarioGuardado =
-    typeof window !== "undefined"
-      ? sessionStorage.getItem("usuario")
-      : null;
-
+    typeof window !== "undefined" ? sessionStorage.getItem("usuario") : null;
   const usuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
 
   // Paso 1
@@ -100,14 +209,10 @@ export default function MiEmprendimientoPage() {
     setImagenes(imagenes.filter((_, idx) => idx !== i));
 
   const publicarEmprendimiento = async () => {
-    // Evitar múltiples publicaciones
     if (isPublishing) return;
-    
     setIsPublishing(true);
 
-    // Verificar sesión antes de publicar
     const usuarioGuardado = sessionStorage.getItem("usuario");
-
     if (!usuarioGuardado) {
       alert("Debes iniciar sesión primero");
       setIsPublishing(false);
@@ -115,24 +220,20 @@ export default function MiEmprendimientoPage() {
     }
 
     const usuario = JSON.parse(usuarioGuardado);
-    
-    // VERIFICAR TIPO DE USUARIO ANTES DE PUBLICAR
     if (usuario.tipoUsuario !== "emprendedor") {
-      alert("⚠️ No tienes permisos para crear emprendimientos. Solo los EMPRENDEDORES pueden hacerlo.");
+      alert("⚠️ No tienes permisos para crear emprendimientos.");
       setIsPublishing(false);
       router.push("/");
       return;
     }
-    
-    const usuarioId = usuario.id ?? usuario._id;
 
+    const usuarioId = usuario.id ?? usuario._id;
     if (!usuarioId) {
       alert("No se encontró el ID del usuario. Vuelve a iniciar sesión.");
       setIsPublishing(false);
       return;
     }
 
-    // VALIDAR TELÉFONO - EXACTAMENTE 10 DÍGITOS
     const telefonoLimpio = telefono.replace(/\D/g, '');
     if (telefonoLimpio.length !== 10) {
       alert("⚠️ El teléfono debe tener EXACTAMENTE 10 dígitos numéricos");
@@ -141,7 +242,6 @@ export default function MiEmprendimientoPage() {
       return;
     }
 
-    // Validar que haya al menos una imagen
     const imagenesValidas = imagenes.filter(img => img.trim() !== "");
     if (imagenesValidas.length === 0) {
       alert("⚠️ Debes agregar al menos una imagen para tu emprendimiento");
@@ -150,15 +250,27 @@ export default function MiEmprendimientoPage() {
       return;
     }
 
+    // 🔥 OBTENER EL ID CORRECTO DE LA CATEGORÍA SELECCIONADA
+    const categoriaId = categoriaToId[categoria];
+    
+    if (!categoriaId) {
+      alert("⚠️ Por favor selecciona una categoría válida");
+      setPaso(1);
+      setIsPublishing(false);
+      return;
+    }
+
     console.log("Publicando emprendimiento...");
     console.log("Usuario:", usuario.nombre);
     console.log("Tipo:", usuario.tipoUsuario);
     console.log("Teléfono:", telefonoLimpio);
+    console.log("Categoría seleccionada:", categoria);
+    console.log("Categoría ID:", categoriaId);
 
     const data = {
       nombre,
       descripcion,
-      categoriaId: "69adb8d5781c765dca3ab5f0",
+      categoriaId: categoriaId,
       usuarioId: usuarioId,
       estado,
       telefono: telefonoLimpio,
@@ -177,22 +289,16 @@ export default function MiEmprendimientoPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
-
-      console.log("Response status:", res.status);
       const result = await res.json();
-      console.log("Response data:", result);
-
       if (res.ok) {
         alert("¡Emprendimiento publicado correctamente!");
         router.push("/inicioemprendedor");
       } else {
-        const errorMessage = result.message || result.error || "Error al publicar el emprendimiento";
-        alert("Error: " + errorMessage);
+        alert("Error: " + (result.message || result.error || "Error al publicar"));
       }
-
     } catch (error) {
-      console.error("Error de conexión:", error);
-      alert("Error de conexión con el servidor. Asegúrate que el backend esté corriendo en http://localhost:8080");
+      console.error(error);
+      alert("Error de conexión con el servidor.");
     } finally {
       setIsPublishing(false);
     }
@@ -204,7 +310,6 @@ export default function MiEmprendimientoPage() {
     { n: 3, label: "Imágenes" },
   ];
 
-  // Mostrar loading mientras verificamos
   if (isLoading) {
     return (
       <div className={styles.wrapper}>
@@ -216,10 +321,7 @@ export default function MiEmprendimientoPage() {
     );
   }
 
-  // Si no está autorizado, no mostrar el formulario
-  if (!isAuthorized) {
-    return null;
-  }
+  if (!isAuthorized) return null;
 
   return (
     <div className={styles.wrapper}>
@@ -308,11 +410,10 @@ export default function MiEmprendimientoPage() {
                   />
                 </div>
 
-                {/* ── Teléfono de contacto con validación EXACTA de 10 dígitos ── */}
                 <div className={styles.field}>
                   <label className={styles.label}>
                     Teléfono de contacto *
-                    <span className={styles.labelHint}>(EXACTAMENTE 10 dígitos)</span>
+                    <span className={styles.labelHint}>(exactamente 10 dígitos)</span>
                   </label>
                   <div className={styles.inputWrap}>
                     <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -325,17 +426,13 @@ export default function MiEmprendimientoPage() {
                       value={telefono}
                       onChange={(e) => {
                         const valor = e.target.value.replace(/\D/g, '');
-                        if (valor.length <= 10) {
-                          setTelefono(valor);
-                        }
+                        if (valor.length <= 10) setTelefono(valor);
                       }}
                     />
                   </div>
                   {telefono && (
                     <small className={`${styles.helperText} ${telefono.length === 10 ? styles.validText : styles.invalidText}`}>
-                      {telefono.length}/10 dígitos
-                      {telefono.length !== 10 && " (deben ser EXACTAMENTE 10 dígitos)"}
-                      {telefono.length === 10 && " ✅"}
+                      {telefono.length}/10 dígitos {telefono.length === 10 ? "✅" : "— deben ser exactamente 10"}
                     </small>
                   )}
                 </div>
@@ -362,7 +459,7 @@ export default function MiEmprendimientoPage() {
                   type="button"
                   className={styles.btnNext}
                   onClick={() => setPaso(2)}
-                  disabled={!nombre || !descripcion || !categoria || !telefono || telefono.length !== 10}
+                  disabled={!nombre || !descripcion || !categoria || telefono.length !== 10}
                 >
                   Siguiente: Productos →
                 </button>
@@ -380,6 +477,7 @@ export default function MiEmprendimientoPage() {
               </div>
 
               <div className={styles.prodForm}>
+                {/* Fila 1: Nombre + Precio */}
                 <div className={styles.row}>
                   <div className={styles.field}>
                     <label className={styles.label}>Nombre del producto *</label>
@@ -404,6 +502,8 @@ export default function MiEmprendimientoPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Fila 2: Stock + URL imagen */}
                 <div className={styles.row}>
                   <div className={styles.field}>
                     <label className={styles.label}>Stock</label>
@@ -423,11 +523,15 @@ export default function MiEmprendimientoPage() {
                         <circle cx="7" cy="9" r="1.5"/>
                         <path d="M2 14l4-4 3 3 3-3 6 5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <input type="url" placeholder="https://miapp.com/img/producto.jpg" className={styles.input}
+                      <input type="url" placeholder="https://i.postimg.cc/xxxx/imagen.jpg" className={styles.input}
                         value={prodImagen} onChange={(e) => setProdImagen(e.target.value)}/>
                     </div>
                   </div>
                 </div>
+
+                {/* ✅ Helper FUERA del row → ocupa ancho completo */}
+                <ImageHelper />
+
                 <button type="button" className={styles.btnAgregar} onClick={agregarProducto}>
                   + Agregar producto
                 </button>
@@ -476,26 +580,32 @@ export default function MiEmprendimientoPage() {
 
               <div className={styles.fields}>
                 {imagenes.map((img, i) => (
-                  <div key={i} className={styles.imgRow}>
-                    <div className={styles.field} style={{flex: 1}}>
-                      <label className={styles.label}>URL imagen {i + 1}</label>
-                      <div className={styles.inputWrap}>
-                        <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                          <rect x="2" y="4" width="16" height="12" rx="2"/>
-                          <circle cx="7" cy="9" r="1.5"/>
-                          <path d="M2 14l4-4 3 3 3-3 6 5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <input type="url" placeholder="https://miapp.com/img/foto.jpg" className={styles.input}
-                          value={img} onChange={(e) => actualizarImagen(i, e.target.value)}/>
+                  <div key={i} style={{ width: "100%" }}>
+                    {/* Input en su propia fila */}
+                    <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
+                      <div className={styles.field} style={{ flex: 1 }}>
+                        <label className={styles.label}>URL imagen {i + 1}</label>
+                        <div className={styles.inputWrap}>
+                          <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+                            <rect x="2" y="4" width="16" height="12" rx="2"/>
+                            <circle cx="7" cy="9" r="1.5"/>
+                            <path d="M2 14l4-4 3 3 3-3 6 5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <input type="url" placeholder="https://i.postimg.cc/xxxx/imagen.jpg" className={styles.input}
+                            value={img} onChange={(e) => actualizarImagen(i, e.target.value)}/>
+                        </div>
                       </div>
+                      {imagenes.length > 1 && (
+                        <button type="button" className={styles.imgDelBtn} onClick={() => eliminarImagen(i)}
+                          style={{ marginBottom: "2px" }}>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+                            <path d="M3 4h10M6 4V2h4v2M5 4l.5 9h5l.5-9" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      )}
                     </div>
-                    {imagenes.length > 1 && (
-                      <button type="button" className={styles.imgDelBtn} onClick={() => eliminarImagen(i)}>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
-                          <path d="M3 4h10M6 4V2h4v2M5 4l.5 9h5l.5-9" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
-                    )}
+                    {/* ✅ Helper FUERA del row → ocupa ancho completo */}
+                    <ImageHelper />
                   </div>
                 ))}
 

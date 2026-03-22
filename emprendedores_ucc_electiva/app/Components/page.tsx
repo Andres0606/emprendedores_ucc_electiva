@@ -66,7 +66,6 @@ export default function HomePage() {
     { value: "0", label: "Emprendimientos activos" },
     { value: "0", label: "Productos publicados" },
     { value: "8", label: "Facultades participantes" },
-    { value: "0", label: "Estudiantes conectados" },
   ]);
 
   // Función para formatear número de WhatsApp
@@ -189,7 +188,7 @@ const obtenerCategorias = async (): Promise<Map<string, Categoria>> => {
         setUsuarios(usuariosMap);
         
         // Transformar emprendimientos para mostrar
-        const venturesDisplay = activos.slice(0, 5).map(emp => {
+        const venturesDisplay = activos.slice(0, 4).map(emp => {
           const usuario = usuariosMap.get(emp.usuarioId);
           const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido}` : "Estudiante UCC";
           const carrera = usuario?.carrera || "";
@@ -249,7 +248,6 @@ const obtenerCategorias = async (): Promise<Map<string, Categoria>> => {
           { value: totalActivos.toString(), label: "Emprendimientos activos" },
           { value: totalProductos.toString(), label: "Productos publicados" },
           { value: "8", label: "Facultades participantes" },
-          { value: usuariosUnicos.toString(), label: "Estudiantes conectados" },
         ]);
         
       } catch (error) {

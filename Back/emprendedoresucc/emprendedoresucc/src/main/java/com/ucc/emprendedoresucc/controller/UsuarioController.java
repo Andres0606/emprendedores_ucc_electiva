@@ -20,14 +20,13 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    // Registrar usuario - CORREGIDO
+    // Registrar usuario
     @PostMapping("/registro")
     public ResponseEntity<?> registrar(@RequestBody Usuario usuario) {
         try {
             Usuario nuevoUsuario = usuarioService.registrarUsuario(usuario);
             return new ResponseEntity<>(nuevoUsuario, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            // 🔥 CORRECCIÓN: Devolver JSON en lugar de texto plano
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", e.getMessage());
             errorResponse.put("message", e.getMessage());
@@ -40,7 +39,7 @@ public class UsuarioController {
         }
     }
 
-    // Login - CORREGIDO
+    // Login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credenciales) {
         try {
@@ -81,7 +80,7 @@ public class UsuarioController {
         return ResponseEntity.notFound().build();
     }
 
-    // Actualizar usuario - CORREGIDO
+    // Actualizar usuario
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable String id, @RequestBody Usuario usuarioActualizado) {
         try {
@@ -95,7 +94,7 @@ public class UsuarioController {
         }
     }
 
-    // Eliminar usuario - CORREGIDO
+    // Eliminar usuario
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable String id) {
         try {
