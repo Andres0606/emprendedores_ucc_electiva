@@ -9,49 +9,63 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
- // login.tsx - Modifica la función login
-const login = async () => {
-  if (!correo || !password) {
-    alert("Por favor completa todos los campos");
-    return;
-  }
-
-  try {
-    const res = await fetch("http://localhost:8080/api/usuarios/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        correo,
-        password
-      })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.message || "Correo o contraseña incorrectos");
+  const login = async () => {
+    if (!correo || !password) {
+      alert("Por favor completa todos los campos");
       return;
     }
 
-    // Guardar usuario en sesión (incluyendo el ID correctamente)
-    sessionStorage.setItem("usuario", JSON.stringify(data));
-    
-    // También guarda el ID por separado para fácil acceso
-    sessionStorage.setItem("usuarioId", data.id || data._id);
+    setIsLoading(true);
 
-    alert("Inicio de sesión correcto");
-    router.push("/inicioemprendedor");
+    try {
+      const res = await fetch("http://localhost:8080/api/usuarios/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          correo,
+          password
+        })
+      });
 
-  } catch (error) {
-    console.error(error);
-    alert("Error de conexión con el servidor");
-  }
-};
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Correo o contraseña incorrectos");
+        return;
+      }
+
+      // Guardar usuario en sesión
+      sessionStorage.setItem("usuario", JSON.stringify(data));
+      sessionStorage.setItem("usuarioId", data.id || data._id);
+      sessionStorage.setItem("tipoUsuario", data.tipoUsuario);
+
+      alert("Inicio de sesión correcto");
+      
+      // 👈 REDIRECCIÓN SEGÚN TIPO DE USUARIO (TODO EN MINÚSCULA)
+      const tipoUsuario = data.tipoUsuario?.toLowerCase();
+      
+      if (tipoUsuario === "emprendedor") {
+        router.push("/inicioemprendedor");
+      } else if (tipoUsuario === "estudiante") {
+        router.push("/inicioestudiante");  // ← RUTA EN MINÚSCULA
+      } else {
+        console.warn("Tipo de usuario no reconocido:", tipoUsuario);
+        router.push("/");
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert("Error de conexión con el servidor");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className={styles.wrapper}>
@@ -118,6 +132,7 @@ const login = async () => {
                   autoComplete="email"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -144,20 +159,26 @@ const login = async () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
                 />
 
                 <button
                   type="button"
                   className={styles.togglePass}
                   onClick={() => setShowPass(!showPass)}
+                  disabled={isLoading}
                 >
                   {showPass ? "🙈" : "👁"}
                 </button>
               </div>
             </div>
 
-            <button type="submit" className={styles.submitBtn}>
-              Iniciar sesión
+            <button 
+              type="submit" 
+              className={styles.submitBtn}
+              disabled={isLoading}
+            >
+              {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
             </button>
 
           </form>
