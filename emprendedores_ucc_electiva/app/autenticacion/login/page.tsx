@@ -44,16 +44,20 @@ export default function LoginPage() {
       sessionStorage.setItem("usuario", JSON.stringify(data));
       sessionStorage.setItem("usuarioId", data.id || data._id);
       sessionStorage.setItem("tipoUsuario", data.tipoUsuario);
+      
+      // Guardar también el nombre para mostrarlo en la interfaz
+      sessionStorage.setItem("nombreUsuario", data.nombre || data.correo?.split('@')[0] || "Usuario");
 
       alert("Inicio de sesión correcto");
       
-      // 👈 REDIRECCIÓN SEGÚN TIPO DE USUARIO (TODO EN MINÚSCULA)
+      // 👈 REDIRECCIÓN SEGÚN TIPO DE USUARIO
       const tipoUsuario = data.tipoUsuario?.toLowerCase();
       
       if (tipoUsuario === "emprendedor") {
         router.push("/inicioemprendedor");
-      } else if (tipoUsuario === "estudiante") {
-        router.push("/inicioestudiante");  // ← RUTA EN MINÚSCULA
+      } else if (tipoUsuario === "estudiante" || tipoUsuario === "administrativo") {
+        // Tanto estudiantes como administrativos van a la misma interfaz
+        router.push("/inicioestudiante");
       } else {
         console.warn("Tipo de usuario no reconocido:", tipoUsuario);
         router.push("/");
@@ -127,7 +131,7 @@ export default function LoginPage() {
                 </svg>
                 <input
                   type="email"
-                  placeholder="tu.nombre@gmail.com"
+                  placeholder="tu.nombre@ucc.edu.co"
                   className={styles.input}
                   autoComplete="email"
                   value={correo}

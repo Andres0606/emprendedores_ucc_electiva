@@ -1,30 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "../css/inicioestudiante/inicioestudiante.module.css";
 import Link from "next/link";
 
-
-const stats = [
-  { value: "4",  label: "Emprendimientos seguidos" },
-  { value: "18", label: "Productos explorados"     },
-  { value: "3",  label: "Facultades descubiertas"  },
-];
-
 const recentActivity = [
-  { id: 1, title: "Emprendimiento seguido",   desc: "BioLab UCC — hace 2 días",           icon: "🔔" },
-  { id: 2, title: "Producto visitado",        desc: "EcoMochila Reciclada — hace 4 días",  icon: "👁️" },
-  { id: 3, title: "Perfil actualizado",       desc: "Foto y descripción — hace 1 semana",  icon: "✏️" },
+  { id: 1, title: "Emprendimiento seguido", desc: "BioLab UCC — hace 2 días", icon: "🔔" },
+  { id: 2, title: "Producto visitado", desc: "EcoMochila Reciclada — hace 4 días", icon: "👁️" },
+  { id: 3, title: "Perfil actualizado", desc: "Foto y descripción — hace 1 semana", icon: "✏️" },
 ];
 
 const quickLinks = [
-  { href: "/inicioestudiante/miperfil",      label: "Mi Perfil",     icon: "👤", bg: "#e8f0fe", color: "#1565c0" },
-  { href: "/inicioestudiante/seguidos",      label: "Seguidos",      icon: "🔖", bg: "#e8f5e9", color: "#2e7d32" },
+  { href: "/inicioestudiante/miperfil", label: "Mi Perfil", icon: "👤", bg: "#e8f0fe", color: "#1565c0" },
+  { href: "/inicioestudiante/seguidos", label: "Seguidos", icon: "🔖", bg: "#e8f5e9", color: "#2e7d32" },
   { href: "/inicioestudiante/configuracion", label: "Configuración", icon: "⚙️", bg: "#fce4ec", color: "#c62828" },
 ];
 
 export default function InicioEstudiantePage() {
   const [activeTab, setActiveTab] = useState("resumen");
+  const [tipoUsuario, setTipoUsuario] = useState("estudiante");
+  const [nombreUsuario, setNombreUsuario] = useState("");
+
+  useEffect(() => {
+    const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
+    const nombre = sessionStorage.getItem("nombreUsuario") || "Usuario";
+    setTipoUsuario(tipo.toLowerCase());
+    setNombreUsuario(nombre);
+  }, []);
+
+  const esEstudiante = tipoUsuario === "estudiante";
+
+  // Stats según el tipo de usuario
+  const stats = esEstudiante
+    ? [
+        { value: "4", label: "Emprendimientos seguidos" },
+        { value: "18", label: "Productos explorados" },
+        { value: "3", label: "Facultades descubiertas" },
+      ]
+    : [
+        { value: "12", label: "Emprendimientos activos" },
+        { value: "45", label: "Estudiantes registrados" },
+        { value: "8", label: "Facultades participantes" },
+      ];
 
   return (
     <main className={styles.main}>
@@ -34,10 +51,12 @@ export default function InicioEstudiantePage() {
         <div className={styles.heroContent}>
           <span className={styles.heroBadge}>👋 Bienvenido de nuevo</span>
           <h1 className={styles.heroTitle}>
-            Hola, <span className={styles.heroName}>Estudiante</span>
+            Hola, <span className={styles.heroName}>{nombreUsuario}</span>
           </h1>
           <p className={styles.heroSub}>
-            Descubre emprendimientos, sigue los que te inspiran y gestiona tu perfil.
+            {esEstudiante
+              ? "Descubre emprendimientos, sigue los que te inspiran y gestiona tu perfil."
+              : "Apoya y gestiona los emprendimientos estudiantiles, conecta con la comunidad UCC."}
           </p>
           <div className={styles.heroActions}>
             <Link href="/emprendimientos" className={styles.btnPrimary}>
@@ -94,10 +113,16 @@ export default function InicioEstudiantePage() {
           <div className={styles.tabContent}>
             <div className={styles.summaryGrid}>
               <div className={styles.summaryCard}>
-                <p className={styles.summaryLabel}>Emprendimiento que sigues</p>
+                <p className={styles.summaryLabel}>
+                  {esEstudiante ? "Emprendimiento destacado" : "Programa destacado"}
+                </p>
                 <p className={styles.empName}>BioLab UCC</p>
-                <p className={styles.empDesc}>Laboratorio de biotecnología estudiantil — Facultad de Ciencias.</p>
-                <Link href="/emprendimientoInicio" className={styles.btnLink}>Ver más →</Link>
+                <p className={styles.empDesc}>
+                  {esEstudiante
+                    ? "Laboratorio de biotecnología estudiantil — Facultad de Ciencias."
+                    : "Iniciativa estudiantil de biotecnología con gran impacto en la comunidad."}
+                </p>
+                <Link href="/emprendimiento/biolab-ucc" className={styles.btnLink}>Ver más →</Link>
               </div>
               <div className={styles.summaryCard}>
                 <p className={styles.summaryLabel}>Completar mi perfil</p>

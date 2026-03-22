@@ -1,20 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioestudiante/configuracion.module.css";
 import Link from "next/link";
-
 
 type Section = "cuenta" | "notificaciones" | "privacidad";
 
 export default function ConfiguracionPage() {
   const [activeSection, setActiveSection] = useState<Section>("cuenta");
-  const [email, setEmail]               = useState("valentina.gomez@ucc.edu.co");
-  const [notifNuevos, setNotifNuevos]   = useState(true);
+  const [tipoUsuario, setTipoUsuario] = useState("estudiante");
+  const [nombreUsuario, setNombreUsuario] = useState("");
+  const [email, setEmail] = useState("");
+  const [facultad, setFacultad] = useState("");
+  const [notifNuevos, setNotifNuevos] = useState(true);
   const [notifSeguidos, setNotifSeguidos] = useState(false);
   const [notifMensajes, setNotifMensajes] = useState(true);
   const [perfilPublico, setPerfilPublico] = useState(true);
-  const [saved, setSaved]               = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    // Obtener datos del usuario desde sessionStorage
+    const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
+    const nombre = sessionStorage.getItem("nombreUsuario") || "";
+    const usuario = JSON.parse(sessionStorage.getItem("usuario") || "{}");
+    
+    setTipoUsuario(tipo.toLowerCase());
+    setNombreUsuario(nombre);
+    setEmail(usuario.correo || "");
+    
+    // Si es estudiante, cargar facultad (si existe)
+    if (tipo.toLowerCase() === "estudiante" && usuario.facultad) {
+      setFacultad(usuario.facultad);
+    }
+  }, []);
 
   const handleSave = () => {
     setSaved(true);
@@ -22,10 +40,12 @@ export default function ConfiguracionPage() {
   };
 
   const navItems: { key: Section; label: string; icon: string }[] = [
-    { key: "cuenta",         label: "Cuenta",         icon: "👤" },
+    { key: "cuenta", label: "Cuenta", icon: "👤" },
     { key: "notificaciones", label: "Notificaciones", icon: "🔔" },
-    { key: "privacidad",     label: "Privacidad",     icon: "🔒" },
+    { key: "privacidad", label: "Privacidad", icon: "🔒" },
   ];
+
+  const esEstudiante = tipoUsuario === "estudiante";
 
   return (
     <main className={styles.main}>
@@ -56,29 +76,49 @@ export default function ConfiguracionPage() {
             {activeSection === "cuenta" && (
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Datos de la cuenta</h2>
+                
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Nombre completo</label>
-                  <input className={styles.input} type="text" defaultValue="Valentina Gómez" />
+                  <input 
+                    className={styles.input} 
+                    type="text" 
+                    defaultValue={nombreUsuario}
+                    placeholder="Tu nombre completo"
+                  />
                 </div>
+                
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Correo institucional</label>
-                  <input className={styles.input} type="email" value={email}
-                    onChange={(e) => setEmail(e.target.value)} />
+                  <input 
+                    className={styles.input} 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)} 
+                  />
                 </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Facultad</label>
-                  <select className={styles.input}>
-                    <option>Ingeniería Industrial</option>
-                    <option>Derecho</option>
-                    <option>Psicología</option>
-                    <option>Contaduría Pública</option>
-                    <option>Medicina Veterinaria</option>
-                  </select>
-                </div>
+                
+                {/* Solo mostrar campo de facultad si es estudiante */}
+                {esEstudiante && (
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Facultad</label>
+                    <select className={styles.input} value={facultad} onChange={(e) => setFacultad(e.target.value)}>
+                      <option value="">Selecciona tu facultad</option>
+                      <option>Ingeniería Industrial</option>
+                      <option>Derecho</option>
+                      <option>Psicología</option>
+                      <option>Contaduría Pública</option>
+                      <option>Medicina Veterinaria</option>
+                      <option>Comunicación Social</option>
+                      <option>Arquitectura</option>
+                    </select>
+                  </div>
+                )}
+                
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Nueva contraseña</label>
                   <input className={styles.input} type="password" placeholder="••••••••" />
                 </div>
+                
                 <div className={styles.danger}>
                   <h3 className={styles.dangerTitle}>Zona de peligro</h3>
                   <p className={styles.dangerDesc}>
@@ -93,9 +133,9 @@ export default function ConfiguracionPage() {
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Preferencias de notificación</h2>
                 {[
-                  { label: "Nuevos emprendimientos publicados",      val: notifNuevos,   set: setNotifNuevos   },
-                  { label: "Actividad de emprendimientos seguidos",  val: notifSeguidos, set: setNotifSeguidos },
-                  { label: "Mensajes y comentarios",                 val: notifMensajes, set: setNotifMensajes },
+                  { label: "Nuevos emprendimientos publicados", val: notifNuevos, set: setNotifNuevos },
+                  { label: "Actividad de emprendimientos seguidos", val: notifSeguidos, set: setNotifSeguidos },
+                  { label: "Mensajes y comentarios", val: notifMensajes, set: setNotifMensajes },
                 ].map(({ label, val, set }) => (
                   <div key={label} className={styles.toggleRow}>
                     <span className={styles.toggleLabel}>{label}</span>
@@ -118,7 +158,7 @@ export default function ConfiguracionPage() {
                   <div>
                     <p className={styles.toggleLabel}>Perfil público</p>
                     <p className={styles.toggleSub}>
-                      Otros estudiantes podrán ver tu perfil.
+                      Otros usuarios podrán ver tu perfil y los emprendimientos que sigues.
                     </p>
                   </div>
                   <button
@@ -130,7 +170,7 @@ export default function ConfiguracionPage() {
                   </button>
                 </div>
                 <div className={styles.infoBox}>
-                  <p>🔒 Tu información académica nunca se comparte fuera de EmprendedoresUCC.</p>
+                  <p>🔒 Tu información personal nunca se comparte fuera de EmprendedoresUCC.</p>
                 </div>
               </section>
             )}

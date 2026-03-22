@@ -1,522 +1,348 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "../../css/Autenticación/register.module.css";
 
-const categorias = [
-  "Tecnología", "Gastronomía", "Moda y Diseño",
-  "Salud y Bienestar", "Arte y Cultura", "Servicios",
+const facultades = [
+  "Administración de Empresas",
+  "Contaduría Pública",
+  "Derecho",
+  "Enfermería",
+  "Ingeniería Civil",
+  "Ingeniería de Sistemas",
+  "Medicina Veterinaria",
+  "Odontología",
+  "Psicología",
+  "Medicina",
+  "Posgrado",
 ];
 
-type Producto = {
-  id: string;
-  nombre: string;
-  precio: string;
-  stock: string;
-  imagen: string;
-};
+const tiposUsuario = [
+  { value: "estudiante", label: "Estudiante" },
+  { value: "emprendedor", label: "Emprendedor" },
+  { value: "administrativo", label: "Administrativo" },
+];
 
-export default function MiEmprendimientoPage() {
-  const [paso, setPaso] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+export default function RegisterPage() {
+
   const router = useRouter();
 
-  // ── Verificar sesión y tipo de usuario al entrar ──
-  useEffect(() => {
-    const usuarioGuardado = sessionStorage.getItem("usuario");
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-    if (!usuarioGuardado) {
-      alert("Debes iniciar sesión");
-      router.push("/autenticacion/login");
-      return;
-    }
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [carrera, setCarrera] = useState("");
+  const [tipoUsuario, setTipoUsuario] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-    const usuario = JSON.parse(usuarioGuardado);
+  // 👈 Función para validar teléfono (solo números y máximo 10 dígitos)
+  const validarTelefono = (telefono: string) => {
+    // Eliminar cualquier caracter que no sea número
+    const soloNumeros = telefono.replace(/\D/g, '');
     
-    // Verificar si el usuario existe y tiene ID
-    if (!usuario.id && !usuario._id) {
-      alert("Sesión inválida. Vuelve a iniciar sesión.");
-      router.push("/autenticacion/login");
-      return;
-    }
-
-    // 👈 VERIFICAR TIPO DE USUARIO
-    console.log("Tipo de usuario:", usuario.tipoUsuario);
-    
-    if (usuario.tipoUsuario !== "emprendedor") {
-      alert("⚠️ Solo los usuarios registrados como EMPRENDEDORES pueden crear emprendimientos.\n\nTu tipo de usuario es: " + usuario.tipoUsuario);
-      
-      // Redirigir según el tipo de usuario
-      if (usuario.tipoUsuario === "administrativo") {
-        router.push("/dashboard/administrativo");
-      } else if (usuario.tipoUsuario === "estudiante") {
-        router.push("/dashboard/estudiante");
-      } else {
-        router.push("/");
-      }
-      return;
+    // Verificar que tenga máximo 10 dígitos
+    if (soloNumeros.length > 10) {
+      return false;
     }
     
-    setIsAuthorized(true);
-    setIsLoading(false);
-  }, [router]);
-
-  // ── Obtener usuario una sola vez ──
-  const usuarioGuardado =
-    typeof window !== "undefined"
-      ? sessionStorage.getItem("usuario")
-      : null;
-
-  const usuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
-
-  // Paso 1
-  const [nombre, setNombre]           = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [categoria, setCategoria]     = useState("");
-  const [estado, setEstado]           = useState("activo");
-  const [telefono, setTelefono]       = useState("");
-
-  // Paso 2
-  const [productos, setProductos]   = useState<Producto[]>([]);
-  const [prodNombre, setProdNombre] = useState("");
-  const [prodPrecio, setProdPrecio] = useState("");
-  const [prodStock, setProdStock]   = useState("");
-  const [prodImagen, setProdImagen] = useState("");
-
-  // Paso 3
-  const [imagenes, setImagenes] = useState<string[]>([""]);
-
-  const agregarProducto = () => {
-    if (!prodNombre || !prodPrecio) return;
-    setProductos([...productos, {
-      id: Date.now().toString(),
-      nombre: prodNombre,
-      precio: prodPrecio,
-      stock: prodStock,
-      imagen: prodImagen,
-    }]);
-    setProdNombre(""); setProdPrecio(""); setProdStock(""); setProdImagen("");
+    return true;
   };
 
-  const eliminarProducto = (id: string) =>
-    setProductos(productos.filter((p) => p.id !== id));
-
-  const agregarImagen = () => setImagenes([...imagenes, ""]);
-  const actualizarImagen = (i: number, val: string) => {
-    const arr = [...imagenes]; arr[i] = val; setImagenes(arr);
+  // 👈 Función para formatear teléfono (solo números)
+  const manejarCambioTelefono = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let valor = e.target.value;
+    // Eliminar cualquier caracter que no sea número
+    valor = valor.replace(/\D/g, '');
+    // Limitar a máximo 10 dígitos
+    if (valor.length <= 10) {
+      setTelefono(valor);
+    }
   };
-  const eliminarImagen = (i: number) =>
-    setImagenes(imagenes.filter((_, idx) => idx !== i));
 
-  const publicarEmprendimiento = async () => {
+  const registrarUsuario = async (e: any) => {
+    e.preventDefault();
 
-    // ── Verificar sesión antes de publicar ──
-    const usuarioGuardado = sessionStorage.getItem("usuario");
-
-    if (!usuarioGuardado) {
-      alert("Debes iniciar sesión primero");
+    if (password !== confirmPassword) {
+      alert("Las contraseñas no coinciden");
       return;
     }
 
-    const usuario = JSON.parse(usuarioGuardado);
-    
-    // 👈 VERIFICAR TIPO DE USUARIO ANTES DE PUBLICAR
-    if (usuario.tipoUsuario !== "emprendedor") {
-      alert("⚠️ No tienes permisos para crear emprendimientos. Solo los EMPRENDEDORES pueden hacerlo.");
-      router.push("/");
-      return;
-    }
-    
-    const usuarioId = usuario.id ?? usuario._id;
-
-    if (!usuarioId) {
-      alert("No se encontró el ID del usuario. Vuelve a iniciar sesión.");
+    // 👈 Validar teléfono
+    if (!telefono) {
+      alert("Por favor ingresa tu número de teléfono");
       return;
     }
 
-    console.log("Usuario:", usuario.nombre);
-    console.log("Tipo:", usuario.tipoUsuario);
+    if (telefono.length < 7) {
+      alert("El teléfono debe tener al menos 7 dígitos");
+      return;
+    }
 
-    const data = {
+    if (telefono.length > 10) {
+      alert("El teléfono no puede tener más de 10 dígitos");
+      return;
+    }
+
+    // Si es administrativo, enviar "administrativo" como carrera
+    const carreraEnviar = tipoUsuario === "administrativo" ? "administrativo" : carrera;
+
+    // Validar que si NO es administrativo, haya seleccionado una carrera
+    if (tipoUsuario !== "administrativo" && !carrera) {
+      alert("Por favor selecciona tu facultad/programa");
+      return;
+    }
+
+    const usuario = {
       nombre,
-      descripcion,
-      categoriaId: "69adb8d5781c765dca3ab5f0",
-      usuarioId: usuarioId,
-      estado,
-      telefono,
-      imagenes,
-      productos: productos.map(p => ({
-        nombre: p.nombre,
-        precio: Number(p.precio),
-        stock: Number(p.stock),
-        imagen: p.imagen
-      }))
+      apellido,
+      telefono,  // Ya viene solo con números
+      correo,
+      carrera: carreraEnviar,
+      tipoUsuario,
+      password,
+      saldo: 0,
     };
 
     try {
-      const res = await fetch("http://localhost:8080/api/emprendimientos", {
+      const res = await fetch("http://localhost:8080/api/usuarios/registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify(usuario),
       });
 
-      const result = await res.json();
-      console.log(result);
-
-      if (res.ok) {
-        alert("¡Emprendimiento publicado correctamente!");
-        router.push("/mis-emprendimientos"); // Redirigir a sus emprendimientos
+      const contentType = res.headers.get("content-type");
+      let data;
+      
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
       } else {
-        alert("Error al publicar el emprendimiento: " + (result.message || result.error || "Error desconocido"));
+        data = await res.text();
       }
 
+      if (res.ok) {
+        alert("Usuario registrado correctamente");
+        router.push("/autenticacion/login");
+      } else {
+        const errorMessage = typeof data === 'string' ? data : data.message || "Error al registrar usuario";
+        alert(errorMessage);
+      }
     } catch (error) {
       console.error(error);
       alert("Error de conexión con el servidor");
     }
   };
 
-  const pasos = [
-    { n: 1, label: "Información general" },
-    { n: 2, label: "Productos" },
-    { n: 3, label: "Imágenes" },
-  ];
+  const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
 
-  // Mostrar loading mientras verificamos
-  if (isLoading) {
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner}></div>
-          <p>Verificando permisos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no está autorizado, no mostrar el formulario
-  if (!isAuthorized) {
-    return null;
-  }
+  const EyeOffIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
 
   return (
     <div className={styles.wrapper}>
 
-      {/* ── Sidebar ── */}
-      <div className={styles.sidebar}>
-        <div className={styles.sidebarBg} aria-hidden />
+      <div className={styles.brand}>
+        <div className={styles.brandBg} aria-hidden />
 
-        <Link href="/" className={styles.sidebarLogo}>
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-            <rect width="36" height="36" rx="10" fill="rgba(255,255,255,0.12)"/>
-            <rect x="5"  y="5"  width="10" height="18" rx="3" fill="#fff"/>
-            <rect x="5"  y="17" width="10" height="5"  rx="2" fill="rgba(255,255,255,0.5)"/>
-            <rect x="17" y="5"  width="10" height="18" rx="3" fill="#8DC63F"/>
-            <circle cx="31" cy="9" r="4" fill="none" stroke="#8DC63F" strokeWidth="1.8"/>
-            <circle cx="31" cy="9" r="1.6" fill="#fff"/>
-          </svg>
-          <span className={styles.sidebarLogoText}>EmprendedoresUCC</span>
+        <Link href="/" className={styles.brandLogo}>
+          <span className={styles.brandName}>EmprendedoresUCC</span>
         </Link>
 
-        <div className={styles.sidebarContent}>
-          <h2 className={styles.sidebarTitle}>Publica tu emprendimiento</h2>
-          <p className={styles.sidebarDesc}>
-            Completa los 3 pasos para que tu proyecto llegue a toda la comunidad UCC.
-          </p>
-
-          <div className={styles.steps}>
-            {pasos.map((p, idx) => (
-              <div key={p.n} className={styles.stepWrap}>
-                <div className={`${styles.step} ${paso === p.n ? styles.stepActive : ""} ${paso > p.n ? styles.stepDone : ""}`}>
-                  <div className={styles.stepCircle}>
-                    {paso > p.n ? (
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M2 7l3.5 3.5L12 4" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    ) : p.n}
-                  </div>
-                  <div className={styles.stepInfo}>
-                    <span className={styles.stepNum}>Paso {p.n}</span>
-                    <span className={styles.stepLabel}>{p.label}</span>
-                  </div>
-                </div>
-                {idx < pasos.length - 1 && (
-                  <div className={`${styles.stepConnector} ${paso > p.n ? styles.stepConnectorDone : ""}`} />
-                )}
-              </div>
-            ))}
-          </div>
+        <div className={styles.brandCenter}>
+          <h2 className={styles.brandTitle}>
+            Tu idea merece<br />
+            <span className={styles.brandGreen}>ser vista.</span>
+          </h2>
         </div>
 
-        <p className={styles.sidebarFooter}>© 2025 EmprendedoresUCC · UCC Villavicencio</p>
+        <p className={styles.brandFooter}>© 2025 EmprendedoresUCC · UCC Villavicencio</p>
       </div>
 
-      {/* ── Contenido ── */}
       <div className={styles.formSide}>
         <div className={styles.formBox}>
 
-          {/* ══ PASO 1 ══ */}
-          {paso === 1 && (
-            <div className={styles.formStep}>
-              <div className={styles.formHead}>
-                <span className={styles.formTag}>Paso 1 de 3</span>
-                <h1 className={styles.formTitle}>Información general</h1>
-                <p className={styles.formSub}>Cuéntanos sobre tu emprendimiento</p>
-              </div>
+          <div className={styles.formHead}>
+            <h1 className={styles.formTitle}>Crea tu cuenta</h1>
+            <p className={styles.formSub}>Únete a la comunidad emprendedora de la UCC</p>
+          </div>
 
-              <div className={styles.fields}>
-                <div className={styles.field}>
-                  <label className={styles.label}>Nombre del emprendimiento *</label>
-                  <div className={styles.inputWrap}>
-                    <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                      <rect x="3" y="3" width="14" height="14" rx="2"/>
-                      <path d="M7 7h6M7 10h4" strokeLinecap="round"/>
-                    </svg>
-                    <input type="text" placeholder="Ej: TecnoMarket" className={styles.input}
-                      value={nombre} onChange={(e) => setNombre(e.target.value)}/>
-                  </div>
-                </div>
+          <form className={styles.form} onSubmit={registrarUsuario}>
 
-                <div className={styles.field}>
-                  <label className={styles.label}>Descripción *</label>
-                  <textarea
-                    placeholder="Describe tu emprendimiento, qué ofreces y a quién va dirigido..."
-                    className={styles.textarea} rows={4}
-                    value={descripcion} onChange={(e) => setDescripcion(e.target.value)}
-                  />
-                </div>
-
-                {/* ── Teléfono de contacto ── */}
-                <div className={styles.field}>
-                  <label className={styles.label}>Teléfono de contacto *</label>
-                  <div className={styles.inputWrap}>
-                    <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                      <path d="M4 2h4l1.5 4-2 1.2a11 11 0 005.3 5.3L14 10.5 18 12v4a2 2 0 01-2 2C6.1 18 2 13.9 2 4a2 2 0 012-2z" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <input
-                      type="tel"
-                      placeholder="Ej: 3001234567"
-                      className={styles.input}
-                      value={telefono}
-                      onChange={(e) => {
-                        // Solo permitir números y máximo 10 dígitos
-                        const valor = e.target.value.replace(/\D/g, '');
-                        if (valor.length <= 10) {
-                          setTelefono(valor);
-                        }
-                      }}
-                    />
-                  </div>
-                  <small className={styles.helperText}>
-                    {telefono.length}/10 dígitos
-                  </small>
-                </div>
-
-                <div className={styles.row}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Categoría *</label>
-                    <div className={styles.inputWrap}>
-                      <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                        <path d="M3 5h14M3 10h14M3 15h8" strokeLinecap="round"/>
-                      </svg>
-                      <select className={`${styles.input} ${styles.select}`} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-                        <option value="" disabled>Selecciona categoría</option>
-                        {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.formActions}>
-                <Link href="/" className={styles.btnBack}>← Cancelar</Link>
-                <button
-                  type="button"
-                  className={styles.btnNext}
-                  onClick={() => setPaso(2)}
-                  disabled={!nombre || !descripcion || !categoria || !telefono || telefono.length < 7}
-                >
-                  Siguiente: Productos →
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ══ PASO 2 ══ */}
-          {paso === 2 && (
-            <div className={styles.formStep}>
-              <div className={styles.formHead}>
-                <span className={styles.formTag}>Paso 2 de 3</span>
-                <h1 className={styles.formTitle}>Productos</h1>
-                <p className={styles.formSub}>Agrega los productos de tu emprendimiento</p>
-              </div>
-
-              <div className={styles.prodForm}>
-                <div className={styles.row}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Nombre del producto *</label>
-                    <div className={styles.inputWrap}>
-                      <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                        <rect x="3" y="3" width="14" height="14" rx="2"/>
-                        <path d="M7 10h6M10 7v6" strokeLinecap="round"/>
-                      </svg>
-                      <input type="text" placeholder="Ej: Mouse Gamer" className={styles.input}
-                        value={prodNombre} onChange={(e) => setProdNombre(e.target.value)}/>
-                    </div>
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Precio (COP) *</label>
-                    <div className={styles.inputWrap}>
-                      <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                        <circle cx="10" cy="10" r="8"/>
-                        <path d="M10 6v8M7 8h4.5a1.5 1.5 0 010 3H7" strokeLinecap="round"/>
-                      </svg>
-                      <input type="number" placeholder="80000" className={styles.input}
-                        value={prodPrecio} onChange={(e) => setProdPrecio(e.target.value)}/>
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.row}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Stock</label>
-                    <div className={styles.inputWrap}>
-                      <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                        <path d="M3 7h14M3 13h14M7 3v14M13 3v14" strokeLinecap="round"/>
-                      </svg>
-                      <input type="number" placeholder="15" className={styles.input}
-                        value={prodStock} onChange={(e) => setProdStock(e.target.value)}/>
-                    </div>
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>URL imagen del producto</label>
-                    <div className={styles.inputWrap}>
-                      <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                        <rect x="2" y="4" width="16" height="12" rx="2"/>
-                        <circle cx="7" cy="9" r="1.5"/>
-                        <path d="M2 14l4-4 3 3 3-3 6 5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <input type="url" placeholder="https://miapp.com/img/producto.jpg" className={styles.input}
-                        value={prodImagen} onChange={(e) => setProdImagen(e.target.value)}/>
-                    </div>
-                  </div>
-                </div>
-                <button type="button" className={styles.btnAgregar} onClick={agregarProducto}>
-                  + Agregar producto
-                </button>
-              </div>
-
-              {productos.length > 0 && (
-                <div className={styles.prodList}>
-                  <p className={styles.prodListTitle}>{productos.length} producto{productos.length > 1 ? "s" : ""} agregado{productos.length > 1 ? "s" : ""}</p>
-                  {productos.map((p) => (
-                    <div key={p.id} className={styles.prodItem}>
-                      <div className={styles.prodItemIcon}>📦</div>
-                      <div className={styles.prodItemInfo}>
-                        <span className={styles.prodItemNombre}>{p.nombre}</span>
-                        <span className={styles.prodItemMeta}>
-                          ${parseInt(p.precio).toLocaleString("es-CO")} COP
-                          {p.stock && ` · Stock: ${p.stock}`}
-                        </span>
-                      </div>
-                      <button type="button" className={styles.prodItemDel} onClick={() => eliminarProducto(p.id)}>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
-                          <path d="M3 4h10M6 4V2h4v2M5 4l.5 9h5l.5-9" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className={styles.formActions}>
-                <button type="button" className={styles.btnBack} onClick={() => setPaso(1)}>← Atrás</button>
-                <button type="button" className={styles.btnNext} onClick={() => setPaso(3)}>
-                  Siguiente: Imágenes →
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ══ PASO 3 ══ */}
-          {paso === 3 && (
-            <div className={styles.formStep}>
-              <div className={styles.formHead}>
-                <span className={styles.formTag}>Paso 3 de 3</span>
-                <h1 className={styles.formTitle}>Imágenes</h1>
-                <p className={styles.formSub}>Agrega las URLs de las imágenes de tu emprendimiento</p>
-              </div>
-
-              <div className={styles.fields}>
-                {imagenes.map((img, i) => (
-                  <div key={i} className={styles.imgRow}>
-                    <div className={styles.field} style={{flex: 1}}>
-                      <label className={styles.label}>URL imagen {i + 1}</label>
-                      <div className={styles.inputWrap}>
-                        <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
-                          <rect x="2" y="4" width="16" height="12" rx="2"/>
-                          <circle cx="7" cy="9" r="1.5"/>
-                          <path d="M2 14l4-4 3 3 3-3 6 5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        <input type="url" placeholder="https://miapp.com/img/foto.jpg" className={styles.input}
-                          value={img} onChange={(e) => actualizarImagen(i, e.target.value)}/>
-                      </div>
-                    </div>
-                    {imagenes.length > 1 && (
-                      <button type="button" className={styles.imgDelBtn} onClick={() => eliminarImagen(i)}>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
-                          <path d="M3 4h10M6 4V2h4v2M5 4l.5 9h5l.5-9" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
-                    )}
-                  </div>
+            {/* Tipo usuario */}
+            <div className={styles.field}>
+              <label className={styles.label}>Tipo de usuario</label>
+              <div className={styles.tipoGrid}>
+                {tiposUsuario.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    className={`${styles.tipoBtn} ${tipoUsuario === t.value ? styles.tipoBtnActive : ""}`}
+                    onClick={() => {
+                      setTipoUsuario(t.value);
+                      // Si selecciona administrativo, limpiar carrera
+                      if (t.value === "administrativo") {
+                        setCarrera("");
+                      }
+                    }}
+                  >
+                    {t.label}
+                  </button>
                 ))}
-
-                <button type="button" className={styles.btnAgregarImg} onClick={agregarImagen}>
-                  + Agregar otra imagen
-                </button>
               </div>
+            </div>
 
-              {/* Resumen */}
-              <div className={styles.resumen}>
-                <p className={styles.resumenTitle}>Resumen del emprendimiento</p>
-                <div className={styles.resumenGrid}>
-                  <div className={styles.resumenItem}>
-                    <span className={styles.resumenLbl}>Nombre</span>
-                    <span className={styles.resumenVal}>{nombre}</span>
-                  </div>
-                  <div className={styles.resumenItem}>
-                    <span className={styles.resumenLbl}>Categoría</span>
-                    <span className={styles.resumenVal}>{categoria}</span>
-                  </div>
-                  <div className={styles.resumenItem}>
-                    <span className={styles.resumenLbl}>Estado</span>
-                    <span className={`${styles.resumenVal} ${styles.resumenEstado}`}>{estado}</span>
-                  </div>
-                  <div className={styles.resumenItem}>
-                    <span className={styles.resumenLbl}>Teléfono</span>
-                    <span className={styles.resumenVal}>{telefono}</span>
-                  </div>
-                  <div className={styles.resumenItem}>
-                    <span className={styles.resumenLbl}>Productos</span>
-                    <span className={styles.resumenVal}>{productos.length} agregados</span>
-                  </div>
-                </div>
+            {/* Nombre y Apellido */}
+            <div className={styles.row}>
+              <div className={styles.field}>
+                <label className={styles.label}>Nombre</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  required
+                />
               </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Apellido</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
 
-              <div className={styles.formActions}>
-                <button type="button" className={styles.btnBack} onClick={() => setPaso(2)}>← Atrás</button>
+            {/* Teléfono */}
+            <div className={styles.field}>
+              <label className={styles.label}>
+                Teléfono 
+                <span className={styles.labelHint}>(Máximo 10 dígitos)</span>
+              </label>
+              <div className={styles.inputWrap}>
+                <input
+                  type="tel"
+                  className={styles.input}
+                  placeholder="Ej: 3102474495"
+                  value={telefono}
+                  onChange={manejarCambioTelefono}
+                  required
+                  maxLength={10}
+                />
+              </div>
+              {telefono && telefono.length > 0 && (
+                <small className={styles.helperText}>
+                  {telefono.length} / 10 dígitos
+                </small>
+              )}
+            </div>
+
+            {/* Correo */}
+            <div className={styles.field}>
+              <label className={styles.label}>Correo</label>
+              <input
+                type="email"
+                className={styles.input}
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Campo de carrera: solo visible si NO es administrativo */}
+            {tipoUsuario !== "administrativo" && (
+              <div className={styles.field}>
+                <label className={styles.label}>Facultad / Programa</label>
+                <select
+                  className={styles.input}
+                  value={carrera}
+                  onChange={(e) => setCarrera(e.target.value)}
+                  required={tipoUsuario !== "administrativo"}
+                >
+                  <option value="">Selecciona</option>
+                  {facultades.map((f) => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Contraseña */}
+            <div className={styles.field}>
+              <label className={styles.label}>Contraseña</label>
+              <div className={styles.inputWrap}>
+                <input
+                  type={showPass ? "text" : "password"}
+                  className={styles.input}
+                  style={{ paddingLeft: "0.9rem", paddingRight: "2.8rem" }}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
                 <button
                   type="button"
-                  className={styles.btnSubmit}
-                  onClick={publicarEmprendimiento}
+                  className={styles.togglePass}
+                  onClick={() => setShowPass(!showPass)}
+                  aria-label={showPass ? "Ocultar contraseña" : "Ver contraseña"}
                 >
-                  🚀 Publicar emprendimiento
+                  {showPass ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
             </div>
-          )}
+
+            {/* Confirmar contraseña */}
+            <div className={styles.field}>
+              <label className={styles.label}>Confirmar contraseña</label>
+              <div className={styles.inputWrap}>
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  className={styles.input}
+                  style={{ paddingLeft: "0.9rem", paddingRight: "2.8rem" }}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className={styles.togglePass}
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  aria-label={showConfirm ? "Ocultar contraseña" : "Ver contraseña"}
+                >
+                  {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" className={styles.submitBtn}>
+              Crear cuenta
+            </button>
+
+          </form>
+
+          <p className={styles.switchText}>
+            ¿Ya tienes cuenta?{" "}
+            <Link href="/autenticacion/login" className={styles.switchLink}>
+              Inicia sesión
+            </Link>
+          </p>
 
         </div>
       </div>

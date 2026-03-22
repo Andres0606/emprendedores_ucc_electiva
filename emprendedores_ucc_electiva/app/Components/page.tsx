@@ -39,6 +39,18 @@ interface Usuario {
   telefono?: string;
 }
 
+// Categorías por defecto en caso de que el backend no responda
+const CATEGORIAS_POR_DEFECTO: Categoria[] = [
+  { _id: "1", nombre: "Tecnología", descripcion: "Apps, software, hardware y servicios tecnológicos" },
+  { _id: "2", nombre: "Gastronomía", descripcion: "Comidas, bebidas y productos alimenticios" },
+  { _id: "3", nombre: "Moda y Diseño", descripcion: "Ropa, accesorios y diseño creativo" },
+  { _id: "4", nombre: "Salud y Bienestar", descripcion: "Productos y servicios para el bienestar físico y mental" },
+  { _id: "5", nombre: "Arte y Cultura", descripcion: "Artesanías, pintura, música y expresión cultural" },
+  { _id: "6", nombre: "Servicios", descripcion: "Servicios profesionales y asesorías" },
+  { _id: "7", nombre: "Educación", descripcion: "Cursos, talleres y materiales educativos" },
+  { _id: "8", nombre: "Sostenibilidad", descripcion: "Productos ecológicos y soluciones sostenibles" },
+];
+
 // Mapeo de emojis por nombre de categoría
 const obtenerEmojiPorCategoria = (nombreCategoria: string): string => {
   const emojis: Record<string, string> = {
@@ -49,6 +61,8 @@ const obtenerEmojiPorCategoria = (nombreCategoria: string): string => {
     "Salud y Bienestar": "🧘",
     "Arte y Cultura": "🎨",
     "Servicios": "🛠️",
+    "Educación": "📚",
+    "Sostenibilidad": "🌱",
   };
   return emojis[nombreCategoria] || "🚀";
 };
@@ -59,7 +73,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [usuarios, setUsuarios] = useState<Map<string, Usuario>>(new Map());
   const [categorias, setCategorias] = useState<Map<string, Categoria>>(new Map());
-  const [categoriesList, setCategoriesList] = useState<Categoria[]>([]);
+  const [categoriesList, setCategoriesList] = useState<Categoria[]>(CATEGORIAS_POR_DEFECTO);
   
   // Estadísticas reales
   const [stats, setStats] = useState([
@@ -95,71 +109,99 @@ export default function HomePage() {
     }
   };
 
-  // Función para obtener todas las categorías
-  // Función para obtener todas las categorías
-const obtenerCategorias = async (): Promise<Map<string, Categoria>> => {
-  try {
-    console.log("🔍 Obteniendo categorías...");
-    const respuesta = await fetch("http://localhost:8080/api/categorias");
-    
-    if (!respuesta.ok) {
-      console.error("❌ Error al obtener categorías:", respuesta.status);
-      return new Map();
-    }
-    
-    const categoriasData: any[] = await respuesta.json();
-    console.log("📦 Categorías recibidas (raw):", categoriasData);
-    console.log("📊 Número de categorías:", categoriasData.length);
-    
-    const categoriasMap = new Map<string, Categoria>();
-    
-    categoriasData.forEach((cat, index) => {
-      // 🔥 CORREGIDO: Manejar tanto 'id' como '_id'
-      const id = cat._id || cat.id;
+  // Función para obtener todas las categorías (con fallback a categorías por defecto)
+  const obtenerCategorias = async (): Promise<Map<string, Categoria>> => {
+    try {
+      console.log("🔍 Obteniendo categorías desde: http://localhost:8080/api/categorias");
       
-      if (!id) {
-        console.error(`❌ Categoría sin ID en índice ${index}:`, cat);
-        return;
+      const respuesta = await fetch("http://localhost:8080/api/categorias", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        }
+      });
+      
+      console.log("📡 Respuesta de categorías - Status:", respuesta.status);
+      
+      if (!respuesta.ok) {
+        console.error(`❌ Error al obtener categorías: ${respuesta.status}`);
+        console.log("📦 Usando categorías por defecto");
+        setCategoriesList(CATEGORIAS_POR_DEFECTO);
+        return convertirArrayAMapa(CATEGORIAS_POR_DEFECTO);
       }
       
-      const idString = id.toString();
-      const categoria: Categoria = {
-        _id: idString,
-        nombre: cat.nombre,
-        descripcion: cat.descripcion
-      };
+      const categoriasData: any[] = await respuesta.json();
+      console.log("📦 Categorías recibidas (raw):", categoriasData);
+      console.log("📊 Número de categorías:", categoriasData.length);
       
-      categoriasMap.set(idString, categoria);
-      console.log(`✅ Categoría ${index + 1} mapeada: ID=${idString}, Nombre=${cat.nombre}`);
+      // Si no hay categorías en la BD, usar las de defecto
+      if (!categoriasData || categoriasData.length === 0) {
+        console.log("⚠️ No hay categorías en la BD, usando categorías por defecto");
+        setCategoriesList(CATEGORIAS_POR_DEFECTO);
+        return convertirArrayAMapa(CATEGORIAS_POR_DEFECTO);
+      }
+      
+      const categoriasMap = new Map<string, Categoria>();
+      
+      categoriasData.forEach((cat, index) => {
+        const id = cat._id || cat.id;
+        
+        if (!id) {
+          console.error(`❌ Categoría sin ID en índice ${index}:`, cat);
+          return;
+        }
+        
+        const idString = id.toString();
+        const categoria: Categoria = {
+          _id: idString,
+          nombre: cat.nombre,
+          descripcion: cat.descripcion || ""
+        };
+        
+        categoriasMap.set(idString, categoria);
+        console.log(`✅ Categoría ${index + 1}: ID=${idString}, Nombre=${cat.nombre}`);
+      });
+      
+      console.log("🗺️ Mapa final de categorías, tamaño:", categoriasMap.size);
+      
+      // Convertir el mapa a array para categoriesList
+      const categoriesArray = Array.from(categoriasMap.values());
+      
+      if (categoriesArray.length === 0) {
+        console.log("⚠️ No se pudieron procesar categorías, usando por defecto");
+        setCategoriesList(CATEGORIAS_POR_DEFECTO);
+        return convertirArrayAMapa(CATEGORIAS_POR_DEFECTO);
+      }
+      
+      setCategoriesList(categoriesArray);
+      return categoriasMap;
+      
+    } catch (error) {
+      console.error("❌ Error de conexión al obtener categorías:", error);
+      console.log("📦 Usando categorías por defecto por error de conexión");
+      setCategoriesList(CATEGORIAS_POR_DEFECTO);
+      return convertirArrayAMapa(CATEGORIAS_POR_DEFECTO);
+    }
+  };
+  
+  // Función auxiliar para convertir array de categorías a Map
+  const convertirArrayAMapa = (categoriasArray: Categoria[]): Map<string, Categoria> => {
+    const map = new Map<string, Categoria>();
+    categoriasArray.forEach(cat => {
+      map.set(cat._id, cat);
     });
-    
-    console.log("🗺️ Mapa final de categorías, tamaño:", categoriasMap.size);
-    console.log("🔑 IDs disponibles:", Array.from(categoriasMap.keys()));
-    
-    // Convertir el mapa a array para categoriesList
-    const categoriesArray = Array.from(categoriasMap.values());
-    setCategoriesList(categoriesArray);
-    
-    return categoriasMap;
-  } catch (error) {
-    console.error("❌ Error en la petición de categorías:", error);
-    return new Map();
-  }
-};
+    return map;
+  };
 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
         setLoading(true);
         
-        // Primero obtener las categorías
+        // Primero obtener las categorías (si falla, usa las de defecto)
         const categoriasMap = await obtenerCategorias();
         setCategorias(categoriasMap);
-        
-        // Verificar que el mapa no esté vacío
-        if (categoriasMap.size === 0) {
-          console.warn("⚠️ No se cargaron categorías, verificando endpoint...");
-        }
         
         // Obtener todos los emprendimientos
         const respuesta = await fetch("http://localhost:8080/api/emprendimientos");
@@ -169,7 +211,7 @@ const obtenerCategorias = async (): Promise<Map<string, Categoria>> => {
         }
         
         const emprendimientos: Emprendimiento[] = await respuesta.json();
-        console.log("📦 Emprendimientos recibidos:", emprendimientos);
+        console.log("📦 Emprendimientos recibidos:", emprendimientos.length);
         
         // Filtrar solo los activos para mostrar
         const activos = emprendimientos.filter(emp => emp.estado === "activo");
@@ -194,24 +236,17 @@ const obtenerCategorias = async (): Promise<Map<string, Categoria>> => {
           const carrera = usuario?.carrera || "";
           const semestre = extraerSemestre(carrera);
           
-          // Convertir a string por si acaso
           const categoriaIdString = emp.categoriaId?.toString() || "";
           
-          console.log(`🔍 Buscando categoría para ${emp.nombre}:`);
-          console.log(`  - ID buscado: ${categoriaIdString}`);
-          console.log(`  - IDs disponibles:`, Array.from(categoriasMap.keys()));
-          
-          // Buscar la categoría
-          const categoria = categoriasMap.get(categoriaIdString);
-          
+          // Buscar la categoría (primero en el mapa de la BD, si no en las de defecto)
+          let categoria = categoriasMap.get(categoriaIdString);
           if (!categoria) {
-            console.warn(`⚠️ No se encontró categoría para ID: ${categoriaIdString}`);
+            // Buscar en las categorías por defecto
+            categoria = CATEGORIAS_POR_DEFECTO.find(c => c._id === categoriaIdString);
           }
           
           const nombreCategoria = categoria?.nombre || "Sin categoría";
           const emojiCategoria = obtenerEmojiPorCategoria(nombreCategoria);
-          
-          console.log(`  - Resultado: ${nombreCategoria}`);
           
           // Obtener el precio más bajo de los productos
           const precios = emp.productos?.map(p => p.precio) || [];
@@ -236,13 +271,12 @@ const obtenerCategorias = async (): Promise<Map<string, Categoria>> => {
           };
         });
         
-        console.log("🎯 Emprendimientos procesados:", venturesDisplay);
+        console.log("🎯 Emprendimientos procesados:", venturesDisplay.length);
         setFeaturedVentures(venturesDisplay);
         
         // Calcular estadísticas
         const totalActivos = emprendimientos.filter(emp => emp.estado === "activo").length;
         const totalProductos = emprendimientos.reduce((sum, emp) => sum + (emp.productos?.length || 0), 0);
-        const usuariosUnicos = new Set(emprendimientos.map(emp => emp.usuarioId)).size;
         
         setStats([
           { value: totalActivos.toString(), label: "Emprendimientos activos" },

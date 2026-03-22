@@ -1,27 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioestudiante/seguidos.module.css";
 import Link from "next/link";
 
-
-const initialSeguidos = [
-  { id: 1, name: "BioLab UCC",              cat: "Ciencias",         followers: 24, active: true  },
-  { id: 2, name: "EcoModa UCC",             cat: "Moda sostenible",  followers: 18, active: true  },
-  { id: 3, name: "TechStart Villavicencio", cat: "Tecnología",       followers: 41, active: false },
-  { id: 4, name: "AgroInnova",              cat: "Agroindustria",    followers: 9,  active: true  },
+// Datos de ejemplo de emprendimientos
+const todosEmprendimientos = [
+  { id: 1, name: "BioLab UCC", cat: "Ciencias", followers: 24, active: true },
+  { id: 2, name: "EcoModa UCC", cat: "Moda sostenible", followers: 18, active: true },
+  { id: 3, name: "TechStart Villavicencio", cat: "Tecnología", followers: 41, active: false },
+  { id: 4, name: "AgroInnova", cat: "Agroindustria", followers: 9, active: true },
+  { id: 5, name: "Arte y Cultura UCC", cat: "Arte", followers: 32, active: true },
+  { id: 6, name: "Deporte UCC", cat: "Deportes", followers: 56, active: true },
 ];
 
 export default function SeguidosPage() {
-  const [seguidos, setSeguidos] = useState(initialSeguidos);
-  const [search, setSearch]     = useState("");
+  const [seguidos, setSeguidos] = useState(todosEmprendimientos.slice(0, 4));
+  const [search, setSearch] = useState("");
+  const [tipoUsuario, setTipoUsuario] = useState("estudiante");
+  const [nombreUsuario, setNombreUsuario] = useState("");
+
+  useEffect(() => {
+    const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
+    const nombre = sessionStorage.getItem("nombreUsuario") || "";
+    setTipoUsuario(tipo.toLowerCase());
+    setNombreUsuario(nombre);
+    
+    // Aquí podrías cargar los seguidos reales desde el backend
+    // Por ahora usamos datos de ejemplo
+  }, []);
 
   const filtered = seguidos.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDejar = (id: number) =>
+  const handleDejar = (id: number) => {
     setSeguidos((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const esEstudiante = tipoUsuario === "estudiante";
 
   return (
     <main className={styles.main}>
@@ -31,12 +48,12 @@ export default function SeguidosPage() {
 
         <div className={styles.header}>
           <div>
-            <h1 className={styles.title}>Seguidos</h1>
+            <h1 className={styles.title}>Emprendimientos seguidos</h1>
             <p className={styles.subtitle}>
-              Emprendimientos que estás siguiendo — {seguidos.length} en total
+              {esEstudiante ? "Emprendimientos que estás siguiendo" : "Emprendimientos que estás apoyando"} — {seguidos.length} en total
             </p>
           </div>
-          <Link href="/emprendimientoInicio" className={styles.btnExplore}>
+          <Link href="/emprendimientos" className={styles.btnExplore}>
             + Explorar más
           </Link>
         </div>
@@ -54,7 +71,10 @@ export default function SeguidosPage() {
 
         {filtered.length === 0 ? (
           <div className={styles.empty}>
-            <p>No se encontraron emprendimientos.</p>
+            <p>No sigues ningún emprendimiento aún.</p>
+            <Link href="/emprendimientos" className={styles.btnExplore} style={{ marginTop: "16px", display: "inline-block" }}>
+              Explorar emprendimientos
+            </Link>
           </div>
         ) : (
           <ul className={styles.list}>
@@ -71,8 +91,13 @@ export default function SeguidosPage() {
                   </p>
                 </div>
                 <div className={styles.itemActions}>
-                  <Link href="/emprendimientoInicio" className={styles.btnView}>Ver</Link>
-                  <button className={styles.btnDejar} onClick={() => handleDejar(s.id)}>
+                  <Link href={`/emprendimiento/${s.id}`} className={styles.btnView}>
+                    Ver
+                  </Link>
+                  <button
+                    className={styles.btnDejar}
+                    onClick={() => handleDejar(s.id)}
+                  >
                     Dejar de seguir
                   </button>
                 </div>
