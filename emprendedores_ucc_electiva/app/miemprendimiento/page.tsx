@@ -19,6 +19,9 @@ type Producto = {
 
 export default function MiEmprendimientoPage() {
   const [paso, setPaso] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const router = useRouter();
 
   // ── Verificar sesión al entrar ──
@@ -35,8 +38,19 @@ export default function MiEmprendimientoPage() {
     if (!usuario.id && !usuario._id) {
       alert("Sesión inválida. Vuelve a iniciar sesión.");
       router.push("/autenticacion/login");
+      return;
     }
-  }, []);
+
+    // VERIFICAR QUE SEA EMPRENDEDOR
+    if (usuario.tipoUsuario !== "emprendedor") {
+      alert("⚠️ Solo los usuarios registrados como EMPRENDEDORES pueden crear emprendimientos.\n\nTu tipo de usuario es: " + usuario.tipoUsuario);
+      router.push("/");
+      return;
+    }
+
+    setIsAuthorized(true);
+    setIsLoading(false);
+  }, [router]);
 
   // ── Obtener usuario una sola vez ──
   const usuarioGuardado =
@@ -86,25 +100,60 @@ export default function MiEmprendimientoPage() {
     setImagenes(imagenes.filter((_, idx) => idx !== i));
 
   const publicarEmprendimiento = async () => {
+    // Evitar múltiples publicaciones
+    if (isPublishing) return;
+    
+    setIsPublishing(true);
 
-    // ── Verificar sesión antes de publicar ──
+    // Verificar sesión antes de publicar
     const usuarioGuardado = sessionStorage.getItem("usuario");
 
     if (!usuarioGuardado) {
       alert("Debes iniciar sesión primero");
+      setIsPublishing(false);
       return;
     }
 
     const usuario = JSON.parse(usuarioGuardado);
+    
+    // VERIFICAR TIPO DE USUARIO ANTES DE PUBLICAR
+    if (usuario.tipoUsuario !== "emprendedor") {
+      alert("⚠️ No tienes permisos para crear emprendimientos. Solo los EMPRENDEDORES pueden hacerlo.");
+      setIsPublishing(false);
+      router.push("/");
+      return;
+    }
+    
     const usuarioId = usuario.id ?? usuario._id;
 
     if (!usuarioId) {
       alert("No se encontró el ID del usuario. Vuelve a iniciar sesión.");
+      setIsPublishing(false);
       return;
     }
 
-    console.log(usuario.nombre);
-    console.log(usuario.tipoUsuario);
+    // VALIDAR TELÉFONO - EXACTAMENTE 10 DÍGITOS
+    const telefonoLimpio = telefono.replace(/\D/g, '');
+    if (telefonoLimpio.length !== 10) {
+      alert("⚠️ El teléfono debe tener EXACTAMENTE 10 dígitos numéricos");
+      setPaso(1);
+      setIsPublishing(false);
+      return;
+    }
+
+    // Validar que haya al menos una imagen
+    const imagenesValidas = imagenes.filter(img => img.trim() !== "");
+    if (imagenesValidas.length === 0) {
+      alert("⚠️ Debes agregar al menos una imagen para tu emprendimiento");
+      setPaso(3);
+      setIsPublishing(false);
+      return;
+    }
+
+    console.log("Publicando emprendimiento...");
+    console.log("Usuario:", usuario.nombre);
+    console.log("Tipo:", usuario.tipoUsuario);
+    console.log("Teléfono:", telefonoLimpio);
 
     const data = {
       nombre,
@@ -112,12 +161,12 @@ export default function MiEmprendimientoPage() {
       categoriaId: "69adb8d5781c765dca3ab5f0",
       usuarioId: usuarioId,
       estado,
-      telefono,
-      imagenes,
+      telefono: telefonoLimpio,
+      imagenes: imagenesValidas,
       productos: productos.map(p => ({
         nombre: p.nombre,
         precio: Number(p.precio),
-        stock: Number(p.stock),
+        stock: Number(p.stock) || 0,
         imagen: p.imagen
       }))
     };
@@ -129,18 +178,23 @@ export default function MiEmprendimientoPage() {
         body: JSON.stringify(data)
       });
 
+      console.log("Response status:", res.status);
       const result = await res.json();
-      console.log(result);
+      console.log("Response data:", result);
 
       if (res.ok) {
         alert("¡Emprendimiento publicado correctamente!");
+        router.push("/inicioemprendedor");
       } else {
-        alert("Error al publicar el emprendimiento");
+        const errorMessage = result.message || result.error || "Error al publicar el emprendimiento";
+        alert("Error: " + errorMessage);
       }
 
     } catch (error) {
-      console.error(error);
-      alert("Error de conexión con el servidor");
+      console.error("Error de conexión:", error);
+      alert("Error de conexión con el servidor. Asegúrate que el backend esté corriendo en http://localhost:8080");
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -149,6 +203,23 @@ export default function MiEmprendimientoPage() {
     { n: 2, label: "Productos" },
     { n: 3, label: "Imágenes" },
   ];
+
+  // Mostrar loading mientras verificamos
+  if (isLoading) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner}></div>
+          <p>Verificando permisos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no está autorizado, no mostrar el formulario
+  if (!isAuthorized) {
+    return null;
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -237,21 +308,36 @@ export default function MiEmprendimientoPage() {
                   />
                 </div>
 
-                {/* ── Teléfono de contacto ── */}
+                {/* ── Teléfono de contacto con validación EXACTA de 10 dígitos ── */}
                 <div className={styles.field}>
-                  <label className={styles.label}>Teléfono de contacto *</label>
+                  <label className={styles.label}>
+                    Teléfono de contacto *
+                    <span className={styles.labelHint}>(EXACTAMENTE 10 dígitos)</span>
+                  </label>
                   <div className={styles.inputWrap}>
                     <svg className={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
                       <path d="M4 2h4l1.5 4-2 1.2a11 11 0 005.3 5.3L14 10.5 18 12v4a2 2 0 01-2 2C6.1 18 2 13.9 2 4a2 2 0 012-2z" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <input
                       type="tel"
-                      placeholder="Ej: +57 300 123 4567"
+                      placeholder="Ej: 3102474495"
                       className={styles.input}
                       value={telefono}
-                      onChange={(e) => setTelefono(e.target.value)}
+                      onChange={(e) => {
+                        const valor = e.target.value.replace(/\D/g, '');
+                        if (valor.length <= 10) {
+                          setTelefono(valor);
+                        }
+                      }}
                     />
                   </div>
+                  {telefono && (
+                    <small className={`${styles.helperText} ${telefono.length === 10 ? styles.validText : styles.invalidText}`}>
+                      {telefono.length}/10 dígitos
+                      {telefono.length !== 10 && " (deben ser EXACTAMENTE 10 dígitos)"}
+                      {telefono.length === 10 && " ✅"}
+                    </small>
+                  )}
                 </div>
 
                 <div className={styles.row}>
@@ -267,8 +353,6 @@ export default function MiEmprendimientoPage() {
                       </select>
                     </div>
                   </div>
-
-          
                 </div>
               </div>
 
@@ -278,7 +362,7 @@ export default function MiEmprendimientoPage() {
                   type="button"
                   className={styles.btnNext}
                   onClick={() => setPaso(2)}
-                  disabled={!nombre || !descripcion || !categoria || !telefono}
+                  disabled={!nombre || !descripcion || !categoria || !telefono || telefono.length !== 10}
                 >
                   Siguiente: Productos →
                 </button>
@@ -453,8 +537,9 @@ export default function MiEmprendimientoPage() {
                   type="button"
                   className={styles.btnSubmit}
                   onClick={publicarEmprendimiento}
+                  disabled={isPublishing}
                 >
-                  🚀 Publicar emprendimiento
+                  {isPublishing ? "Publicando..." : "🚀 Publicar emprendimiento"}
                 </button>
               </div>
             </div>
