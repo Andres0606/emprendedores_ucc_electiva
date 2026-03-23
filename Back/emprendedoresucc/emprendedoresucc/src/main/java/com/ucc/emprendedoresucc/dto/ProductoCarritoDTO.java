@@ -1,18 +1,23 @@
-package com.ucc.emprendedoresucc.model;
+// DTO para los productos del carrito
+package com.ucc.emprendedoresucc.dto;
 
-public class ProductoCarrito {
+public class ProductoCarritoDTO {
     private String emprendimientoId;
     private String nombreProducto;
     private double precio;
     private int cantidad;
+    private String imagen; // Podrías agregar esto si quieres
 
-    public ProductoCarrito() {}
+    // Constructor vacío
+    public ProductoCarritoDTO() {}
 
-    public ProductoCarrito(String emprendimientoId, String nombreProducto, double precio, int cantidad) {
+    // Constructor con parámetros
+    public ProductoCarritoDTO(String emprendimientoId, String nombreProducto, double precio, int cantidad, String imagen) {
         this.emprendimientoId = emprendimientoId;
         this.nombreProducto = nombreProducto;
         this.precio = precio;
         this.cantidad = cantidad;
+        this.imagen = imagen;
     }
 
     // Getters y Setters
@@ -27,4 +32,7 @@ public class ProductoCarrito {
     
     public int getCantidad() { return cantidad; }
     public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+    
+    public String getImagen() { return imagen; }
+    public void setImagen(String imagen) { this.imagen = imagen; }
 }
