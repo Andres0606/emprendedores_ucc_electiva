@@ -17,7 +17,6 @@
   --white:       #ffffff;
 }
 
-/* ── Fondo general ── */
 .main {
   min-height: 100vh;
   background: #f8fafc;
@@ -152,7 +151,6 @@
   gap: 1.5rem;
 }
 
-/* Badges: categoría + estado */
 .header {
   display: flex;
   align-items: center;
@@ -194,7 +192,6 @@
   border: 1px solid #fde68a;
 }
 
-/* Título y descripción */
 .title {
   font-family: var(--font-display);
   font-size: clamp(1.75rem, 3vw, 2.25rem);
@@ -209,6 +206,131 @@
   color: var(--gray);
   line-height: 1.8;
 }
+
+/* ══════════════════════════════
+   SECCIÓN SEGUIMIENTO
+══════════════════════════════ */
+.followSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.followButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.65rem 1.35rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s, background 0.15s;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.followButton:hover:not(:disabled) { transform: translateY(-2px); }
+.followButton:active:not(:disabled) { transform: scale(0.97); }
+
+.followButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.notFollowingButton {
+  background: #009FE3;
+  color: #ffffff;
+}
+
+.notFollowingButton:hover:not(:disabled) { background: #0087c2; }
+
+.followingButton {
+  background: #f0fdf4;
+  color: #6fa52e;
+  border: 1.5px solid #c3e89a;
+}
+
+.followingButton:hover:not(:disabled) { background: #e2f7c4; }
+
+.loginButton {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1.5px solid #e2e8f0;
+}
+
+.loginButton:hover:not(:disabled) { background: #e2e8f0; }
+
+.followIconCircle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-style: normal;
+  flex-shrink: 0;
+}
+
+.iconPlus {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.iconCheck {
+  background: rgba(141, 198, 63, 0.18);
+  color: #6fa52e;
+  font-size: 11px;
+}
+
+.iconLock {
+  background: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+  font-size: 12px;
+}
+
+.followersCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #f1f5f9;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.followersDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #009FE3;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.spinnerSmall {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 159, 227, 0.25);
+  border-top-color: #009FE3;
+  border-radius: 50%;
+  animation: spinBtn 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes spinBtn { to { transform: rotate(360deg); } }
 
 /* ── Tarjeta del emprendedor ── */
 .entrepreneur {
@@ -269,7 +391,6 @@
   gap: 0.65rem;
 }
 
-/* WhatsApp */
 .whatsappButton {
   display: flex;
   align-items: center;
@@ -296,7 +417,6 @@
 
 .whatsappButton:active { transform: scale(0.98); }
 
-/* Email */
 .emailButton {
   display: flex;
   align-items: center;

@@ -42,7 +42,6 @@ interface Categoria {
   descripcion: string;
 }
 
-// Emojis por categoría
 const categoriaEmoji: Record<string, string> = {
   "Tecnología": "💻",
   "Gastronomía": "🍽️",
@@ -53,7 +52,6 @@ const categoriaEmoji: Record<string, string> = {
   "Servicios": "🛠️",
 };
 
-// Función para formatear número de WhatsApp
 const formatearNumeroWhatsApp = (telefono: string): string => {
   let numeroLimpio = telefono.replace(/[\s\-\(\)]/g, '');
   
@@ -79,14 +77,59 @@ export default function DetalleEmprendimientoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imagenSeleccionada, setImagenSeleccionada] = useState(0);
+  
+  const [usuarioActual, setUsuarioActual] = useState<{ id: string; tipoUsuario?: string } | null>(null);
+  const [siguiendo, setSiguiendo] = useState(false);
+  const [totalSeguidores, setTotalSeguidores] = useState(0);
+  const [cargandoSeguimiento, setCargandoSeguimiento] = useState(false);
 
-  // Obtener categoría por ID
+  // Obtener usuario logueado
+  useEffect(() => {
+    console.log("=== VERIFICANDO AUTENTICACIÓN ===");
+    console.log("SessionStorage completo:", sessionStorage);
+    
+    const userStr = sessionStorage.getItem('usuario');
+    const userId = sessionStorage.getItem('usuarioId');
+    const tipoUsuario = sessionStorage.getItem('tipoUsuario');
+    
+    console.log("Datos de sessionStorage:");
+    console.log("- usuario:", userStr);
+    console.log("- usuarioId:", userId);
+    console.log("- tipoUsuario:", tipoUsuario);
+    
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        console.log("Usuario parseado:", user);
+        
+        const usuarioId = user.id || user._id || userId;
+        console.log("ID de usuario obtenido:", usuarioId);
+        
+        if (usuarioId) {
+          setUsuarioActual({ 
+            id: usuarioId,
+            tipoUsuario: user.tipoUsuario || tipoUsuario || undefined
+          });
+          console.log("✅ Usuario autenticado:", { id: usuarioId, tipo: user.tipoUsuario });
+        } else {
+          console.log("❌ Usuario sin ID válido");
+          setUsuarioActual(null);
+        }
+      } catch (error) {
+        console.error("Error al parsear usuario:", error);
+        setUsuarioActual(null);
+      }
+    } else {
+      console.log("❌ No hay usuario autenticado en sessionStorage");
+      setUsuarioActual(null);
+    }
+  }, []);
+
   const obtenerCategoria = async (categoriaId: string) => {
     try {
       const respuesta = await fetch(`http://localhost:8080/api/categorias/${categoriaId}`);
       if (!respuesta.ok) return null;
       const data = await respuesta.json();
-      // Manejar tanto id como _id
       return {
         id: data.id || data._id,
         nombre: data.nombre,
@@ -98,7 +141,6 @@ export default function DetalleEmprendimientoPage() {
     }
   };
 
-  // Obtener usuario por ID
   const obtenerUsuario = async (usuarioId: string) => {
     try {
       const respuesta = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
@@ -119,14 +161,147 @@ export default function DetalleEmprendimientoPage() {
     }
   };
 
-  // Cargar datos
+  const verificarSeguimiento = async () => {
+    if (!usuarioActual || !usuarioActual.id || !emprendimiento) {
+      console.log("⚠️ No se puede verificar seguimiento: usuario no autenticado");
+      return;
+    }
+    
+    try {
+      const emprendimientoId = emprendimiento.id || emprendimiento._id;
+      console.log("🔍 Verificando seguimiento - Usuario:", usuarioActual.id, "Emprendimiento:", emprendimientoId);
+      
+      const url = `http://localhost:8080/api/seguimientos/verificar?usuarioId=${usuarioActual.id}&emprendimientoId=${emprendimientoId}`;
+      console.log("URL de verificación:", url);
+      
+      const respuesta = await fetch(url);
+      console.log("Respuesta verificación - Status:", respuesta.status);
+      
+      if (respuesta.ok) {
+        const data = await respuesta.json();
+        console.log("Datos de verificación:", data);
+        setSiguiendo(data.estaSiguiendo);
+        setTotalSeguidores(data.totalSeguidores);
+      } else {
+        const errorText = await respuesta.text();
+        console.error("❌ Error al verificar seguimiento:", errorText);
+      }
+    } catch (error) {
+      console.error("❌ Error en verificarSeguimiento:", error);
+    }
+  };
+
+  const toggleSeguimiento = async () => {
+    console.log("=== EJECUTANDO TOGGLE SEGUIMIENTO ===");
+    
+    // Verificar autenticación
+    if (!usuarioActual || !usuarioActual.id) {
+      console.log("⚠️ Intento de seguir sin autenticación");
+      const confirmLogin = confirm("Debes iniciar sesión para seguir emprendimientos. ¿Quieres ir al login?");
+      if (confirmLogin) {
+        sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+        router.push('/autenticacion/login');
+      }
+      return;
+    }
+    
+    if (!emprendimiento) {
+      console.error("❌ No hay emprendimiento cargado");
+      return;
+    }
+    
+    setCargandoSeguimiento(true);
+    
+    try {
+      const emprendimientoId = emprendimiento.id || emprendimiento._id;
+      console.log("Datos para la petición:");
+      console.log("- usuarioId:", usuarioActual.id);
+      console.log("- emprendimientoId:", emprendimientoId);
+      
+      if (siguiendo) {
+        // DEJAR DE SEGUIR
+        console.log("🔄 Dejando de seguir...");
+        const url = `http://localhost:8080/api/seguimientos/dejar-de-seguir`;
+        const body = JSON.stringify({
+          usuarioId: usuarioActual.id,
+          emprendimientoId: emprendimientoId
+        });
+        
+        console.log("URL:", url);
+        console.log("Body:", body);
+        
+        const respuesta = await fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: body
+        });
+        
+        console.log("Respuesta status:", respuesta.status);
+        
+        if (respuesta.ok) {
+          const data = await respuesta.json();
+          console.log("Respuesta exitosa:", data);
+          setSiguiendo(false);
+          setTotalSeguidores(data.totalSeguidores);
+          alert("✅ Has dejado de seguir este emprendimiento");
+        } else {
+          const error = await respuesta.json();
+          console.error("❌ Error en respuesta:", error);
+          alert(error.message || "Error al dejar de seguir");
+        }
+      } else {
+        // SEGUIR
+        console.log("🔄 Siguiendo emprendimiento...");
+        const url = `http://localhost:8080/api/seguimientos/seguir`;
+        const body = JSON.stringify({
+          usuarioId: usuarioActual.id,
+          emprendimientoId: emprendimientoId
+        });
+        
+        console.log("URL:", url);
+        console.log("Body:", body);
+        
+        const respuesta = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: body
+        });
+        
+        console.log("Respuesta status:", respuesta.status);
+        
+        if (respuesta.ok) {
+          const data = await respuesta.json();
+          console.log("Respuesta exitosa:", data);
+          setSiguiendo(true);
+          setTotalSeguidores(data.totalSeguidores);
+          alert("✅ ¡Ahora sigues este emprendimiento!");
+        } else {
+          const error = await respuesta.json();
+          console.error("❌ Error en respuesta:", error);
+          alert(error.message || "Error al seguir");
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error en toggleSeguimiento:", error);
+      alert("Error al procesar la solicitud");
+    } finally {
+      setCargandoSeguimiento(false);
+    }
+  };
+
+  // Cargar datos del emprendimiento
   useEffect(() => {
     const cargarDatos = async () => {
       try {
         setLoading(true);
+        console.log("=== CARGANDO EMPRENDIMIENTO ID:", id);
         
-        // Obtener el emprendimiento
         const respuesta = await fetch(`http://localhost:8080/api/emprendimientos/${id}`);
+        console.log("Respuesta emprendimiento - Status:", respuesta.status);
         
         if (!respuesta.ok) {
           if (respuesta.status === 404) {
@@ -136,9 +311,9 @@ export default function DetalleEmprendimientoPage() {
         }
         
         const data: Emprendimiento = await respuesta.json();
+        console.log("Emprendimiento cargado:", data);
         setEmprendimiento(data);
         
-        // Obtener el usuario del emprendimiento
         if (data.usuarioId) {
           const usuarioData = await obtenerUsuario(data.usuarioId);
           if (usuarioData) {
@@ -146,7 +321,6 @@ export default function DetalleEmprendimientoPage() {
           }
         }
         
-        // Obtener la categoría
         if (data.categoriaId) {
           const categoriaData = await obtenerCategoria(data.categoriaId);
           if (categoriaData) {
@@ -167,7 +341,28 @@ export default function DetalleEmprendimientoPage() {
     }
   }, [id]);
 
-  // Formatear precio
+  // Verificar seguimiento
+  useEffect(() => {
+    if (emprendimiento && usuarioActual && usuarioActual.id) {
+      verificarSeguimiento();
+    } else if (emprendimiento && !usuarioActual) {
+      const obtenerContadorSolamente = async () => {
+        try {
+          const emprendimientoId = emprendimiento.id || emprendimiento._id;
+          const respuesta = await fetch(`http://localhost:8080/api/seguimientos/verificar?usuarioId=dummy&emprendimientoId=${emprendimientoId}`);
+          if (respuesta.ok) {
+            const data = await respuesta.json();
+            setTotalSeguidores(data.totalSeguidores);
+            console.log("📊 Total seguidores:", data.totalSeguidores);
+          }
+        } catch (error) {
+          console.error("Error al obtener contador:", error);
+        }
+      };
+      obtenerContadorSolamente();
+    }
+  }, [emprendimiento, usuarioActual]);
+
   const formatearPrecio = (precio: number): string => {
     return `$${precio.toLocaleString()}`;
   };
@@ -213,8 +408,6 @@ export default function DetalleEmprendimientoPage() {
     <>
       <Header />
       <main className={styles.main}>
-        
-        {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
           <Link href="/">Inicio</Link>
           <span>/</span>
@@ -224,8 +417,6 @@ export default function DetalleEmprendimientoPage() {
         </div>
 
         <div className={styles.container}>
-          
-          {/* Galería de imágenes */}
           <div className={styles.gallery}>
             <div className={styles.mainImage}>
               {emprendimiento.imagenes && emprendimiento.imagenes.length > 0 && emprendimiento.imagenes[imagenSeleccionada] ? (
@@ -259,7 +450,6 @@ export default function DetalleEmprendimientoPage() {
             )}
           </div>
 
-          {/* Información principal */}
           <div className={styles.info}>
             <div className={styles.header}>
               <span className={styles.category}>
@@ -273,7 +463,33 @@ export default function DetalleEmprendimientoPage() {
             <h1 className={styles.title}>{emprendimiento.nombre}</h1>
             <p className={styles.description}>{emprendimiento.descripcion}</p>
 
-            {/* Datos del emprendedor */}
+            <div className={styles.followSection}>
+              <button 
+                onClick={toggleSeguimiento}
+                className={`${styles.followButton} ${siguiendo ? styles.followingButton : styles.notFollowingButton}`}
+                disabled={cargandoSeguimiento}
+              >
+                {cargandoSeguimiento ? (
+                  <span className={styles.spinnerSmall}>⏳</span>
+                ) : !usuarioActual || !usuarioActual.id ? (
+                  <>
+                    <span>🔒</span> Inicia sesión para seguir
+                  </>
+                ) : siguiendo ? (
+                  <>
+                    <span>✓</span> Siguiendo
+                  </>
+                ) : (
+                  <>
+                    <span>+</span> Seguir emprendimiento
+                  </>
+                )}
+              </button>
+              <div className={styles.followersCount}>
+                <span>👥</span> {totalSeguidores} seguidor{totalSeguidores !== 1 ? 'es' : ''}
+              </div>
+            </div>
+
             <div className={styles.entrepreneur}>
               <h3>Emprendedor</h3>
               <div className={styles.entrepreneurInfo}>
@@ -291,7 +507,6 @@ export default function DetalleEmprendimientoPage() {
               </div>
             </div>
 
-            {/* Botones de contacto */}
             <div className={styles.contactButtons}>
               {telefonoContacto && (
                 <a
@@ -323,7 +538,6 @@ export default function DetalleEmprendimientoPage() {
           </div>
         </div>
 
-        {/* Productos */}
         {emprendimiento.productos && emprendimiento.productos.length > 0 && (
           <section className={styles.productsSection}>
             <div className={styles.productsHeader}>
@@ -354,13 +568,11 @@ export default function DetalleEmprendimientoPage() {
           </section>
         )}
 
-        {/* Botón volver */}
         <div className={styles.backSection}>
           <Link href="/emprendimientos" className={styles.backToList}>
             ← Ver todos los emprendimientos
           </Link>
         </div>
-
       </main>
       <Footer />
     </>
