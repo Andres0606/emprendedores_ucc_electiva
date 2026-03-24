@@ -29,7 +29,7 @@ public class EmprendimientoService {
         }
 
         if (emprendimiento.getEstado() == null || emprendimiento.getEstado().trim().isEmpty()) {
-            emprendimiento.setEstado("activo");
+            emprendimiento.setEstado("pendiente");
         }
 
         // 🔥 PROTECCIÓN IMPORTANTE
@@ -47,35 +47,34 @@ public class EmprendimientoService {
     // 🔥 ESTE ES EL MÁS IMPORTANTE (ARREGLA EL ERROR 500)
     public List<Emprendimiento> obtenerTodos() {
 
-        try {
-            List<Emprendimiento> lista = emprendimientoRepository.findAll();
+    try {
+        List<Emprendimiento> lista = emprendimientoRepository.findAll();
 
-            if (lista == null) {
-                return new ArrayList<>();
-            }
-
-            for (Emprendimiento emp : lista) {
-
-                if (emp.getProductos() == null) {
-                    emp.setProductos(new ArrayList<>());
-                }
-
-                if (emp.getImagenes() == null) {
-                    emp.setImagenes(new ArrayList<>());
-                }
-
-                if (emp.getEstado() == null) {
-                    emp.setEstado("activo");
-                }
-            }
-
-            return lista;
-
-        } catch (Exception e) {
-            e.printStackTrace(); // 👈 AQUÍ VERÁS EL ERROR REAL
-            return new ArrayList<>(); // 👈 NUNCA ROMPE EL FRONT
+        if (lista == null) {
+            return new ArrayList<>();
         }
+
+        for (Emprendimiento emp : lista) {
+            if (emp.getProductos() == null) {
+                emp.setProductos(new ArrayList<>());
+            }
+            if (emp.getImagenes() == null) {
+                emp.setImagenes(new ArrayList<>());
+            }
+            // 👈 NO MODIFICAR EL ESTADO SI YA TIENE UNO VÁLIDO
+            // Solo poner "pendiente" si es null (por si hay datos antiguos)
+            if (emp.getEstado() == null) {
+                emp.setEstado("pendiente");
+            }
+        }
+
+        return lista;
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return new ArrayList<>();
     }
+}
 
     // Obtener emprendimiento por ID
     public Optional<Emprendimiento> obtenerPorId(String id) {
@@ -156,21 +155,24 @@ public class EmprendimientoService {
                 .orElseThrow(() -> new RuntimeException("Emprendimiento no encontrado con id: " + id));
     }
 
-    // Actualizar estado
-    public Emprendimiento actualizarEstado(String id, String nuevoEstado) {
+   // Actualizar estado - Agrega más estados válidos
+public Emprendimiento actualizarEstado(String id, String nuevoEstado) {
 
-        return emprendimientoRepository.findById(id)
-                .map(emp -> {
+    return emprendimientoRepository.findById(id)
+            .map(emp -> {
+                // 👈 ACEPTAR MÁS ESTADOS
+                if (!"activo".equals(nuevoEstado) && 
+                    !"pausado".equals(nuevoEstado) && 
+                    !"pendiente".equals(nuevoEstado) && 
+                    !"rechazado".equals(nuevoEstado)) {
+                    throw new IllegalArgumentException("Estado no válido. Estados permitidos: activo, pausado, pendiente, rechazado");
+                }
 
-                    if (!"activo".equals(nuevoEstado) && !"pausado".equals(nuevoEstado)) {
-                        throw new IllegalArgumentException("Estado no válido");
-                    }
-
-                    emp.setEstado(nuevoEstado);
-                    return emprendimientoRepository.save(emp);
-                })
-                .orElseThrow(() -> new RuntimeException("Emprendimiento no encontrado con id: " + id));
-    }
+                emp.setEstado(nuevoEstado);
+                return emprendimientoRepository.save(emp);
+            })
+            .orElseThrow(() -> new RuntimeException("Emprendimiento no encontrado con id: " + id));
+}
 
     // Eliminar
     public void eliminarEmprendimiento(String id) {

@@ -58,7 +58,10 @@ export default function LoginPage() {
       } else if (tipoUsuario === "estudiante" || tipoUsuario === "administrativo") {
         // Tanto estudiantes como administrativos van a la misma interfaz
         router.push("/inicioestudiante");
-      } else {
+      } else if (tipoUsuario === "admin") {
+        router.push("/inicioadmin");
+      }
+      else {
         console.warn("Tipo de usuario no reconocido:", tipoUsuario);
         router.push("/");
       }

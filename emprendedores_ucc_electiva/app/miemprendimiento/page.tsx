@@ -272,7 +272,7 @@ export default function MiEmprendimientoPage() {
       descripcion,
       categoriaId: categoriaId,
       usuarioId: usuarioId,
-      estado,
+      estado: "pendiente",
       telefono: telefonoLimpio,
       imagenes: imagenesValidas,
       productos: productos.map(p => ({

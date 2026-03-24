@@ -1,0 +1,445 @@
+.main {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #eef2f5 100%);
+  padding: 2rem;
+}
+
+/* Header del Admin */
+.adminHeader {
+  max-width: 1400px;
+  margin: 0 auto 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.adminBadge {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+}
+
+.badge {
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* Estadísticas */
+.statsGrid {
+  max-width: 1400px;
+  margin: 0 auto 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.statCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.statIcon {
+  font-size: 2.5rem;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.statPending .statValue {
+  color: #f59e0b;
+}
+
+.statActive .statValue {
+  color: #10b981;
+}
+
+/* Sección de gestión */
+.managementSection {
+  max-width: 1400px;
+  margin: 0 auto 2rem;
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sectionHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sectionHeader h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.tabActive {
+  background: #3b82f6;
+  color: white;
+}
+
+.tabActive:hover {
+  background: #2563eb;
+  color: white;
+}
+
+/* Búsqueda */
+.searchBox {
+  margin-top: 1rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Lista de emprendimientos */
+.venturesList {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ventureCard {
+  background: #f9fafb;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  transition: box-shadow 0.2s;
+}
+
+.ventureCard:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ventureInfo {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  min-width: 250px;
+}
+
+.ventureImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #e5e7eb;
+  flex-shrink: 0;
+}
+
+.ventureImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  background: #e5e7eb;
+  color: #9ca3af;
+}
+
+.ventureDetails {
+  flex: 1;
+}
+
+.ventureDetails h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.ventureDescription {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ventureMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.ventureCategory,
+.ventureAuthor,
+.ventureProducts,
+.ventureStatus {
+  padding: 0.25rem 0.5rem;
+  background: #e5e7eb;
+  border-radius: 0.25rem;
+  color: #374151;
+}
+
+.ventureStatus {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Acciones de la tarjeta */
+.ventureActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.approveBtn {
+  background: #10b981;
+  color: white;
+}
+
+.approveBtn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.rejectBtn {
+  background: #ef4444;
+  color: white;
+}
+
+.rejectBtn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.deleteBtn {
+  background: #6b7280;
+  color: white;
+}
+
+.deleteBtn:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.viewBtn {
+  background: #3b82f6;
+  color: white;
+}
+
+.viewBtn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Estado vacío */
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.emptyState span {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+/* Acciones rápidas */
+.quickActions {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.quickActions h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.actionCard {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.actionCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.actionCard span {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.actionCard p {
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* Loading y error */
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .ventureCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .ventureInfo {
+    flex-direction: column;
+  }
+  
+  .ventureImage {
+    width: 100%;
+    height: 150px;
+  }
+  
+  .ventureActions {
+    justify-content: flex-end;
+  }
+}
