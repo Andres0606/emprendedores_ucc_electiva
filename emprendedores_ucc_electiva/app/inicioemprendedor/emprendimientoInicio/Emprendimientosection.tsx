@@ -14,29 +14,62 @@ interface Emprendimiento {
   estado: string;
   imagenes: string[];
   productos: any[];
+  telefono?: string;
 }
 
 interface EmprendimientoSectionProps {
-  estadoEmp: "activo" | "pausado";
-  setEstadoEmp: (estado: "activo" | "pausado") => void;
+  estadoEmp: "activo" | "pausado" | "pendiente" | "rechazado";
+  setEstadoEmp: (estado: "activo" | "pausado" | "pendiente" | "rechazado") => void;
 }
 
-// Mapeo de categorías
+// Mapeo de categorías - ACTUALIZADO con los IDs reales de MongoDB
 const categorias: Record<string, string> = {
   "69adb8d5781c765dca3ab5f0": "Tecnología",
-  "69adb8d5781c765dca3ab5f1": "Alimentos",
-  "69adb8d5781c765dca3ab5f2": "Moda",
-  "69adb8d5781c765dca3ab5f3": "Artesanías",
-  "69adb8d5781c765dca3ab5f4": "Servicios",
+  "69bf25148374500218c043ee": "Gastronomía",
+  "69bf25148374500218c043ef": "Moda y Diseño",
+  "69bf25148374500218c043f0": "Salud y Bienestar",
+  "69bf25148374500218c043f1": "Arte y Cultura",
+  "69bf25148374500218c043f2": "Servicios",
+  "69adb8da781c765dca3ab5f2": "Comida",
 };
 
 // Emojis por categoría
 const emojisPorCategoria: Record<string, string> = {
   "69adb8d5781c765dca3ab5f0": "💻",
-  "69adb8d5781c765dca3ab5f1": "🥗",
-  "69adb8d5781c765dca3ab5f2": "👕",
-  "69adb8d5781c765dca3ab5f3": "🎨",
-  "69adb8d5781c765dca3ab5f4": "🔧",
+  "69bf25148374500218c043ee": "🍽️",
+  "69bf25148374500218c043ef": "👗",
+  "69bf25148374500218c043f0": "🧘",
+  "69bf25148374500218c043f1": "🎨",
+  "69bf25148374500218c043f2": "🛠️",
+  "69adb8da781c765dca3ab5f2": "🍔",
+};
+
+// Configuración de estados con colores y mensajes (sin el mensaje de pausado)
+const estadoConfig: Record<string, { color: string; bg: string; icon: string; mensaje: string }> = {
+  activo: {
+    color: "#10b981",
+    bg: "#d1fae5",
+    icon: "✅",
+    mensaje: "Tu emprendimiento está activo y visible para toda la comunidad"
+  },
+  pausado: {
+    color: "#f59e0b",
+    bg: "#fef3c7",
+    icon: "⏸️",
+    mensaje: "" // Mensaje vacío
+  },
+  pendiente: {
+    color: "#3b82f6",
+    bg: "#dbeafe",
+    icon: "⏳",
+    mensaje: "Tu emprendimiento está en revisión. Un administrador lo evaluará pronto"
+  },
+  rechazado: {
+    color: "#ef4444",
+    bg: "#fee2e2",
+    icon: "❌",
+    mensaje: "Tu emprendimiento fue rechazado. Por favor, revisa los comentarios del administrador"
+  }
 };
 
 export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: EmprendimientoSectionProps) {
@@ -45,6 +78,7 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
   const [error, setError] = useState<string | null>(null);
   const [emprendimientoSeleccionado, setEmprendimientoSeleccionado] = useState<string | null>(null);
   const [actualizandoEstado, setActualizandoEstado] = useState(false);
+  const [motivoRechazo, setMotivoRechazo] = useState<string | null>(null);
 
   useEffect(() => {
     const obtenerEmprendimientos = async () => {
@@ -52,7 +86,6 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
         setCargando(true);
         setError(null);
         
-        // Obtener el usuario de sessionStorage
         const usuarioGuardado = sessionStorage.getItem("usuario");
         
         if (!usuarioGuardado) {
@@ -72,7 +105,6 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
 
         console.log("Buscando emprendimientos para usuario:", usuarioId);
 
-        // Hacer la petición al backend
         const respuesta = await fetch(`http://localhost:8080/api/emprendimientos/usuario/${usuarioId}`);
         
         if (!respuesta.ok) {
@@ -84,10 +116,15 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
         
         setEmprendimientos(emprendimientosData);
         
-        // Si hay emprendimientos, seleccionar el primero por defecto
+        // Verificar si algún emprendimiento fue rechazado para mostrar motivo
+        const rechazado = emprendimientosData.find((emp: Emprendimiento) => emp.estado === "rechazado");
+        if (rechazado) {
+          setMotivoRechazo("Tu emprendimiento no cumple con las políticas de la plataforma. Por favor, contáctanos para más información.");
+        }
+        
         if (emprendimientosData.length > 0) {
           setEmprendimientoSeleccionado(emprendimientosData[0].id || emprendimientosData[0]._id);
-          setEstadoEmp(emprendimientosData[0].estado as "activo" | "pausado");
+          setEstadoEmp(emprendimientosData[0].estado as "activo" | "pausado" | "pendiente" | "rechazado");
         }
 
       } catch (error) {
@@ -103,6 +140,17 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
 
   // Función para cambiar el estado de un emprendimiento específico
   const cambiarEstado = async (emprendimientoId: string, estadoActual: string) => {
+    // Solo permitir cambiar entre activo y pausado
+    if (estadoActual === "pendiente") {
+      alert("⏳ No puedes modificar un emprendimiento que está en revisión. Espera la aprobación del administrador.");
+      return;
+    }
+    
+    if (estadoActual === "rechazado") {
+      alert("❌ Tu emprendimiento fue rechazado. Por favor, contáctanos para más información.");
+      return;
+    }
+    
     const nuevoEstado = estadoActual === "activo" ? "pausado" : "activo";
     
     try {
@@ -123,23 +171,21 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
 
       const emprendimientoActualizado = await respuesta.json();
       
-      // Actualizar la lista de emprendimientos
       setEmprendimientos(prevEmprendimientos => 
         prevEmprendimientos.map(emp => 
           (emp.id || emp._id) === emprendimientoId ? emprendimientoActualizado : emp
         )
       );
 
-      // Si el emprendimiento actualizado es el seleccionado, actualizar el estado global
       if (emprendimientoSeleccionado === emprendimientoId) {
         setEstadoEmp(emprendimientoActualizado.estado);
       }
       
-      alert(`Emprendimiento ${emprendimientoActualizado.estado === "activo" ? "activado" : "pausado"} correctamente`);
+      alert(`✅ Emprendimiento ${emprendimientoActualizado.estado === "activo" ? "activado" : "pausado"} correctamente`);
       
     } catch (error) {
       console.error("Error al actualizar estado:", error);
-      alert("No se pudo actualizar el estado. Por favor, intenta de nuevo.");
+      alert("❌ No se pudo actualizar el estado. Por favor, intenta de nuevo.");
     } finally {
       setActualizandoEstado(false);
     }
@@ -148,13 +194,29 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
   // Función para seleccionar un emprendimiento
   const seleccionarEmprendimiento = (emprendimientoId: string, estado: string) => {
     setEmprendimientoSeleccionado(emprendimientoId);
-    setEstadoEmp(estado as "activo" | "pausado");
+    setEstadoEmp(estado as "activo" | "pausado" | "pendiente" | "rechazado");
+    
+    // Limpiar motivo de rechazo si el emprendimiento seleccionado no está rechazado
+    if (estado !== "rechazado") {
+      setMotivoRechazo(null);
+    }
   };
 
   // Obtener el emprendimiento seleccionado
   const emprendimientoActual = emprendimientos.find(
     emp => (emp.id || emp._id) === emprendimientoSeleccionado
   );
+
+  // Función para obtener el badge del estado
+  const getEstadoBadge = (estado: string) => {
+    const config = estadoConfig[estado] || estadoConfig.pendiente;
+    return (
+      <span className={`${styles.estadoBadge} ${styles[`estado${estado.charAt(0).toUpperCase() + estado.slice(1)}`]}`}
+        style={{ backgroundColor: config.bg, color: config.color }}>
+        {config.icon} {estado.charAt(0).toUpperCase() + estado.slice(1)}
+      </span>
+    );
+  };
 
   // Si está cargando
   if (cargando) {
@@ -227,7 +289,7 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
               Crea tu primer emprendimiento y empieza a vender tus productos
             </p>
             <Link 
-              href="/crear-emprendimiento" 
+              href="/miemprendimiento" 
               style={{
                 display: "inline-block",
                 padding: "0.75rem 1.5rem",
@@ -271,6 +333,7 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
           const empId = emp.id || emp._id;
           const isSelected = emprendimientoSeleccionado === empId;
           const emoji = emojisPorCategoria[emp.categoriaId] || "🚀";
+          const estadoInfo = estadoConfig[emp.estado] || estadoConfig.pendiente;
           
           return (
             <button
@@ -296,7 +359,7 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
                 width: "8px",
                 height: "8px",
                 borderRadius: "50%",
-                backgroundColor: emp.estado === "activo" ? "#10b981" : "#9ca3af",
+                backgroundColor: estadoInfo.color,
                 marginLeft: "0.25rem"
               }} />
             </button>
@@ -327,16 +390,54 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
             <div className={styles.editField}>
               <label className={styles.editLabel}>Estado</label>
               <div className={styles.editValue}>
-                <span className={`${styles.estadoBadge} ${estadoEmp === "activo" ? styles.estadoActivo : styles.estadoPausado}`}>
-                  ● {estadoEmp === "activo" ? "Activo" : "Pausado"}
-                </span>
+                {getEstadoBadge(estadoEmp)}
               </div>
             </div>
+
+            {/* Mensaje de estado - solo mostrar si no está vacío */}
+            {estadoConfig[estadoEmp]?.mensaje && (
+              <div className={styles.editField} style={{ gridColumn: "1 / -1" }}>
+                <div style={{
+                  padding: "0.75rem",
+                  backgroundColor: estadoConfig[estadoEmp]?.bg || "#f3f4f6",
+                  borderRadius: "0.5rem",
+                  color: estadoConfig[estadoEmp]?.color || "#6b7280",
+                  fontSize: "0.875rem"
+                }}>
+                  {estadoConfig[estadoEmp]?.icon} {estadoConfig[estadoEmp]?.mensaje}
+                </div>
+              </div>
+            )}
+
+            {/* Mostrar motivo de rechazo si aplica */}
+            {estadoEmp === "rechazado" && motivoRechazo && (
+              <div className={styles.editField} style={{ gridColumn: "1 / -1" }}>
+                <label className={styles.editLabel}>Motivo del rechazo</label>
+                <div style={{
+                  padding: "0.75rem",
+                  backgroundColor: "#fee2e2",
+                  borderRadius: "0.5rem",
+                  color: "#dc2626",
+                  fontSize: "0.875rem",
+                  borderLeft: "3px solid #dc2626"
+                }}>
+                  {motivoRechazo}
+                </div>
+              </div>
+            )}
             
             <div className={styles.editField} style={{ gridColumn: "1 / -1" }}>
               <label className={styles.editLabel}>Descripción</label>
               <div className={styles.editValue}>{emprendimientoActual.descripcion}</div>
             </div>
+
+            {/* Teléfono de contacto */}
+            {emprendimientoActual.telefono && (
+              <div className={styles.editField} style={{ gridColumn: "1 / -1" }}>
+                <label className={styles.editLabel}>Teléfono de contacto</label>
+                <div className={styles.editValue}>{emprendimientoActual.telefono}</div>
+              </div>
+            )}
 
             {emprendimientoActual.imagenes && emprendimientoActual.imagenes.length > 0 && (
               <div className={styles.editField} style={{ gridColumn: "1 / -1" }}>
@@ -355,6 +456,9 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
                           src={img} 
                           alt={`Imagen ${index + 1}`}
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/images/placeholder.png";
+                          }}
                         />
                       ) : (
                         <div style={{
@@ -377,27 +481,15 @@ export default function EmprendimientoSection({ estadoEmp, setEstadoEmp }: Empre
           </div>
 
           <div className={styles.editActions}>
-            <Link 
-              href={`/inicioemprendedor/editarEmprendimiento/${emprendimientoActual.id || emprendimientoActual._id}`} 
-              className={styles.btnEditar}
-            >
-              ✏️ Editar este emprendimiento
-            </Link>
-            
-            <button
-              className={`${styles.btnEstado} ${estadoEmp === "activo" ? styles.btnPausar : styles.btnActivar}`}
-              onClick={() => cambiarEstado(
-                emprendimientoActual.id || emprendimientoActual._id!, 
-                emprendimientoActual.estado
-              )}
-              disabled={actualizandoEstado}
-            >
-              {actualizandoEstado ? (
-                "⏳ Procesando..."
-              ) : (
-                estadoEmp === "activo" ? "⏸ Pausar este emprendimiento" : "▶ Activar este emprendimiento"
-              )}
-            </button>
+            {/* Solo permitir editar si no está rechazado */}
+            {estadoEmp !== "rechazado" && (
+              <Link 
+                href={`/inicioemprendedor/editarEmprendimiento/${emprendimientoActual.id || emprendimientoActual._id}`} 
+                className={styles.btnEditar}
+              >
+                ✏️ Editar este emprendimiento
+              </Link>
+            )}          
           </div>
 
           <div style={{ 
