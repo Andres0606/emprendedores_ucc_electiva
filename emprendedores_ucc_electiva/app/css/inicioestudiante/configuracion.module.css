@@ -11,7 +11,7 @@
 }
 
 .container {
-  max-width: 860px;
+  max-width: 620px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -36,53 +36,6 @@
   margin: 0 0 28px;
 }
 
-/* ── Layout ── */
-.layout {
-  display: grid;
-  grid-template-columns: 190px 1fr;
-  gap: 20px;
-  align-items: start;
-}
-
-/* ── Sidebar ── */
-.sidebar {
-  background: #fff;
-  border: 1.5px solid #e0e7ef;
-  border-radius: 14px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  box-shadow: 0 2px 10px rgba(0,159,227,0.06);
-}
-
-.navItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: none;
-  border: none;
-  color: #78909c;
-  font-size: 0.86rem;
-  font-weight: 600;
-  padding: 10px 13px;
-  border-radius: 9px;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
-  width: 100%;
-  transition: background 0.2s, color 0.2s;
-}
-.navItem:hover {
-  background: #f5f7fa;
-  color: #0d1b2a;
-}
-.navActive {
-  background: #e6f6fd !important;
-  color: #009FE3 !important;
-}
-.navIcon { font-size: 1rem; }
-
 /* ── Content ── */
 .content {
   background: #fff;
@@ -96,11 +49,6 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  animation: fadeIn 0.2s ease;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 .sectionTitle {
@@ -176,70 +124,6 @@
 }
 .btnDanger:hover { background: #ffebee; }
 
-/* ── Toggle ── */
-.toggleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 13px 0;
-  border-bottom: 1px solid #f0f3f7;
-}
-.toggleRow:last-of-type { border-bottom: none; }
-
-.toggleLabel {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #0d1b2a;
-  margin: 0;
-}
-.toggleSub {
-  font-size: 0.76rem;
-  color: #78909c;
-  margin: 3px 0 0;
-}
-
-.toggle {
-  flex-shrink: 0;
-  width: 42px; height: 23px;
-  background: #e0e7ef;
-  border: 1.5px solid #cfd8e3;
-  border-radius: 999px;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.25s, border-color 0.25s;
-  padding: 0;
-}
-.toggleOn {
-  background: #b3e5fc;
-  border-color: #009FE3;
-}
-.toggleThumb {
-  display: block;
-  width: 17px; height: 17px;
-  background: #90a4ae;
-  border-radius: 50%;
-  position: absolute;
-  top: 1px; left: 1px;
-  transition: transform 0.25s, background 0.25s;
-}
-.toggleOn .toggleThumb {
-  transform: translateX(19px);
-  background: #009FE3;
-}
-
-/* ── Info box ── */
-.infoBox {
-  background: #e6f6fd;
-  border: 1.5px solid #b3e5fc;
-  border-radius: 10px;
-  padding: 13px 16px;
-  font-size: 0.83rem;
-  color: #009FE3;
-  line-height: 1.5;
-}
-.infoBox p { margin: 0; }
-
 /* ── Save ── */
 .saveRow {
   display: flex;
@@ -272,7 +156,50 @@
 
 /* ── Responsive ── */
 @media (max-width: 680px) {
-  .layout { grid-template-columns: 1fr; }
-  .sidebar { flex-direction: row; flex-wrap: wrap; }
-  .navItem { flex: 1; justify-content: center; text-align: center; }
+  .container { padding: 0 16px; }
+}
+
+/* Agregar al final de configuracion.module.css */
+
+.readonly {
+    background: #f0f2f5 !important;
+    color: #6c757d !important;
+    cursor: not-allowed;
+    border-color: #e0e7ef !important;
+}
+
+.helperText {
+    font-size: 0.7rem;
+    color: #78909c;
+    margin-top: 4px;
+}
+
+.passwordSection {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e0e7ef;
+}
+
+.passwordTitle {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0d1b2a;
+    margin: 0 0 16px 0;
+}
+
+.errorMessage {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #dc2626;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.errorIcon {
+    font-size: 1rem;
 }

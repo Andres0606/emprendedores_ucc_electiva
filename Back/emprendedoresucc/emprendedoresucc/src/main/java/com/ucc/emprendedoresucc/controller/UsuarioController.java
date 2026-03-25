@@ -107,4 +107,48 @@ public class UsuarioController {
             return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         }
     }
+
+    // Cambiar contraseña
+    @PatchMapping("/{id}/cambiar-password")
+    public ResponseEntity<?> cambiarPassword(
+            @PathVariable String id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String nuevaPassword = request.get("nuevaPassword");
+            
+            if (nuevaPassword == null || nuevaPassword.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "La nueva contraseña es requerida");
+                error.put("message", "La nueva contraseña es requerida");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            if (nuevaPassword.length() < 4) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "La contraseña debe tener al menos 4 caracteres");
+                error.put("message", "La contraseña debe tener al menos 4 caracteres");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            Usuario usuarioActualizado = usuarioService.cambiarPassword(id, nuevaPassword);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Contraseña actualizada correctamente");
+            response.put("usuario", usuarioActualizado);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al cambiar contraseña");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 }

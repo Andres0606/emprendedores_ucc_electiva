@@ -116,4 +116,14 @@ public class UsuarioService {
         }
         usuarioRepository.deleteById(id);
     }
+
+    // Cambiar contraseña
+    public Usuario cambiarPassword(String id, String nuevaPassword) {
+        return usuarioRepository.findById(id)
+                .map(usuario -> {
+                    usuario.setPassword(nuevaPassword);
+                    return usuarioRepository.save(usuario);
+                })
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+    }
 }

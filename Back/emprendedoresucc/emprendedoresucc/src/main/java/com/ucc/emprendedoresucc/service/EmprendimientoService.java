@@ -4,6 +4,9 @@ import com.ucc.emprendedoresucc.model.Emprendimiento;
 import com.ucc.emprendedoresucc.repository.EmprendimientoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.ucc.emprendedoresucc.service.EmprendimientoService;
+
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +17,7 @@ public class EmprendimientoService {
 
     @Autowired
     private EmprendimientoRepository emprendimientoRepository;
+
 
     // Crear un nuevo emprendimiento
     // En EmprendimientoService.java - actualizar crearEmprendimiento()

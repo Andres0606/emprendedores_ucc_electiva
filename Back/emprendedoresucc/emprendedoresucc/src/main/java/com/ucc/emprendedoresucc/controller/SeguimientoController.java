@@ -1,13 +1,20 @@
+
 package com.ucc.emprendedoresucc.controller;
 
+import com.ucc.emprendedoresucc.model.Emprendimiento;
 import com.ucc.emprendedoresucc.model.Seguimiento;
+import com.ucc.emprendedoresucc.service.EmprendimientoService;
 import com.ucc.emprendedoresucc.service.SeguimientoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/seguimientos")
@@ -16,6 +23,9 @@ public class SeguimientoController {
     
     @Autowired
     private SeguimientoService seguimientoService;
+
+    @Autowired
+    private EmprendimientoService emprendimientoService;
     
     // Seguir un emprendimiento
     @PostMapping("/seguir")
@@ -53,6 +63,7 @@ public class SeguimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
     
     // Dejar de seguir
     @DeleteMapping("/dejar-de-seguir")
@@ -89,6 +100,36 @@ public class SeguimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
+
+    // 🔥 NUEVO ENDPOINT - Obtener todos los emprendimientos que sigue un usuario
+    @GetMapping("/usuario/{usuarioId}/emprendimientos")
+    public ResponseEntity<?> obtenerEmprendimientosSeguidos(@PathVariable String usuarioId) {
+        try {
+            System.out.println("🔍 Buscando seguimientos para usuario: " + usuarioId);
+            
+            List<Seguimiento> seguimientos = seguimientoService.obtenerSeguimientosPorUsuario(usuarioId);
+            System.out.println("📊 Seguimientos encontrados: " + seguimientos.size());
+            
+            List<Emprendimiento> emprendimientos = new ArrayList<>();
+            for (Seguimiento seg : seguimientos) {
+                Optional<Emprendimiento> empOpt = emprendimientoService.obtenerPorId(seg.getEmprendimientoId());
+                if (empOpt.isPresent()) {
+                    emprendimientos.add(empOpt.get());
+                }
+            }
+            
+            System.out.println("🎯 Emprendimientos a devolver: " + emprendimientos.size());
+            return ResponseEntity.ok(emprendimientos);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al obtener emprendimientos seguidos");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
     
     // Verificar si un usuario sigue un emprendimiento
     @GetMapping("/verificar")
@@ -108,6 +149,27 @@ public class SeguimientoController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al verificar seguimiento");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    // Obtener todos los seguimientos de un usuario (con fecha)
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<?> obtenerSeguimientosPorUsuario(@PathVariable String usuarioId) {
+        try {
+            List<Seguimiento> seguimientos = seguimientoService.obtenerSeguimientosPorUsuario(usuarioId);
+            System.out.println("📊 Seguimientos encontrados para usuario " + usuarioId + ": " + seguimientos.size());
+            
+            for (Seguimiento seg : seguimientos) {
+                System.out.println("  - Emprendimiento: " + seg.getEmprendimientoId() + ", Fecha: " + seg.getFecha());
+            }
+            
+            return ResponseEntity.ok(seguimientos);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al obtener seguimientos");
             error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
@@ -142,4 +204,5 @@ public class SeguimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
 }

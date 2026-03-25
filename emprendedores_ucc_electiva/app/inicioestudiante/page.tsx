@@ -4,6 +4,32 @@ import React, { useState, useEffect } from "react";
 import styles from "../css/inicioestudiante/inicioestudiante.module.css";
 import Link from "next/link";
 
+interface Emprendimiento {
+  id?: string;
+  _id?: string;
+  nombre: string;
+  descripcion: string;
+  categoriaId: string;
+  categoriaNombre?: string;
+  usuarioId: string;
+  estado: string;
+  telefono?: string;
+  imagenes?: string[];
+  productos?: Array<{
+    nombre: string;
+    precio: number;
+    stock: number;
+    imagen: string;
+  }>;
+}
+
+interface SeguimientoConFecha {
+  id: string;
+  emprendimientoId: string;
+  fecha: string;
+  emprendimiento?: Emprendimiento;
+}
+
 const recentActivity = [
   { id: 1, title: "Emprendimiento seguido", desc: "BioLab UCC — hace 2 días", icon: "🔔" },
   { id: 2, title: "Producto visitado", desc: "EcoMochila Reciclada — hace 4 días", icon: "👁️" },
@@ -20,20 +46,114 @@ export default function InicioEstudiantePage() {
   const [activeTab, setActiveTab] = useState("resumen");
   const [tipoUsuario, setTipoUsuario] = useState("estudiante");
   const [nombreUsuario, setNombreUsuario] = useState("");
+  const [ultimoEmprendimiento, setUltimoEmprendimiento] = useState<Emprendimiento | null>(null);
+  const [loadingUltimo, setLoadingUltimo] = useState(true);
+  const [totalSeguidos, setTotalSeguidos] = useState(0);
+
+  // Obtener el último emprendimiento seguido
+  const obtenerUltimoSeguido = async (usuarioId: string) => {
+    try {
+      // Primero obtenemos los seguimientos con fecha
+      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}`);
+      
+      if (!res.ok) {
+        console.log("⚠️ Error al obtener seguimientos");
+        return null;
+      }
+      
+      const seguimientos: SeguimientoConFecha[] = await res.json();
+      
+      if (seguimientos.length === 0) {
+        return null;
+      }
+      
+      // Ordenar por fecha (más reciente primero)
+      const seguimientosOrdenados = [...seguimientos].sort((a, b) => 
+        new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+      );
+      
+      const ultimoSeguimiento = seguimientosOrdenados[0];
+      setTotalSeguidos(seguimientos.length);
+      
+      // Obtener los detalles del emprendimiento
+      const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${ultimoSeguimiento.emprendimientoId}`);
+      
+      if (!resEmp.ok) {
+        return null;
+      }
+      
+      const emprendimiento = await resEmp.json();
+      
+      // Obtener categoría
+      const resCat = await fetch(`http://localhost:8080/api/categorias/${emprendimiento.categoriaId}`);
+      let categoriaNombre = "Sin categoría";
+      if (resCat.ok) {
+        const categoria = await resCat.json();
+        categoriaNombre = categoria.nombre;
+      }
+      
+      return {
+        ...emprendimiento,
+        categoriaNombre
+      };
+      
+    } catch (error) {
+      console.error("Error al obtener último seguido:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
-    const nombre = sessionStorage.getItem("nombreUsuario") || "Usuario";
-    setTipoUsuario(tipo.toLowerCase());
-    setNombreUsuario(nombre);
+    const cargarDatos = async () => {
+      // Obtener datos del sessionStorage
+      const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
+      const nombre = sessionStorage.getItem("nombreUsuario") || "Usuario";
+      const usuarioId = sessionStorage.getItem("usuarioId");
+      const usuarioGuardado = sessionStorage.getItem("usuario");
+      
+      console.log("📝 Datos de sesión:");
+      console.log("  - Tipo usuario:", tipo);
+      console.log("  - Nombre guardado:", nombre);
+      console.log("  - Usuario ID:", usuarioId);
+      
+      // Si el nombre no está completo (solo nombre sin apellido), intentar obtener del objeto usuario
+      let nombreCompleto = nombre;
+      if (usuarioGuardado && (!nombre || nombre === "Usuario" || nombre.split(" ").length === 1)) {
+        try {
+          const usuario = JSON.parse(usuarioGuardado);
+          if (usuario.nombre && usuario.apellido) {
+            nombreCompleto = `${usuario.nombre} ${usuario.apellido}`;
+            // Actualizar sessionStorage con el nombre completo
+            sessionStorage.setItem("nombreUsuario", nombreCompleto);
+            console.log("✅ Nombre completo obtenido del usuario:", nombreCompleto);
+          } else if (usuario.nombre) {
+            nombreCompleto = usuario.nombre;
+          }
+        } catch (e) {
+          console.error("Error al parsear usuario:", e);
+        }
+      }
+      
+      setTipoUsuario(tipo.toLowerCase());
+      setNombreUsuario(nombreCompleto);
+      
+      if (usuarioId && tipo.toLowerCase() === "estudiante") {
+        const ultimo = await obtenerUltimoSeguido(usuarioId);
+        setUltimoEmprendimiento(ultimo);
+      }
+      
+      setLoadingUltimo(false);
+    };
+    
+    cargarDatos();
   }, []);
 
   const esEstudiante = tipoUsuario === "estudiante";
 
-  // Stats según el tipo de usuario
+  // Stats dinámicos
   const stats = esEstudiante
     ? [
-        { value: "4", label: "Emprendimientos seguidos" },
+        { value: totalSeguidos.toString(), label: "Emprendimientos seguidos" },
         { value: "18", label: "Productos explorados" },
         { value: "3", label: "Facultades descubiertas" },
       ]
@@ -59,6 +179,9 @@ export default function InicioEstudiantePage() {
               : "Apoya y gestiona los emprendimientos estudiantiles, conecta con la comunidad UCC."}
           </p>
           <div className={styles.heroActions}>
+            <Link href="/" className={styles.btnSecondary}>
+              ← Inicio
+            </Link>
             <Link href="/emprendimientos" className={styles.btnPrimary}>
               Explorar emprendimientos →
             </Link>
@@ -114,15 +237,37 @@ export default function InicioEstudiantePage() {
             <div className={styles.summaryGrid}>
               <div className={styles.summaryCard}>
                 <p className={styles.summaryLabel}>
-                  {esEstudiante ? "Emprendimiento destacado" : "Programa destacado"}
+                  {esEstudiante ? "Último emprendimiento seguido" : "Programa destacado"}
                 </p>
-                <p className={styles.empName}>BioLab UCC</p>
-                <p className={styles.empDesc}>
-                  {esEstudiante
-                    ? "Laboratorio de biotecnología estudiantil — Facultad de Ciencias."
-                    : "Iniciativa estudiantil de biotecnología con gran impacto en la comunidad."}
-                </p>
-                <Link href="/emprendimiento/biolab-ucc" className={styles.btnLink}>Ver más →</Link>
+                {loadingUltimo ? (
+                  <div className={styles.loadingText}>Cargando...</div>
+                ) : ultimoEmprendimiento ? (
+                  <>
+                    <p className={styles.empName}>{ultimoEmprendimiento.nombre}</p>
+                    <p className={styles.empDesc}>
+                      {ultimoEmprendimiento.descripcion?.substring(0, 100) || "Sin descripción"}
+                      {ultimoEmprendimiento.descripcion?.length > 100 ? "..." : ""}
+                    </p>
+                    {ultimoEmprendimiento.categoriaNombre && (
+                      <p className={styles.empCat}>
+                        <span className={styles.catBadge}>{ultimoEmprendimiento.categoriaNombre}</span>
+                      </p>
+                    )}
+                    <Link href={`/emprendimientos/${ultimoEmprendimiento.id || ultimoEmprendimiento._id}`} className={styles.btnLink}>
+                      Ver más →
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p className={styles.empName}>No sigues ningún emprendimiento</p>
+                    <p className={styles.empDesc}>
+                      Explora emprendimientos y dale click en "Seguir" para verlos aquí.
+                    </p>
+                    <Link href="/emprendimientos" className={styles.btnLink}>
+                      Explorar emprendimientos →
+                    </Link>
+                  </>
+                )}
               </div>
               <div className={styles.summaryCard}>
                 <p className={styles.summaryLabel}>Completar mi perfil</p>
