@@ -8,6 +8,7 @@ const navLinks = [
   { label: "Inicio",          href: "/" },
   { label: "Nosotros",        href: "/nosotros" },
   { label: "Emprendimientos", href: "/emprendimientos" },
+  { label: "Eventos",         href: "/eventos" },
 ];
 
 export default function Header() {
@@ -22,7 +23,7 @@ export default function Header() {
   // Verificar si hay usuario logueado
   useEffect(() => {
     const userStr = sessionStorage.getItem('usuario');
-    const userName = sessionStorage.getItem('usuarioNombre');
+    const userName = sessionStorage.getItem('nombreUsuario');
     const tipoUsuario = sessionStorage.getItem('tipoUsuario');
     
     if (userStr) {
@@ -45,7 +46,9 @@ export default function Header() {
   const irAlPerfil = () => {
     const tipoUsuario = usuarioActual?.tipoUsuario || sessionStorage.getItem('tipoUsuario');
     
-    if (tipoUsuario === "emprendedor") {
+    if (tipoUsuario === "admin") {
+      router.push("/inicioadmin");
+    } else if (tipoUsuario === "emprendedor") {
       router.push("/inicioemprendedor");
     } else if (tipoUsuario === "estudiante" || tipoUsuario === "administrativo") {
       router.push("/inicioestudiante");
@@ -63,7 +66,7 @@ export default function Header() {
     // Limpiar sessionStorage
     sessionStorage.removeItem('usuario');
     sessionStorage.removeItem('usuarioId');
-    sessionStorage.removeItem('usuarioNombre');
+    sessionStorage.removeItem('nombreUsuario');
     sessionStorage.removeItem('tipoUsuario');
     sessionStorage.removeItem('redirectAfterLogin');
     
@@ -76,6 +79,15 @@ export default function Header() {
     // Redirigir al inicio
     router.push('/');
   };
+
+  // Verificar si el usuario es emprendedor o estudiante/administrativo (no admin)
+  const puedeVerPedidos = usuarioActual?.tipoUsuario !== "admin";
+  const puedeVerEmprendimientos = usuarioActual?.tipoUsuario === "emprendedor";
+  
+  // 🔥 REGLA: Mostrar botón "Publicar emprendimiento" SOLO si:
+  // 1. No hay usuario logueado, O
+  // 2. El usuario logueado es EMPRENDEDOR
+  const mostrarBotonPublicar = !usuarioActual || usuarioActual?.tipoUsuario === "emprendedor";
 
   return (
     <header className={styles.header}>
@@ -123,7 +135,7 @@ export default function Header() {
                 </svg>
               </button>
               <div className={styles.userDropdown}>
-                {/* Mi perfil - ahora es un botón con redirección personalizada */}
+                {/* Mi perfil - redirige según tipo de usuario */}
                 <button onClick={irAlPerfil} className={styles.dropdownItem}>
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                     <circle cx="10" cy="7" r="3.5"/>
@@ -133,7 +145,7 @@ export default function Header() {
                 </button>
                 
                 {/* Mis emprendimientos (solo para emprendedores) */}
-                {usuarioActual.tipoUsuario === 'emprendedor' && (
+                {puedeVerEmprendimientos && (
                   <Link href="/mis-emprendimientos" className={styles.dropdownItem}>
                     <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                       <rect x="2" y="4" width="16" height="13" rx="2"/>
@@ -143,14 +155,16 @@ export default function Header() {
                   </Link>
                 )}
                 
-                {/* Mis pedidos */}
-                <Link href="/mis-pedidos" className={styles.dropdownItem}>
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                  </svg>
-                  Mis pedidos
-                </Link>
+                {/* Mis pedidos (solo para NO administradores) */}
+                {puedeVerPedidos && (
+                  <Link href="/mis-pedidos" className={styles.dropdownItem}>
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                      <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    </svg>
+                    Mis pedidos
+                  </Link>
+                )}
                 
                 <div className={styles.dropdownDivider} />
                 <button onClick={cerrarSesion} className={styles.dropdownItemLogout}>
@@ -171,9 +185,13 @@ export default function Header() {
               Ingresar
             </Link>
           )}
-          <Link href="/miemprendimiento" className={styles.ctaBtn}>
-            Publicar emprendimiento →
-          </Link>
+          
+          {/* 🔥 Botón "Publicar emprendimiento" - Aparece si NO hay usuario logueado O es EMPRENDEDOR */}
+          {mostrarBotonPublicar && (
+            <Link href="/miemprendimiento" className={styles.ctaBtn}>
+              Publicar emprendimiento →
+            </Link>
+          )}
         </div>
 
         {/* ── Hamburger ── */}
@@ -222,7 +240,7 @@ export default function Header() {
               </button>
               
               {/* Mis emprendimientos (solo para emprendedores) */}
-              {usuarioActual.tipoUsuario === 'emprendedor' && (
+              {puedeVerEmprendimientos && (
                 <Link href="/mis-emprendimientos" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
                   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                     <rect x="2" y="4" width="16" height="13" rx="2"/>
@@ -232,14 +250,16 @@ export default function Header() {
                 </Link>
               )}
               
-              {/* Mis pedidos */}
-              <Link href="/mis-pedidos" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                </svg>
-                Mis pedidos
-              </Link>
+              {/* Mis pedidos (solo para NO administradores) */}
+              {puedeVerPedidos && (
+                <Link href="/mis-pedidos" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                  </svg>
+                  Mis pedidos
+                </Link>
+              )}
               
               <button onClick={cerrarSesion} className={styles.mobileLogoutBtn}>
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor">
@@ -259,9 +279,13 @@ export default function Header() {
               </Link>
             </>
           )}
-          <Link href="/miemprendimiento" className={styles.mobileCta} onClick={() => setMenuOpen(false)}>
-            Publicar emprendimiento →
-          </Link>
+          
+          {/* 🔥 Botón "Publicar emprendimiento" en móvil - Aparece si NO hay usuario logueado O es EMPRENDEDOR */}
+          {mostrarBotonPublicar && (
+            <Link href="/miemprendimiento" className={styles.mobileCta} onClick={() => setMenuOpen(false)}>
+              Publicar emprendimiento →
+            </Link>
+          )}
         </div>
       )}
     </header>

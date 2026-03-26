@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "../Components/header";
-import Footer from "../Components/footer";
 import styles from "../css/inicioAdmin/page.module.css";
 
 interface Emprendimiento {
@@ -16,12 +14,7 @@ interface Emprendimiento {
   estado: string;
   telefono?: string;
   imagenes: string[];
-  productos: Array<{
-    nombre: string;
-    precio: number;
-    stock: number;
-    imagen: string;
-  }>;
+  productos: Array<{ nombre: string; precio: number; stock: number; imagen: string; }>;
   createdAt?: string;
 }
 
@@ -42,503 +35,521 @@ interface Categoria {
   descripcion: string;
 }
 
+interface Evento {
+  id: string;
+  nombre: string;
+  fecha: string;
+  hora: string;
+  lugar: string;
+  modalidad: "Presencial" | "Virtual" | "Híbrido";
+  descripcion: string;
+  tipo: string;
+  imagen: string;
+}
+
+type Tab = "pendientes" | "activos" | "eventos";
+
 export default function InicioAdminPage() {
   const router = useRouter();
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Datos del dashboard
-  const [stats, setStats] = useState({
-    totalEmprendimientos: 0,
-    pendientesAprobacion: 0,
-    activos: 0,
-    totalUsuarios: 0,
-    emprendedores: 0,
-    estudiantes: 0,
-  });
-  
+
+  const [stats, setStats] = useState({ totalEmprendimientos: 0, pendientesAprobacion: 0, activos: 0, totalUsuarios: 0, emprendedores: 0, estudiantes: 0 });
   const [emprendimientosPendientes, setEmprendimientosPendientes] = useState<Emprendimiento[]>([]);
   const [emprendimientosActivos, setEmprendimientosActivos] = useState<Emprendimiento[]>([]);
   const [categorias, setCategorias] = useState<Map<string, string>>(new Map());
   const [usuariosMap, setUsuariosMap] = useState<Map<string, Usuario>>(new Map());
-  
-  const [activeTab, setActiveTab] = useState<"pendientes" | "activos" | "todos">("pendientes");
+  const [activeTab, setActiveTab] = useState<Tab>("pendientes");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Verificar sesión al cargar
+  const [eventos, setEventos] = useState<Evento[]>(() => {
+    if (typeof window !== "undefined") {
+      const guardados = localStorage.getItem("eventos_ucc");
+      if (guardados) {
+        try {
+          return JSON.parse(guardados);
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
+  const [modalEventoAbierto, setModalEventoAbierto] = useState(false);
+  const [modalAyudaAbierto, setModalAyudaAbierto] = useState(false);
+  const [eventoEditando, setEventoEditando] = useState<Evento | null>(null);
+  const [formEvento, setFormEvento] = useState<Omit<Evento, "id">>({ 
+    nombre: "", 
+    fecha: "", 
+    hora: "", 
+    lugar: "", 
+    modalidad: "Presencial", 
+    descripcion: "", 
+    tipo: "",
+    imagen: ""
+  });
+
   useEffect(() => {
     const usuarioGuardado = sessionStorage.getItem("usuario");
-    
-    if (!usuarioGuardado) {
-      router.push("/autenticacion/login");
-      return;
-    }
-    
+    if (!usuarioGuardado) { router.push("/autenticacion/login"); return; }
     const user = JSON.parse(usuarioGuardado);
-    
-    // Verificar que sea administrador
-    if (user.tipoUsuario !== "admin") {
-      alert("⚠️ No tienes permisos de administrador");
-      router.push("/");
-      return;
-    }
-    
+    if (user.tipoUsuario !== "admin") { router.push("/"); return; }
     setUsuario(user);
     cargarDatos();
   }, [router]);
 
-  // Obtener categorías
   const obtenerCategorias = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/categorias");
-      if (!response.ok) return;
-      const data: Categoria[] = await response.json();
+      const res = await fetch("http://localhost:8080/api/categorias");
+      if (!res.ok) return;
+      const data: Categoria[] = await res.json();
       const map = new Map<string, string>();
-      data.forEach(cat => {
-        const id = cat.id || cat._id;
-        if (id) map.set(id, cat.nombre);
-      });
+      data.forEach(cat => { const id = cat.id || cat._id; if (id) map.set(id, cat.nombre); });
       setCategorias(map);
-    } catch (error) {
-      console.error("Error al obtener categorías:", error);
-    }
+    } catch (e) { console.error(e); }
   };
 
-  // Obtener usuarios por ID
-  const obtenerUsuario = async (usuarioId: string): Promise<Usuario | null> => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
-      if (!response.ok) return null;
-      return await response.json();
-    } catch (error) {
-      console.error("Error al obtener usuario:", error);
-      return null;
-    }
-  };
-
-  // Obtener todos los usuarios
   const obtenerTodosUsuarios = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/usuarios");
-      if (!response.ok) return [];
-      return await response.json();
-    } catch (error) {
-      console.error("Error al obtener usuarios:", error);
-      return [];
-    }
+      const res = await fetch("http://localhost:8080/api/usuarios");
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (e) { return []; }
   };
 
-  // Cargar todos los datos
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      
-      // Obtener categorías
       await obtenerCategorias();
-      
-      // Obtener todos los emprendimientos
-      const response = await fetch("http://localhost:8080/api/emprendimientos");
-      if (!response.ok) throw new Error("Error al cargar emprendimientos");
-      
-      const emprendimientos: Emprendimiento[] = await response.json();
-      
-      // Obtener todos los usuarios
+      const res = await fetch("http://localhost:8080/api/emprendimientos");
+      if (!res.ok) throw new Error();
+      const emprendimientos: Emprendimiento[] = await res.json();
       const usuarios = await obtenerTodosUsuarios();
-      const usuariosMapTemp = new Map<string, Usuario>();
-      usuarios.forEach((u: Usuario) => {
-        const id = u.id || u._id;
-        if (id) usuariosMapTemp.set(id, u);
-      });
-      setUsuariosMap(usuariosMapTemp);
-      
-      // Calcular estadísticas
+      const map = new Map<string, Usuario>();
+      usuarios.forEach((u: Usuario) => { const id = u.id || u._id; if (id) map.set(id, u); });
+      setUsuariosMap(map);
       const pendientes = emprendimientos.filter(e => e.estado === "pendiente");
       const activos = emprendimientos.filter(e => e.estado === "activo");
-      const emprendedores = usuarios.filter((u: Usuario) => u.tipoUsuario === "emprendedor");
-      const estudiantes = usuarios.filter((u: Usuario) => u.tipoUsuario === "estudiante" || u.tipoUsuario === "administrativo");
-      
-      setStats({
-        totalEmprendimientos: emprendimientos.length,
-        pendientesAprobacion: pendientes.length,
-        activos: activos.length,
-        totalUsuarios: usuarios.length,
-        emprendedores: emprendedores.length,
-        estudiantes: estudiantes.length,
-      });
-      
+      setStats({ totalEmprendimientos: emprendimientos.length, pendientesAprobacion: pendientes.length, activos: activos.length, totalUsuarios: usuarios.length, emprendedores: usuarios.filter((u: Usuario) => u.tipoUsuario === "emprendedor").length, estudiantes: usuarios.filter((u: Usuario) => u.tipoUsuario === "estudiante" || u.tipoUsuario === "administrativo").length });
       setEmprendimientosPendientes(pendientes);
       setEmprendimientosActivos(activos);
-      
-    } catch (error) {
-      console.error("Error al cargar datos:", error);
-      setError("Error al cargar los datos");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { setError("Error al cargar los datos"); }
+    finally { setLoading(false); }
   };
 
-  // Aprobar emprendimiento
   const aprobarEmprendimiento = async (id: string) => {
-    if (!confirm("¿Estás seguro de aprobar este emprendimiento?")) return;
-    
-    try {
-      const response = await fetch(`http://localhost:8080/api/emprendimientos/${id}/estado`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: "activo" })
-      });
-      
-      if (response.ok) {
-        alert("✅ Emprendimiento aprobado correctamente");
-        cargarDatos(); // Recargar datos
-      } else {
-        alert("❌ Error al aprobar el emprendimiento");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Error de conexión");
-    }
+    if (!confirm("¿Aprobar este emprendimiento?")) return;
+    try { const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}/estado`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado: "activo" }) }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
   };
 
-  // Rechazar emprendimiento
   const rechazarEmprendimiento = async (id: string) => {
-    const motivo = prompt("Motivo del rechazo:");
-    if (!motivo) return;
-    
-    try {
-      const response = await fetch(`http://localhost:8080/api/emprendimientos/${id}/estado`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: "rechazado" })
-      });
-      
-      if (response.ok) {
-        alert(`❌ Emprendimiento rechazado. Motivo: ${motivo}`);
-        cargarDatos();
-      } else {
-        alert("Error al rechazar el emprendimiento");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Error de conexión");
-    }
+    const motivo = prompt("Motivo del rechazo:"); if (!motivo) return;
+    try { const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}/estado`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado: "rechazado" }) }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
   };
 
-  // Eliminar emprendimiento
   const eliminarEmprendimiento = async (id: string) => {
-    if (!confirm("⚠️ ¿Estás seguro de eliminar este emprendimiento? Esta acción no se puede deshacer.")) return;
+    if (!confirm("¿Eliminar este emprendimiento? No se puede deshacer.")) return;
+    try { const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}`, { method: "DELETE" }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
+  };
+
+  const filtrar = (list: Emprendimiento[]) => !searchTerm ? list : list.filter(e => e.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || e.descripcion.toLowerCase().includes(searchTerm.toLowerCase()));
+  const getNombreCategoria = (id: string) => categorias.get(id) || "Sin categoría";
+  const getNombreEmprendedor = (id: string) => { const u = usuariosMap.get(id); return u ? `${u.nombre} ${u.apellido}` : "—"; };
+
+  const abrirNuevo = () => { 
+    setEventoEditando(null); 
+    setFormEvento({ 
+      nombre: "", 
+      fecha: "", 
+      hora: "", 
+      lugar: "", 
+      modalidad: "Presencial", 
+      descripcion: "", 
+      tipo: "",
+      imagen: "" 
+    }); 
+    setModalEventoAbierto(true); 
+  };
+  
+  const abrirEditar = (ev: Evento) => { 
+    setEventoEditando(ev); 
+    setFormEvento({ 
+      nombre: ev.nombre, 
+      fecha: ev.fecha, 
+      hora: ev.hora, 
+      lugar: ev.lugar, 
+      modalidad: ev.modalidad, 
+      descripcion: ev.descripcion, 
+      tipo: ev.tipo,
+      imagen: ev.imagen || "" 
+    }); 
+    setModalEventoAbierto(true); 
+  };
+  
+  const guardarEvento = () => {
+    if (!formEvento.nombre || !formEvento.fecha) return;
     
-    try {
-      const response = await fetch(`http://localhost:8080/api/emprendimientos/${id}`, {
-        method: "DELETE"
-      });
-      
-      if (response.ok) {
-        alert("🗑️ Emprendimiento eliminado correctamente");
-        cargarDatos();
-      } else {
-        alert("Error al eliminar el emprendimiento");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Error de conexión");
+    let nuevosEventos: Evento[];
+    if (eventoEditando) {
+      nuevosEventos = eventos.map(e => e.id === eventoEditando.id ? { ...formEvento, id: eventoEditando.id } : e);
+    } else {
+      const nuevoEvento = { ...formEvento, id: Date.now().toString() };
+      nuevosEventos = [...eventos, nuevoEvento];
+    }
+    
+    setEventos(nuevosEventos);
+    localStorage.setItem("eventos_ucc", JSON.stringify(nuevosEventos));
+    setModalEventoAbierto(false);
+  };
+  
+  const eliminarEvento = (id: string) => {
+    if (confirm("¿Eliminar este evento?")) {
+      const nuevosEventos = eventos.filter(e => e.id !== id);
+      setEventos(nuevosEventos);
+      localStorage.setItem("eventos_ucc", JSON.stringify(nuevosEventos));
     }
   };
 
-  // Filtrar emprendimientos por búsqueda
-  const filtrarEmprendimientos = (emprendimientos: Emprendimiento[]) => {
-    if (!searchTerm) return emprendimientos;
-    return emprendimientos.filter(emp =>
-      emp.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  };
+  if (loading) return <main className={styles.main}><div className={styles.loadingContainer}><div className={styles.spinner} /><p>Cargando panel...</p></div></main>;
+  if (error) return <main className={styles.main}><div className={styles.errorContainer}><p>{error}</p><button onClick={() => window.location.reload()} className={styles.btnPrimary}>Reintentar</button></div></main>;
 
-  // Obtener nombre de categoría
-  const getNombreCategoria = (categoriaId: string): string => {
-    return categorias.get(categoriaId) || "Sin categoría";
-  };
-
-  // Obtener nombre del emprendedor
-  const getNombreEmprendedor = (usuarioId: string): string => {
-    const user = usuariosMap.get(usuarioId);
-    return user ? `${user.nombre} ${user.apellido}` : "Usuario no encontrado";
-  };
-
-  if (loading) {
-    return (
-      <>
-        <Header />
-        <main className={styles.main}>
-          <div className={styles.loadingContainer}>
-            <div className={styles.spinner}></div>
-            <p>Cargando panel de administración...</p>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <Header />
-        <main className={styles.main}>
-          <div className={styles.errorContainer}>
-            <p>❌ {error}</p>
-            <button onClick={() => window.location.reload()}>Reintentar</button>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
+  const STATS_DATA = [
+    { value: stats.totalEmprendimientos, label: "Total emprendimientos", mod: "" },
+    { value: stats.pendientesAprobacion, label: "Pendientes de aprobación", mod: styles.statWarn },
+    { value: stats.activos, label: "Emprendimientos activos", mod: styles.statGreen },
+    { value: stats.totalUsuarios, label: "Usuarios registrados", mod: "" },
+    { value: stats.emprendedores, label: "Emprendedores", mod: "" },
+    { value: stats.estudiantes, label: "Estudiantes", mod: "" },
+  ];
 
   return (
-    <>
-      <Header />
-      <main className={styles.main}>
-        
-        {/* Header del Admin */}
-        <div className={styles.adminHeader}>
-          <div>
-            <h1 className={styles.title}>Panel de Administración</h1>
-            <p className={styles.subtitle}>
-              Bienvenido, {usuario?.nombre} {usuario?.apellido}
-            </p>
-          </div>
-          <div className={styles.adminBadge}>
-            <span className={styles.badge}>Administrador</span>
-          </div>
-        </div>
+    <main className={styles.main}>
 
-        {/* Tarjetas de estadísticas */}
+      {/* Hero */}
+      <div className={styles.hero}>
+        <div className={styles.heroContent}>
+          <Link href="/" className={styles.btnVolverInicio}>
+            ← Volver al inicio
+          </Link>
+          <h1 className={styles.heroTitle}>Panel de <span className={styles.heroAccent}>Administración</span></h1>
+          <p className={styles.heroSub}>Bienvenido, {usuario?.nombre} {usuario?.apellido}</p>
+        </div>
+        <div className={styles.heroDecor}>
+          <div className={styles.decorCircle1} />
+          <div className={styles.decorCircle2} />
+        </div>
+      </div>
+
+      <div className={styles.body}>
+
+        {/* Stats */}
         <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statIcon}>📊</div>
-            <div className={styles.statInfo}>
-              <span className={styles.statValue}>{stats.totalEmprendimientos}</span>
-              <span className={styles.statLabel}>Total emprendimientos</span>
+          {STATS_DATA.map((s, i) => (
+            <div key={i} className={`${styles.statCard} ${s.mod}`}>
+              <span className={styles.statValue}>{s.value}</span>
+              <span className={styles.statLabel}>{s.label}</span>
             </div>
-          </div>
-          
-          <div className={`${styles.statCard} ${styles.statPending}`}>
-            <div className={styles.statIcon}>⏳</div>
-            <div className={styles.statInfo}>
-              <span className={styles.statValue}>{stats.pendientesAprobacion}</span>
-              <span className={styles.statLabel}>Pendientes de aprobación</span>
-            </div>
-          </div>
-          
-          <div className={`${styles.statCard} ${styles.statActive}`}>
-            <div className={styles.statIcon}>✅</div>
-            <div className={styles.statInfo}>
-              <span className={styles.statValue}>{stats.activos}</span>
-              <span className={styles.statLabel}>Emprendimientos activos</span>
-            </div>
-          </div>
-          
-          <div className={styles.statCard}>
-            <div className={styles.statIcon}>👥</div>
-            <div className={styles.statInfo}>
-              <span className={styles.statValue}>{stats.totalUsuarios}</span>
-              <span className={styles.statLabel}>Usuarios registrados</span>
-            </div>
-          </div>
-          
-          <div className={styles.statCard}>
-            <div className={styles.statIcon}>🚀</div>
-            <div className={styles.statInfo}>
-              <span className={styles.statValue}>{stats.emprendedores}</span>
-              <span className={styles.statLabel}>Emprendedores</span>
-            </div>
-          </div>
-          
-          <div className={styles.statCard}>
-            <div className={styles.statIcon}>🎓</div>
-            <div className={styles.statInfo}>
-              <span className={styles.statValue}>{stats.estudiantes}</span>
-              <span className={styles.statLabel}>Estudiantes</span>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Sección de gestión de emprendimientos */}
-        <div className={styles.managementSection}>
-          <div className={styles.sectionHeader}>
-            <h2>Gestión de Emprendimientos</h2>
-            
-            {/* Tabs */}
+        {/* Panel principal */}
+        <div className={styles.panel}>
+          <div className={styles.panelHeader}>
             <div className={styles.tabs}>
-              <button
-                className={`${styles.tab} ${activeTab === "pendientes" ? styles.tabActive : ""}`}
-                onClick={() => setActiveTab("pendientes")}
-              >
-                Pendientes ({emprendimientosPendientes.length})
+              <button className={`${styles.tab} ${activeTab === "pendientes" ? styles.tabActive : ""}`} onClick={() => setActiveTab("pendientes")}>
+                Pendientes <span className={styles.tabCount}>{emprendimientosPendientes.length}</span>
               </button>
-              <button
-                className={`${styles.tab} ${activeTab === "activos" ? styles.tabActive : ""}`}
-                onClick={() => setActiveTab("activos")}
-              >
-                Activos ({emprendimientosActivos.length})
+              <button className={`${styles.tab} ${activeTab === "activos" ? styles.tabActive : ""}`} onClick={() => setActiveTab("activos")}>
+                Activos <span className={styles.tabCount}>{emprendimientosActivos.length}</span>
+              </button>
+              <button className={`${styles.tab} ${activeTab === "eventos" ? styles.tabActive : ""}`} onClick={() => setActiveTab("eventos")}>
+                Eventos <span className={styles.tabCount}>{eventos.length}</span>
               </button>
             </div>
-            
-            {/* Búsqueda */}
-            <div className={styles.searchBox}>
-              <input
-                type="text"
-                placeholder="Buscar emprendimiento..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={styles.searchInput}
-              />
-            </div>
+
+            {activeTab !== "eventos" && (
+              <input type="text" placeholder="Buscar emprendimiento..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={styles.searchInput} />
+            )}
+            {activeTab === "eventos" && (
+              <button className={styles.btnPrimary} onClick={abrirNuevo}>+ Nuevo evento</button>
+            )}
           </div>
-          
-          {/* Lista de emprendimientos pendientes */}
+
+          {/* Tab: Pendientes */}
           {activeTab === "pendientes" && (
-            <div className={styles.venturesList}>
-              {filtrarEmprendimientos(emprendimientosPendientes).length === 0 ? (
-                <div className={styles.emptyState}>
-                  <span>🎉</span>
-                  <p>No hay emprendimientos pendientes de aprobación</p>
-                </div>
-              ) : (
-                filtrarEmprendimientos(emprendimientosPendientes).map((emp) => (
-                  <div key={emp.id || emp._id} className={styles.ventureCard}>
-                    <div className={styles.ventureInfo}>
-                      <div className={styles.ventureImage}>
-                        {emp.imagenes && emp.imagenes[0] ? (
-                          <img src={emp.imagenes[0]} alt={emp.nombre} />
-                        ) : (
-                          <div className={styles.imagePlaceholder}>📷</div>
-                        )}
-                      </div>
-                      <div className={styles.ventureDetails}>
-                        <h3>{emp.nombre}</h3>
-                        <p className={styles.ventureDescription}>{emp.descripcion}</p>
-                        <div className={styles.ventureMeta}>
-                          <span className={styles.ventureCategory}>
-                            📁 {getNombreCategoria(emp.categoriaId)}
-                          </span>
-                          <span className={styles.ventureAuthor}>
-                            👤 {getNombreEmprendedor(emp.usuarioId)}
-                          </span>
-                          <span className={styles.ventureProducts}>
-                            📦 {emp.productos?.length || 0} productos
-                          </span>
-                        </div>
+            <div className={styles.list}>
+              {filtrar(emprendimientosPendientes).length === 0
+                ? <div className={styles.empty}><p>No hay emprendimientos pendientes de aprobación</p></div>
+                : filtrar(emprendimientosPendientes).map(emp => (
+                  <div key={emp.id || emp._id} className={styles.empCard}>
+                    <div className={styles.empImgWrap}>
+                      {emp.imagenes?.[0] ? <img src={emp.imagenes[0]} alt={emp.nombre} className={styles.empImg} /> : <div className={styles.empImgPlaceholder} />}
+                    </div>
+                    <div className={styles.empInfo}>
+                      <h3 className={styles.empNombre}>{emp.nombre}</h3>
+                      <p className={styles.empDesc}>{emp.descripcion}</p>
+                      <div className={styles.empMeta}>
+                        <span className={styles.metaTag}>{getNombreCategoria(emp.categoriaId)}</span>
+                        <span className={styles.metaTag}>{getNombreEmprendedor(emp.usuarioId)}</span>
+                        <span className={styles.metaTag}>{emp.productos?.length || 0} productos</span>
                       </div>
                     </div>
-                    <div className={styles.ventureActions}>
-                      <button
-                        className={`${styles.actionBtn} ${styles.approveBtn}`}
-                        onClick={() => aprobarEmprendimiento(emp.id || emp._id || "")}
-                      >
-                        ✅ Aprobar
-                      </button>
-                      <button
-                        className={`${styles.actionBtn} ${styles.rejectBtn}`}
-                        onClick={() => rechazarEmprendimiento(emp.id || emp._id || "")}
-                      >
-                        ❌ Rechazar
-                      </button>
-                      <button
-                        className={`${styles.actionBtn} ${styles.deleteBtn}`}
-                        onClick={() => eliminarEmprendimiento(emp.id || emp._id || "")}
-                      >
-                        🗑️ Eliminar
-                      </button>
+                    <div className={styles.empActions}>
+                      <button className={styles.btnAprobar} onClick={() => aprobarEmprendimiento(emp.id || emp._id || "")}>Aprobar</button>
+                      <button className={styles.btnRechazar} onClick={() => rechazarEmprendimiento(emp.id || emp._id || "")}>Rechazar</button>
+                      <button className={styles.btnEliminar} onClick={() => eliminarEmprendimiento(emp.id || emp._id || "")}>Eliminar</button>
                     </div>
                   </div>
                 ))
-              )}
+              }
             </div>
           )}
-          
-          {/* Lista de emprendimientos activos */}
+
+          {/* Tab: Activos */}
           {activeTab === "activos" && (
-            <div className={styles.venturesList}>
-              {filtrarEmprendimientos(emprendimientosActivos).length === 0 ? (
-                <div className={styles.emptyState}>
-                  <span>📭</span>
-                  <p>No hay emprendimientos activos</p>
-                </div>
-              ) : (
-                filtrarEmprendimientos(emprendimientosActivos).map((emp) => (
-                  <div key={emp.id || emp._id} className={styles.ventureCard}>
-                    <div className={styles.ventureInfo}>
-                      <div className={styles.ventureImage}>
-                        {emp.imagenes && emp.imagenes[0] ? (
-                          <img src={emp.imagenes[0]} alt={emp.nombre} />
-                        ) : (
-                          <div className={styles.imagePlaceholder}>📷</div>
-                        )}
-                      </div>
-                      <div className={styles.ventureDetails}>
-                        <h3>{emp.nombre}</h3>
-                        <p className={styles.ventureDescription}>{emp.descripcion}</p>
-                        <div className={styles.ventureMeta}>
-                          <span className={styles.ventureCategory}>
-                            📁 {getNombreCategoria(emp.categoriaId)}
-                          </span>
-                          <span className={styles.ventureAuthor}>
-                            👤 {getNombreEmprendedor(emp.usuarioId)}
-                          </span>
-                          <span className={styles.ventureProducts}>
-                            📦 {emp.productos?.length || 0} productos
-                          </span>
-                          <span className={styles.ventureStatus}>
-                            ✅ Activo
-                          </span>
-                        </div>
+            <div className={styles.list}>
+              {filtrar(emprendimientosActivos).length === 0
+                ? <div className={styles.empty}><p>No hay emprendimientos activos</p></div>
+                : filtrar(emprendimientosActivos).map(emp => (
+                  <div key={emp.id || emp._id} className={styles.empCard}>
+                    <div className={styles.empImgWrap}>
+                      {emp.imagenes?.[0] ? <img src={emp.imagenes[0]} alt={emp.nombre} className={styles.empImg} /> : <div className={styles.empImgPlaceholder} />}
+                    </div>
+                    <div className={styles.empInfo}>
+                      <h3 className={styles.empNombre}>{emp.nombre}</h3>
+                      <p className={styles.empDesc}>{emp.descripcion}</p>
+                      <div className={styles.empMeta}>
+                        <span className={styles.metaTag}>{getNombreCategoria(emp.categoriaId)}</span>
+                        <span className={styles.metaTag}>{getNombreEmprendedor(emp.usuarioId)}</span>
+                        <span className={styles.metaTag}>{emp.productos?.length || 0} productos</span>
+                        <span className={`${styles.metaTag} ${styles.metaActivo}`}>Activo</span>
                       </div>
                     </div>
-                    <div className={styles.ventureActions}>
-                      <Link
-                        href={`/emprendimientos/${emp.id || emp._id}`}
-                        className={`${styles.actionBtn} ${styles.viewBtn}`}
-                      >
-                        👁️ Ver
-                      </Link>
-                      <button
-                        className={`${styles.actionBtn} ${styles.deleteBtn}`}
-                        onClick={() => eliminarEmprendimiento(emp.id || emp._id || "")}
-                      >
-                        🗑️ Eliminar
-                      </button>
+                    <div className={styles.empActions}>
+                      <Link href={`/emprendimientos/${emp.id || emp._id}`} className={styles.btnVer}>Ver</Link>
+                      <button className={styles.btnEliminar} onClick={() => eliminarEmprendimiento(emp.id || emp._id || "")}>Eliminar</button>
                     </div>
                   </div>
                 ))
-              )}
+              }
+            </div>
+          )}
+
+          {/* Tab: Eventos */}
+          {activeTab === "eventos" && (
+            <div className={styles.list}>
+              {eventos.length === 0
+                ? <div className={styles.empty}><p>No hay eventos creados. Crea el primero.</p></div>
+                : eventos.map(ev => (
+                  <div key={ev.id} className={styles.eventoCard}>
+                    <div className={styles.eventoImgWrap}>
+                      {ev.imagen ? (
+                        <img src={ev.imagen} alt={ev.nombre} className={styles.eventoImg} />
+                      ) : (
+                        <div className={styles.eventoImgPlaceholder}>
+                          <span>📅</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.eventoInfo}>
+                      <div className={styles.eventoTopRow}>
+                        <h3 className={styles.eventoNombre}>{ev.nombre}</h3>
+                        <span className={styles.eventoTipo}>{ev.tipo}</span>
+                        <span className={`${styles.eventoModal} ${ev.modalidad === "Virtual" ? styles.modalVirtual : ev.modalidad === "Híbrido" ? styles.modalHibrido : styles.modalPresencial}`}>{ev.modalidad}</span>
+                      </div>
+                      <p className={styles.eventoDesc}>{ev.descripcion}</p>
+                      <div className={styles.eventoMeta}>
+                        <span>🕐 {ev.hora}</span>
+                        <span>📍 {ev.lugar}</span>
+                        <span>📅 {ev.fecha}</span>
+                      </div>
+                    </div>
+                    <div className={styles.empActions}>
+                      <button className={styles.btnVer} onClick={() => abrirEditar(ev)}>Editar</button>
+                      <button className={styles.btnEliminar} onClick={() => eliminarEvento(ev.id)}>Eliminar</button>
+                    </div>
+                  </div>
+                ))
+              }
             </div>
           )}
         </div>
 
-        {/* Acciones rápidas */}
-        <div className={styles.quickActions}>
-          <h3>Acciones rápidas</h3>
-          <div className={styles.actionsGrid}>
-            <Link href="/usuarios" className={styles.actionCard}>
-              <span>👥</span>
-              <p>Gestionar usuarios</p>
-            </Link>
-            <Link href="/categorias" className={styles.actionCard}>
-              <span>📁</span>
-              <p>Gestionar categorías</p>
-            </Link>
-            <Link href="/reportes" className={styles.actionCard}>
-              <span>📊</span>
-              <p>Ver reportes</p>
-            </Link>
+      {/* Acciones rápidas */}
+      <div className={styles.quickSection}>
+        <h3 className={styles.quickTitle}>Acciones rápidas</h3>
+        <div className={styles.quickGrid}>
+          <Link href="/usuarios" className={styles.quickCard}>
+            <span className={styles.quickLabel}>👥 Gestionar usuarios</span>
+            <span className={styles.quickArrow}>→</span>
+          </Link>
+          <Link href="/categorias" className={styles.quickCard}>
+            <span className={styles.quickLabel}>📁 Gestionar categorías</span>
+            <span className={styles.quickArrow}>→</span>
+          </Link>
+          <Link href="/reportes" className={styles.quickCard}>
+            <span className={styles.quickLabel}>📊 Ver reportes</span>
+            <span className={styles.quickArrow}>→</span>
+          </Link>
+        </div>
+      </div>
+
+      </div>
+
+      {/* Modal evento */}
+      {modalEventoAbierto && (
+        <div className={styles.overlay} onClick={() => setModalEventoAbierto(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>{eventoEditando ? "Editar evento" : "Nuevo evento"}</h2>
+              <button className={styles.modalClose} onClick={() => setModalEventoAbierto(false)}>✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Nombre del evento</label>
+                <input className={styles.formInput} value={formEvento.nombre} onChange={e => setFormEvento(p => ({ ...p, nombre: e.target.value }))} placeholder="Ej: Feria de Emprendimiento" />
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Fecha</label>
+                  <input className={styles.formInput} type="date" value={formEvento.fecha} onChange={e => setFormEvento(p => ({ ...p, fecha: e.target.value }))} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Hora</label>
+                  <input className={styles.formInput} value={formEvento.hora} onChange={e => setFormEvento(p => ({ ...p, hora: e.target.value }))} placeholder="Ej: 9:00 AM" />
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Lugar</label>
+                <input className={styles.formInput} value={formEvento.lugar} onChange={e => setFormEvento(p => ({ ...p, lugar: e.target.value }))} placeholder="Ej: Bloque A – Campus" />
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Tipo</label>
+                  <select className={styles.formInput} value={formEvento.tipo} onChange={e => setFormEvento(p => ({ ...p, tipo: e.target.value }))}>
+                    <option value="">Seleccionar</option>
+                    {["Feria","Workshop","Charla","Bootcamp","Networking","Demo Day"].map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Modalidad</label>
+                  <select className={styles.formInput} value={formEvento.modalidad} onChange={e => setFormEvento(p => ({ ...p, modalidad: e.target.value as any }))}>
+                    <option>Presencial</option>
+                    <option>Virtual</option>
+                    <option>Híbrido</option>
+                  </select>
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <div className={styles.labelWithHelp}>
+                  <label className={styles.formLabel}>URL de la imagen</label>
+                  <button 
+                    type="button" 
+                    className={styles.helpBtn}
+                    onClick={() => setModalAyudaAbierto(true)}
+                  >
+                    ❓ ¿Cómo obtener la URL?
+                  </button>
+                </div>
+                <input className={styles.formInput} value={formEvento.imagen} onChange={e => setFormEvento(p => ({ ...p, imagen: e.target.value }))} placeholder="https://i.postimg.cc/xxxx/imagen.jpg" />
+                <small className={styles.formHelper}>Usa PostImages.org para subir imágenes (tamaño recomendado: 320x240)</small>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Descripción</label>
+                <textarea className={styles.formTextarea} rows={3} value={formEvento.descripcion} onChange={e => setFormEvento(p => ({ ...p, descripcion: e.target.value }))} placeholder="Describe el evento..." />
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.btnCancelar} onClick={() => setModalEventoAbierto(false)}>Cancelar</button>
+              <button className={styles.btnPrimary} onClick={guardarEvento}>{eventoEditando ? "Guardar cambios" : "Crear evento"}</button>
+            </div>
           </div>
         </div>
+      )}
 
-      </main>
-      <Footer />
-    </>
+      {/* Modal de ayuda para imágenes */}
+      {modalAyudaAbierto && (
+        <div className={styles.overlay} onClick={() => setModalAyudaAbierto(false)}>
+          <div className={`${styles.modal} ${styles.modalAyuda}`} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>📸 ¿Cómo obtener la URL de mi imagen?</h2>
+              <button className={styles.modalClose} onClick={() => setModalAyudaAbierto(false)}>✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.guiaContainer}>
+                <div className={styles.guiaPaso}>
+                  <span className={styles.guiaNumero}>1</span>
+                  <div>
+                    <strong>Ve a PostImages.org</strong>
+                    <p><a href="https://www.postimages.org/" target="_blank" rel="noopener noreferrer">https://www.postimages.org/</a></p>
+                  </div>
+                </div>
+                <div className={styles.guiaPaso}>
+                  <span className={styles.guiaNumero}>2</span>
+                  <div>
+                    <strong>Inicia sesión o crea una cuenta gratuita</strong>
+                    <p>Es rápido y gratuito</p>
+                  </div>
+                </div>
+                <div className={styles.guiaPaso}>
+                  <span className={styles.guiaNumero}>3</span>
+                  <div>
+                    <strong>Verás "Mi galería (1)" — déjalo así</strong>
+                    <p>No es necesario cambiar esta opción</p>
+                  </div>
+                </div>
+                <div className={styles.guiaPaso}>
+                  <span className={styles.guiaNumero}>4</span>
+                  <div>
+                    <strong>Cambia el tamaño a "320x240 — tamaño para web"</strong>
+                    <p>Este tamaño es perfecto para las tarjetas de eventos</p>
+                  </div>
+                </div>
+                <div className={styles.guiaPaso}>
+                  <span className={styles.guiaNumero}>5</span>
+                  <div>
+                    <strong>Deja "Sin caducidad" seleccionado</strong>
+                    <p>Para que la imagen no expire</p>
+                  </div>
+                </div>
+                <div className={styles.guiaPaso}>
+                  <span className={styles.guiaNumero}>6</span>
+                  <div>
+                    <strong>Selecciona tu imagen y haz clic en "Subir"</strong>
+                    <p>Espera a que termine la carga</p>
+                  </div>
+                </div>
+                <div className={styles.guiaPaso}>
+                  <span className={styles.guiaNumero}>7</span>
+                  <div>
+                    <strong>Busca la opción "Miniatura para sitios web"</strong>
+                    <p>Aparecerá después de subir la imagen</p>
+                  </div>
+                </div>
+                <div className={styles.guiaPaso}>
+                  <span className={styles.guiaNumero}>8</span>
+                  <div>
+                    <strong>Copia SOLO la URL dentro de `src='...'`</strong>
+                    <div className={styles.guiaEjemplo}>
+                      <p>Ejemplo:</p>
+                      <code>{`<img src='https://i.postimg.cc/xxxx/imagen.jpg' />`}</code>
+                      <p>Copias solo: <strong>https://i.postimg.cc/xxxx/imagen.jpg</strong></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.guiaNota}>
+                <p>💡 <strong>Consejo:</strong> Puedes previsualizar la imagen pegando la URL en el campo y viendo si aparece correctamente en la tarjeta del evento.</p>
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.btnPrimary} onClick={() => setModalAyudaAbierto(false)}>Entendido</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </main>
   );
 }

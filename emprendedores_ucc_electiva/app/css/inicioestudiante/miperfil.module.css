@@ -347,3 +347,11 @@
   .profileGrid { grid-template-columns: 1fr; }
   .profileHeader { flex-direction: column; align-items: flex-start; }
 }
+
+/* Agregar al final del archivo */
+
+.profileCarrera {
+  font-size: 0.83rem;
+  color: #78909c;
+  margin: 0;
+}

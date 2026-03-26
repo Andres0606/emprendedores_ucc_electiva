@@ -19,7 +19,7 @@ export default function MiPerfilPage() {
   const [tipoUsuario, setTipoUsuario] = useState("estudiante");
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [bio, setBio] = useState("");
-  const [facultad, setFacultad] = useState("");
+  const [carrera, setCarrera] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedCats, setSelectedCats] = useState<Set<number>>(new Set());
@@ -41,8 +41,8 @@ export default function MiPerfilPage() {
           if (usuarioGuardado) {
             const usuario = JSON.parse(usuarioGuardado);
             const carreraUsuario = usuario.carrera || usuario.facultad;
-            if (carreraUsuario && carreraUsuario !== "Facultad no especificada") {
-              setFacultad(carreraUsuario);
+            if (carreraUsuario && carreraUsuario !== "Carrera no especificada") {
+              setCarrera(carreraUsuario);
             } else {
               const usuarioId = sessionStorage.getItem("usuarioId");
               if (usuarioId) {
@@ -52,25 +52,25 @@ export default function MiPerfilPage() {
                     const data = await res.json();
                     const carreraBackend = data.carrera || data.facultad;
                     if (carreraBackend) {
-                      setFacultad(carreraBackend);
+                      setCarrera(carreraBackend);
                       usuario.carrera = carreraBackend;
                       sessionStorage.setItem("usuario", JSON.stringify(usuario));
                     } else {
-                      setFacultad("Facultad no especificada");
+                      setCarrera("Carrera no especificada");
                     }
                   } else {
-                    setFacultad("Facultad no especificada");
+                    setCarrera("Carrera no especificada");
                   }
                 } catch (error) {
                   console.error("Error al obtener carrera del backend:", error);
-                  setFacultad("Facultad no especificada");
+                  setCarrera("Carrera no especificada");
                 }
               } else {
-                setFacultad("Facultad no especificada");
+                setCarrera("Carrera no especificada");
               }
             }
           } else {
-            setFacultad("Facultad no especificada");
+            setCarrera("Carrera no especificada");
           }
         } else {
           setBio("Administrativo de la Universidad Cooperativa de Colombia. Apoyando y fomentando la cultura emprendedora en la comunidad UCC.");
@@ -84,7 +84,7 @@ export default function MiPerfilPage() {
 
       } catch (error) {
         console.error("Error al cargar datos del usuario:", error);
-        setFacultad("Facultad no especificada");
+        setCarrera("Carrera no especificada");
       } finally {
         setIsLoading(false);
       }
@@ -144,8 +144,8 @@ export default function MiPerfilPage() {
             <span className={styles.profileBadge}>
               {esEstudiante ? "Estudiante UCC" : "Administrativo UCC"}
             </span>
-            {esEstudiante && facultad && facultad !== "Facultad no especificada" && (
-              <p className={styles.profileFacultad}>{facultad}</p>
+            {esEstudiante && carrera && carrera !== "Carrera no especificada" && (
+              <p className={styles.profileCarrera}>{carrera}</p>
             )}
           </div>
 
@@ -157,7 +157,7 @@ export default function MiPerfilPage() {
         {/* Grid */}
         <div className={styles.profileGrid}>
 
-          {/* Sobre mí */}
+          {/* Sobre mí - EDITABLE */}
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>Sobre mí</h2>
             {editing ? (
@@ -172,7 +172,7 @@ export default function MiPerfilPage() {
             )}
           </section>
 
-          {/* Datos académicos / profesionales */}
+          {/* Datos académicos - NO EDITABLE */}
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>
               {esEstudiante ? "Datos académicos" : "Información"}
@@ -181,18 +181,10 @@ export default function MiPerfilPage() {
               {esEstudiante ? (
                 <>
                   <li>
-                    <span className={styles.dataKey}>Facultad</span>
-                    {editing ? (
-                      <input
-                        className={styles.inputField}
-                        value={facultad}
-                        onChange={(e) => setFacultad(e.target.value)}
-                      />
-                    ) : (
-                      <span className={styles.dataVal}>
-                        {facultad && facultad !== "Facultad no especificada" ? facultad : "No especificada"}
-                      </span>
-                    )}
+                    <span className={styles.dataKey}>Carrera</span>
+                    <span className={styles.dataVal}>
+                      {carrera && carrera !== "Carrera no especificada" ? carrera : "No especificada"}
+                    </span>
                   </li>
                 </>
               ) : (
@@ -216,10 +208,14 @@ export default function MiPerfilPage() {
               </button>
             </div>
 
-            {/* Chips seleccionados */}
+            {/* Chips seleccionados - SIEMPRE VISIBLES */}
             <div className={styles.selectedCats}>
               {selectedCats.size === 0 ? (
-                <span className={styles.noSelected}>Seleccioná tus categorías de interés abajo</span>
+                <span className={styles.noSelected}>
+                  {editingCats 
+                    ? "Haz clic en las categorías de abajo para seleccionar tus intereses" 
+                    : "No has seleccionado categorías de interés. Haz clic en 'Editar' para personalizar."}
+                </span>
               ) : (
                 Array.from(selectedCats).map((id) => {
                   const cat = CATEGORIAS.find((c) => c.id === id)!;
@@ -242,17 +238,20 @@ export default function MiPerfilPage() {
               )}
             </div>
 
+            {/* Separador */}
             <hr className={styles.catDivider} />
+            
+            {/* Todas las categorías - SIEMPRE VISIBLES */}
             <p className={styles.catAllLabel}>Todas las categorías</p>
-
             <div className={styles.allCats}>
               {CATEGORIAS.map((cat) => (
                 <span
                   key={cat.id}
                   className={`${styles.catChipOpt} ${selectedCats.has(cat.id) ? styles.catChipOptDisabled : ""}`}
                   onClick={() => {
-                    if (selectedCats.has(cat.id)) return;
-                    setSelectedCats(new Set([...selectedCats, cat.id]));
+                    if (!selectedCats.has(cat.id)) {
+                      setSelectedCats(new Set([...selectedCats, cat.id]));
+                    }
                   }}
                 >
                   {cat.label}
