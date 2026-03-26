@@ -115,6 +115,7 @@ export default function DetalleEmprendimientoPage() {
   const [totalSeguidores, setTotalSeguidores] = useState(0);
   const [cargandoSeguimiento, setCargandoSeguimiento] = useState(false);
   const [creandoPedido, setCreandoPedido] = useState(false);
+  const [pedidoConfirmado, setPedidoConfirmado] = useState(false); // Nuevo estado
 
   // Carrito - selector por producto
   const [estadoCarrito, setEstadoCarrito] = useState<Record<number, ProductoCarritoState>>({});
@@ -186,7 +187,22 @@ export default function DetalleEmprendimientoPage() {
     }
   };
 
-  const crearPedido = async () => {
+  // 🔥 FUNCIÓN CORREGIDA: Primero muestra la factura, luego crea el pedido
+  const mostrarFactura = () => {
+    if (itemsCarrito.length === 0) {
+      alert("No hay productos en el carrito");
+      return;
+    }
+    
+    // Generar número de factura y mostrar la vista
+    setNumFactura(generarNumFactura());
+    setFechaFactura(fechaActual());
+    setPedidoConfirmado(false);
+    setVistaFactura(true);
+  };
+
+  // 🔥 FUNCIÓN PARA CONFIRMAR EL PEDIDO (desde la factura)
+  const confirmarPedido = async () => {
     if (!usuarioActual?.id) {
       alert("Debes iniciar sesión para realizar un pedido");
       router.push('/autenticacion/login');
@@ -243,6 +259,7 @@ export default function DetalleEmprendimientoPage() {
         }
       }
       
+      // Vaciar carrito solo después de crear el pedido exitosamente
       localStorage.setItem('carrito', '[]');
       setItemsCarrito([]);
       
@@ -252,15 +269,29 @@ export default function DetalleEmprendimientoPage() {
         });
       }
       
-      alert('¡Pedido creado exitosamente! Revisa tu correo para más detalles.');
+      setPedidoConfirmado(true);
+      alert('✅ ¡Pedido creado exitosamente! Puedes imprimir esta factura como comprobante.');
       return true;
       
     } catch (error) {
       console.error('Error al crear pedido:', error);
-      alert('Error al crear el pedido. Por favor intenta nuevamente.');
+      alert('❌ Error al crear el pedido. Por favor intenta nuevamente.');
       return false;
     } finally {
       setCreandoPedido(false);
+    }
+  };
+
+  // Cerrar factura y volver al carrito
+  const cerrarFactura = () => {
+    if (pedidoConfirmado) {
+      // Si el pedido ya fue confirmado, cerrar todo
+      setCarritoAbierto(false);
+      setVistaFactura(false);
+      setPedidoConfirmado(false);
+    } else {
+      // Solo cerrar la factura, volver al carrito
+      setVistaFactura(false);
     }
   };
 
@@ -317,33 +348,27 @@ export default function DetalleEmprendimientoPage() {
   };
 
   const vaciarCarrito = async () => {
-    localStorage.setItem('carrito', '[]');
-    setItemsCarrito([]);
-    setVistaFactura(false);
-    
-    if (usuarioActual?.id) {
-      await sincronizarCarritoConBackend(usuarioActual.id, []);
+    if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
+      localStorage.setItem('carrito', '[]');
+      setItemsCarrito([]);
+      setVistaFactura(false);
+      
+      if (usuarioActual?.id) {
+        await sincronizarCarritoConBackend(usuarioActual.id, []);
+      }
     }
   };
 
   const abrirCarrito = () => {
     leerCarrito();
     setVistaFactura(false);
+    setPedidoConfirmado(false);
     setCarritoAnimando(true);
     setTimeout(() => setCarritoAnimando(false), 600);
     setCarritoAbierto(true);
   };
 
-  const generarFactura = async () => {
-    const pedidoCreado = await crearPedido();
-    if (pedidoCreado) {
-      setNumFactura(generarNumFactura());
-      setFechaFactura(fechaActual());
-      setVistaFactura(true);
-    }
-  };
-
-  const cerrarDrawer = () => { setCarritoAbierto(false); setVistaFactura(false); };
+  const cerrarDrawer = () => { setCarritoAbierto(false); setVistaFactura(false); setPedidoConfirmado(false); };
 
   // ── Animación partícula ──
   const lanzarAnimacion = (botonEl: HTMLButtonElement, imagenProducto: string) => {
@@ -418,7 +443,6 @@ export default function DetalleEmprendimientoPage() {
     leerCarrito();
     lanzarAnimacion(event.currentTarget, producto.imagen || "🛒");
     
-    // Sincronizar con backend
     if (usuarioActual?.id) {
       await sincronizarCarritoConBackend(usuarioActual.id, carritoActual);
     }
@@ -574,7 +598,7 @@ export default function DetalleEmprendimientoPage() {
             <div className={styles.drawerHeader}>
               <div className={styles.drawerHeaderLeft}>
                 {vistaFactura ? (
-                  <button className={styles.drawerBackBtn} onClick={() => setVistaFactura(false)}>← Volver</button>
+                  <button className={styles.drawerBackBtn} onClick={cerrarFactura}>← Volver</button>
                 ) : (
                   <>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -650,20 +674,43 @@ export default function DetalleEmprendimientoPage() {
                   {/* Aviso */}
                   <div className={styles.facturaAviso}>
                     ⚠️ Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.
+                    Imprimir primero la factura
                   </div>
 
-                  {/* Pie de página — solo visible al imprimir */}
+                  {/* Pie de página */}
                   <div className={styles.facturaPie}>
                     <span>Gracias por apoyar los emprendimientos estudiantiles</span>
                     <span>EmprendedoresUCC · Universidad Cooperativa de Colombia · Villavicencio</span>
                   </div>
 
-                  {/* Botones */}
+                  {/* 🔥 BOTONES CORREGIDOS */}
                   <div className={styles.facturaAcciones}>
-                    <button className={styles.facturaVaciarBtn} onClick={vaciarCarrito}>Vaciar carrito</button>
-                    <button className={styles.facturaPrintBtn} onClick={() => window.print()}>
+                    <button 
+                      className={styles.facturaVaciarBtn} 
+                      onClick={cerrarFactura}
+                    >
+                      ← Volver
+                    </button>
+                    <button 
+                      className={styles.facturaPrintBtn} 
+                      onClick={() => window.print()}
+                    >
                       🖨️ Imprimir factura
                     </button>
+                    {!pedidoConfirmado && (
+                      <button 
+                        className={styles.facturaConfirmarBtn} 
+                        onClick={confirmarPedido}
+                        disabled={creandoPedido}
+                      >
+                        {creandoPedido ? "⏳ Procesando..." : "✅ Confirmar pedido"}
+                      </button>
+                    )}
+                    {pedidoConfirmado && (
+                      <div className={styles.facturaExito}>
+                        <span>🎉 ¡Pedido confirmado! Puedes imprimir esta factura como comprobante.</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -721,8 +768,8 @@ export default function DetalleEmprendimientoPage() {
                     </div>
                     <div className={styles.drawerAcciones}>
                       <button className={styles.drawerVaciarBtn} onClick={vaciarCarrito}>Vaciar</button>
-                      <button className={styles.drawerPagarBtn} onClick={generarFactura} disabled={creandoPedido}>
-                        {creandoPedido ? "Procesando..." : "💳 Pagar"}
+                      <button className={styles.drawerPagarBtn} onClick={mostrarFactura}>
+                        💳 Pagar
                       </button>
                     </div>
                   </div>
