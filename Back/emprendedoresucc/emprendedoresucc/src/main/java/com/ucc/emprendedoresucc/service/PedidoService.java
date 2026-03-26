@@ -91,4 +91,14 @@ public class PedidoService {
         
         return dto;
     }
+    public Integer obtenerUltimoNumeroPedido() {
+    List<Pedido> pedidos = pedidoRepository.findAll();
+    if (pedidos.isEmpty()) {
+        return 0;
+    }
+    return pedidos.stream()
+            .map(Pedido::getNumeroPedido)
+            .max(Integer::compareTo)
+            .orElse(0);
+}
 }

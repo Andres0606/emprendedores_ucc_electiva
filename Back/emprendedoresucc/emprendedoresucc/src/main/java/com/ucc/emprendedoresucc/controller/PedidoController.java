@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,4 +81,17 @@ public class PedidoController {
                 .body("Error al actualizar el estado del pedido: " + e.getMessage());
         }
     }
+    @GetMapping("/ultimo-numero")
+public ResponseEntity<?> obtenerUltimoNumeroPedido() {
+    try {
+        Integer ultimoNumero = pedidoService.obtenerUltimoNumeroPedido();
+        Map<String, Integer> response = new HashMap<>();
+        response.put("ultimoNumero", ultimoNumero);
+        return ResponseEntity.ok(response);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(500).body("Error al obtener último número");
+    }
+}
+    
 }

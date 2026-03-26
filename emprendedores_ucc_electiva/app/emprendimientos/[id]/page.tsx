@@ -202,85 +202,109 @@ export default function DetalleEmprendimientoPage() {
   };
 
   // 🔥 FUNCIÓN PARA CONFIRMAR EL PEDIDO (desde la factura)
-  const confirmarPedido = async () => {
-    if (!usuarioActual?.id) {
-      alert("Debes iniciar sesión para realizar un pedido");
-      router.push('/autenticacion/login');
-      return false;
-    }
+ // Confirmar pedido (ajustado a la estructura de MongoDB)
+// Confirmar pedido (ajustado a tu estructura de backend con DTOs)
+const confirmarPedido = async () => {
+  if (!usuarioActual?.id) {
+    alert("Debes iniciar sesión para realizar un pedido");
+    router.push('/autenticacion/login');
+    return false;
+  }
+  
+  if (itemsCarrito.length === 0) {
+    alert("No hay productos en el carrito");
+    return false;
+  }
+  
+  setCreandoPedido(true);
+  
+  try {
+    const fechaActualStr = new Date().toISOString().split('T')[0];
+    const fechaExpiracion = new Date();
+    fechaExpiracion.setDate(fechaExpiracion.getDate() + 30);
+    const fechaExpiracionStr = fechaExpiracion.toISOString().split('T')[0];
     
-    if (itemsCarrito.length === 0) {
-      alert("No hay productos en el carrito");
-      return false;
-    }
-    
-    setCreandoPedido(true);
-    
-    try {
-      const productosPorEmprendimiento = itemsCarrito.reduce((acc, item) => {
-        if (!acc[item.emprendimientoId]) {
-          acc[item.emprendimientoId] = {
-            emprendimientoId: item.emprendimientoId,
-            productos: [],
-            total: 0
-          };
-        }
-        acc[item.emprendimientoId].productos.push({
-          productoId: item.nombre,
-          cantidad: item.cantidad
-        });
-        acc[item.emprendimientoId].total += item.precio * item.cantidad;
-        return acc;
-      }, {} as Record<string, any>);
-      
-      const fechaActualStr = new Date().toISOString().split('T')[0];
-      const fechaExpiracion = new Date();
-      fechaExpiracion.setDate(fechaExpiracion.getDate() + 30);
-      
-      for (const empId of Object.keys(productosPorEmprendimiento)) {
-        const pedidoData = {
-          clienteId: usuarioActual.id,
-          emprendimientoId: empId,
-          productos: productosPorEmprendimiento[empId].productos,
-          total: productosPorEmprendimiento[empId].total,
-          estado: "pendiente",
-          fechaPedido: fechaActualStr,
-          fechaExpiracion: fechaExpiracion.toISOString().split('T')[0]
+    // Agrupar productos por emprendimiento
+    const productosPorEmprendimiento = itemsCarrito.reduce((acc, item) => {
+      if (!acc[item.emprendimientoId]) {
+        acc[item.emprendimientoId] = {
+          emprendimientoId: item.emprendimientoId,
+          productos: [],
+          total: 0
         };
-        
-        const response = await fetch('http://localhost:8080/api/pedidos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(pedidoData)
-        });
-        
-        if (!response.ok) {
-          throw new Error('Error al crear el pedido');
-        }
+      }
+      acc[item.emprendimientoId].productos.push({
+        productoId: item.nombre, // El nombre del producto como identificador
+        cantidad: item.cantidad
+      });
+      acc[item.emprendimientoId].total += item.precio * item.cantidad;
+      return acc;
+    }, {} as Record<string, any>);
+    
+    // Crear un pedido por cada emprendimiento
+    for (const empId of Object.keys(productosPorEmprendimiento)) {
+      const grupo = productosPorEmprendimiento[empId];
+      
+      // Estructura que espera tu backend (PedidoRequestDTO)
+      const pedidoData = {
+        clienteId: usuarioActual.id,
+        emprendimientoId: empId,
+        productos: grupo.productos.map((p: any) => ({
+          productoId: p.productoId,
+          cantidad: p.cantidad
+        })),
+        total: grupo.total,
+        estado: "pendiente",
+        fechaPedido: fechaActualStr,
+        fechaExpiracion: fechaExpiracionStr
+      };
+      
+      console.log("Enviando pedido al backend:", pedidoData);
+      
+      const response = await fetch('http://localhost:8080/api/pedidos', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pedidoData)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Error al crear el pedido: ${response.status} - ${errorText}`);
       }
       
-      // Vaciar carrito solo después de crear el pedido exitosamente
-      localStorage.setItem('carrito', '[]');
-      setItemsCarrito([]);
-      
-      if (usuarioActual?.id) {
+      const pedidoCreado = await response.json();
+      console.log("Pedido creado exitosamente:", pedidoCreado);
+    }
+    
+    // Vaciar carrito después de crear los pedidos
+    localStorage.setItem('carrito', '[]');
+    setItemsCarrito([]);
+    
+    if (usuarioActual?.id) {
+      try {
         await fetch(`http://localhost:8080/api/carrito/${usuarioActual.id}/vaciar`, {
           method: 'DELETE'
         });
+      } catch (error) {
+        console.log("Error al vaciar carrito en backend:", error);
       }
-      
-      setPedidoConfirmado(true);
-      alert('✅ ¡Pedido creado exitosamente! Puedes imprimir esta factura como comprobante.');
-      return true;
-      
-    } catch (error) {
-      console.error('Error al crear pedido:', error);
-      alert('❌ Error al crear el pedido. Por favor intenta nuevamente.');
-      return false;
-    } finally {
-      setCreandoPedido(false);
     }
-  };
+    
+    setPedidoConfirmado(true);
+    alert(`✅ ¡Pedido realizado exitosamente! El emprendedor se pondrá en contacto contigo para coordinar el pago y la entrega.`);
+    return true;
+    
+  } catch (error) {
+    console.error('Error al crear pedido:', error);
+    alert(`❌ Error al realizar el pedido: ${error instanceof Error ? error.message : "Error desconocido"}. Por favor intenta nuevamente.`);
+    return false;
+  } finally {
+    setCreandoPedido(false);
+  }
+};
 
   // Cerrar factura y volver al carrito
   const cerrarFactura = () => {
