@@ -15,7 +15,17 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // REGISTRO - Mejorado con más validaciones
+    // Método para validar contraseña segura
+    private boolean validarPasswordSegura(String password) {
+        if (password.length() < 8) return false;
+        if (!password.matches(".*[A-Z].*")) return false; // Al menos una mayúscula
+        if (!password.matches(".*[a-z].*")) return false; // Al menos una minúscula
+        if (!password.matches(".*\\d.*")) return false; // Al menos un número
+        if (!password.matches(".*[!@#$%^&*(),.?\":{}|<>].*")) return false; // Al menos un carácter especial
+        return true;
+    }
+
+    // REGISTRO - Con todas las validaciones
     public Usuario registrarUsuario(Usuario usuario) {
         // Validar campos requeridos
         if (usuario.getCorreo() == null || usuario.getCorreo().trim().isEmpty()) {
@@ -39,15 +49,20 @@ public class UsuarioService {
             throw new RuntimeException("El formato del correo no es válido");
         }
         
+        // Validar correo institucional
+        if (!usuario.getCorreo().matches("^[A-Za-z0-9._-]+@campusucc\\.edu\\.co$")) {
+            throw new RuntimeException("El correo debe ser institucional (@campusucc.edu.co)");
+        }
+        
         // Verificar si el correo ya existe
-        Usuario existente = usuarioRepository.findByCorreo(usuario.getCorreo());
-        if (existente != null) {
+        Usuario existentePorCorreo = usuarioRepository.findByCorreo(usuario.getCorreo());
+        if (existentePorCorreo != null) {
             throw new RuntimeException("El correo ya está registrado");
         }
         
-        // Validar longitud de contraseña
-        if (usuario.getPassword().length() < 4) {
-            throw new RuntimeException("La contraseña debe tener al menos 4 caracteres");
+        // Validar contraseña segura
+        if (!validarPasswordSegura(usuario.getPassword())) {
+            throw new RuntimeException("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial");
         }
         
         // Validar teléfono (exactamente 10 dígitos)
@@ -57,8 +72,26 @@ public class UsuarioService {
                 throw new RuntimeException("El teléfono debe tener exactamente 10 dígitos");
             }
             usuario.setTelefono(telefonoLimpio);
+            
+            // VERIFICAR SI EL TELÉFONO YA ESTÁ REGISTRADO
+            Usuario existentePorTelefono = usuarioRepository.findByTelefono(telefonoLimpio);
+            if (existentePorTelefono != null) {
+                throw new RuntimeException("El número de teléfono ya está registrado. Por favor usa otro número");
+            }
         } else {
             throw new RuntimeException("El teléfono es obligatorio");
+        }
+        
+        // Validar tipo de usuario
+        if (usuario.getTipoUsuario() == null || usuario.getTipoUsuario().trim().isEmpty()) {
+            throw new RuntimeException("El tipo de usuario es obligatorio");
+        }
+        
+        // Validar carrera si no es administrativo
+        if (!"administrativo".equals(usuario.getTipoUsuario())) {
+            if (usuario.getCarrera() == null || usuario.getCarrera().trim().isEmpty()) {
+                throw new RuntimeException("La carrera es obligatoria para estudiantes y emprendedores");
+            }
         }
         
         // Aquí deberías encriptar la contraseña antes de guardar
@@ -93,6 +126,11 @@ public class UsuarioService {
     public Usuario obtenerPorCorreo(String correo) {
         return usuarioRepository.findByCorreo(correo);
     }
+    
+    // Obtener usuario por teléfono
+    public Usuario obtenerPorTelefono(String telefono) {
+        return usuarioRepository.findByTelefono(telefono);
+    }
 
     // Actualizar usuario
     public Usuario actualizarUsuario(String id, Usuario usuarioActualizado) {
@@ -100,7 +138,17 @@ public class UsuarioService {
                 .map(usuario -> {
                     usuario.setNombre(usuarioActualizado.getNombre());
                     usuario.setApellido(usuarioActualizado.getApellido());
-                    usuario.setTelefono(usuarioActualizado.getTelefono());
+                    
+                    // Validar teléfono duplicado en actualización
+                    if (usuarioActualizado.getTelefono() != null && !usuarioActualizado.getTelefono().equals(usuario.getTelefono())) {
+                        String telefonoLimpio = usuarioActualizado.getTelefono().replaceAll("\\D", "");
+                        Usuario existentePorTelefono = usuarioRepository.findByTelefono(telefonoLimpio);
+                        if (existentePorTelefono != null && !existentePorTelefono.getId().equals(id)) {
+                            throw new RuntimeException("El número de teléfono ya está registrado por otro usuario");
+                        }
+                        usuario.setTelefono(telefonoLimpio);
+                    }
+                    
                     usuario.setTipoUsuario(usuarioActualizado.getTipoUsuario());
                     usuario.setCarrera(usuarioActualizado.getCarrera());
                     // No actualizamos password ni correo por seguridad
@@ -121,6 +169,13 @@ public class UsuarioService {
     public Usuario cambiarPassword(String id, String nuevaPassword) {
         return usuarioRepository.findById(id)
                 .map(usuario -> {
+                    // Validar contraseña segura
+                    if (nuevaPassword.length() < 8) {
+                        throw new RuntimeException("La contraseña debe tener al menos 8 caracteres");
+                    }
+                    if (!validarPasswordSegura(nuevaPassword)) {
+                        throw new RuntimeException("La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial");
+                    }
                     usuario.setPassword(nuevaPassword);
                     return usuarioRepository.save(usuario);
                 })

@@ -229,7 +229,7 @@
 }
 .input {
   width: 100%;
-  padding: 0.7rem 0.9rem 0.7rem 2.6rem;
+  padding: 0.7rem 0.9rem;
   font-family: var(--font-body);
   font-size: 0.88rem;
   color: #1a2e44;
@@ -267,6 +267,66 @@
 }
 .togglePass svg { width: 17px; height: 17px; }
 .togglePass:hover { color: #009FE3; }
+
+/* Estilos para validación */
+.inputError {
+  border-color: #dc3545 !important;
+  background-color: #fff8f8;
+}
+
+.errorText {
+  color: #dc3545;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.successText {
+  color: #28a745;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.helperText {
+  color: #6c757d;
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.labelHint {
+  font-size: 0.7rem;
+  font-weight: normal;
+  color: #6c757d;
+  margin-left: 0.5rem;
+}
+
+.passwordReqs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.reqMet {
+  color: #28a745;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.reqUnmet {
+  color: #6c757d;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 
 /* Checkbox */
 .checkRow {
@@ -311,12 +371,16 @@
   transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
   box-shadow: 0 2px 10px rgba(0,159,227,0.28);
 }
-.submitBtn:hover {
+.submitBtn:hover:not(:disabled) {
   background: #0087c2;
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(0,159,227,0.35);
 }
-.submitBtn:active { transform: none; }
+.submitBtn:active:not(:disabled) { transform: none; }
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* Switch */
 .switchText {

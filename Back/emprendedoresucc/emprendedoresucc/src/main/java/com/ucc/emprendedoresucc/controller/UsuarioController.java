@@ -32,10 +32,45 @@ public class UsuarioController {
             errorResponse.put("message", e.getMessage());
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            e.printStackTrace();
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Error al registrar usuario");
             errorResponse.put("message", "Error interno del servidor");
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // Verificar si teléfono existe
+    @GetMapping("/verificar-telefono/{telefono}")
+    public ResponseEntity<?> verificarTelefono(@PathVariable String telefono) {
+        try {
+            // Limpiar teléfono (solo números)
+            String telefonoLimpio = telefono.replaceAll("\\D", "");
+            Usuario usuario = usuarioService.obtenerPorTelefono(telefonoLimpio);
+            Map<String, Object> response = new HashMap<>();
+            response.put("existe", usuario != null);
+            response.put("message", usuario != null ? "El teléfono ya está registrado" : "Teléfono disponible");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    // Verificar si correo existe
+    @GetMapping("/verificar-correo/{correo}")
+    public ResponseEntity<?> verificarCorreo(@PathVariable String correo) {
+        try {
+            Usuario usuario = usuarioService.obtenerPorCorreo(correo);
+            Map<String, Object> response = new HashMap<>();
+            response.put("existe", usuario != null);
+            response.put("message", usuario != null ? "El correo ya está registrado" : "Correo disponible");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
@@ -74,6 +109,17 @@ public class UsuarioController {
     @GetMapping("/correo/{correo}")
     public ResponseEntity<Usuario> obtenerPorCorreo(@PathVariable String correo) {
         Usuario usuario = usuarioService.obtenerPorCorreo(correo);
+        if (usuario != null) {
+            return ResponseEntity.ok(usuario);
+        }
+        return ResponseEntity.notFound().build();
+    }
+    
+    // Obtener usuario por teléfono
+    @GetMapping("/telefono/{telefono}")
+    public ResponseEntity<Usuario> obtenerPorTelefono(@PathVariable String telefono) {
+        String telefonoLimpio = telefono.replaceAll("\\D", "");
+        Usuario usuario = usuarioService.obtenerPorTelefono(telefonoLimpio);
         if (usuario != null) {
             return ResponseEntity.ok(usuario);
         }
@@ -120,13 +166,6 @@ public class UsuarioController {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "La nueva contraseña es requerida");
                 error.put("message", "La nueva contraseña es requerida");
-                return ResponseEntity.badRequest().body(error);
-            }
-            
-            if (nuevaPassword.length() < 4) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "La contraseña debe tener al menos 4 caracteres");
-                error.put("message", "La contraseña debe tener al menos 4 caracteres");
                 return ResponseEntity.badRequest().body(error);
             }
             

@@ -39,32 +39,131 @@ export default function RegisterPage() {
   const [tipoUsuario, setTipoUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // Estados para errores
+  const [correoError, setCorreoError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [telefonoError, setTelefonoError] = useState("");
+  const [verificandoTelefono, setVerificandoTelefono] = useState(false);
+  const [verificandoCorreo, setVerificandoCorreo] = useState(false);
 
-  // 👈 Función para validar teléfono (solo números y máximo 10 dígitos)
-  const validarTelefono = (telefono: string) => {
-    // Eliminar cualquier caracter que no sea número
-    const soloNumeros = telefono.replace(/\D/g, '');
-    
-    // Verificar que tenga máximo 10 dígitos
-    if (soloNumeros.length > 10) {
-      return false;
-    }
-    
-    return true;
+  // Validar correo institucional
+  const validarCorreoInstitucional = (correo: string) => {
+    const regexCorreo = /^[a-zA-Z0-9._-]+@campusucc\.edu\.co$/;
+    return regexCorreo.test(correo);
   };
 
-  // 👈 Función para formatear teléfono (solo números)
+  // Validar contraseña segura
+  const validarPasswordSegura = (password: string) => {
+    if (password.length < 8) {
+      return { valido: false, mensaje: "La contraseña debe tener al menos 8 caracteres" };
+    }
+    if (!/\d/.test(password)) {
+      return { valido: false, mensaje: "La contraseña debe contener al menos un número" };
+    }
+    if (!/[A-Z]/.test(password)) {
+      return { valido: false, mensaje: "La contraseña debe contener al menos una letra mayúscula" };
+    }
+    if (!/[a-z]/.test(password)) {
+      return { valido: false, mensaje: "La contraseña debe contener al menos una letra minúscula" };
+    }
+    const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!caracteresEspeciales.test(password)) {
+      return { valido: false, mensaje: "La contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?\":{}|<>)" };
+    }
+    return { valido: true, mensaje: "" };
+  };
+
+  // Verificar teléfono en backend
+  const verificarTelefono = async (telefono: string) => {
+    if (telefono.length === 10) {
+      setVerificandoTelefono(true);
+      try {
+        const res = await fetch(`http://localhost:8080/api/usuarios/verificar-telefono/${telefono}`);
+        const data = await res.json();
+        if (data.existe) {
+          setTelefonoError("Este número de teléfono ya está registrado. Por favor usa otro");
+        } else {
+          setTelefonoError("");
+        }
+      } catch (error) {
+        console.error("Error verificando teléfono:", error);
+        setTelefonoError("Error al verificar teléfono");
+      } finally {
+        setVerificandoTelefono(false);
+      }
+    } else {
+      setTelefonoError("");
+    }
+  };
+
+  // Verificar correo en backend
+  const verificarCorreo = async (correo: string) => {
+    if (correo && validarCorreoInstitucional(correo)) {
+      setVerificandoCorreo(true);
+      try {
+        const res = await fetch(`http://localhost:8080/api/usuarios/verificar-correo/${encodeURIComponent(correo)}`);
+        const data = await res.json();
+        if (data.existe) {
+          setCorreoError("Este correo ya está registrado");
+        } else {
+          setCorreoError("");
+        }
+      } catch (error) {
+        console.error("Error verificando correo:", error);
+      } finally {
+        setVerificandoCorreo(false);
+      }
+    }
+  };
+
+  // Manejar cambio de correo
+  const manejarCambioCorreo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nuevoCorreo = e.target.value;
+    setCorreo(nuevoCorreo);
+    
+    if (nuevoCorreo && !validarCorreoInstitucional(nuevoCorreo)) {
+      setCorreoError("El correo debe ser institucional (@campusucc.edu.co)");
+    } else {
+      verificarCorreo(nuevoCorreo);
+    }
+  };
+
+  // Manejar cambio de contraseña
+  const manejarCambioPassword = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nuevaPassword = e.target.value;
+    setPassword(nuevaPassword);
+    
+    if (nuevaPassword) {
+      const validacion = validarPasswordSegura(nuevaPassword);
+      if (!validacion.valido) {
+        setPasswordError(validacion.mensaje);
+      } else {
+        setPasswordError("");
+      }
+    } else {
+      setPasswordError("");
+    }
+  };
+
+  // Manejar cambio de teléfono
   const manejarCambioTelefono = (e: React.ChangeEvent<HTMLInputElement>) => {
     let valor = e.target.value;
-    // Eliminar cualquier caracter que no sea número
     valor = valor.replace(/\D/g, '');
-    // Limitar a máximo 10 dígitos
     if (valor.length <= 10) {
       setTelefono(valor);
+      if (valor.length === 10) {
+        verificarTelefono(valor);
+      } else {
+        setTelefonoError("");
+      }
     }
   };
 
-  const registrarUsuario = async (e: any) => {
+  // Calcular si el formulario es válido
+  const isFormInvalid = !!correoError || !!passwordError || !!telefonoError || (confirmPassword && password !== confirmPassword) || !tipoUsuario || !nombre || !apellido || !correo || !password || !confirmPassword || (tipoUsuario !== "administrativo" && !carrera);
+
+  const registrarUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -72,40 +171,52 @@ export default function RegisterPage() {
       return;
     }
 
-    // 👈 Validar teléfono
+    if (!validarCorreoInstitucional(correo)) {
+      alert("El correo debe ser institucional (@campusucc.edu.co). Ejemplo: estudiante@campusucc.edu.co");
+      return;
+    }
+
+    const validacionPassword = validarPasswordSegura(password);
+    if (!validacionPassword.valido) {
+      alert(validacionPassword.mensaje);
+      return;
+    }
+
     if (!telefono) {
       alert("Por favor ingresa tu número de teléfono");
       return;
     }
 
-    if (telefono.length < 7) {
-      alert("El teléfono debe tener al menos 7 dígitos");
+    if (telefono.length !== 10) {
+      alert("El teléfono debe tener exactamente 10 dígitos");
       return;
     }
 
-    if (telefono.length > 10) {
-      alert("El teléfono no puede tener más de 10 dígitos");
+    if (telefonoError) {
+      alert(telefonoError);
       return;
     }
 
-    // Si es administrativo, enviar "administrativo" como carrera
     const carreraEnviar = tipoUsuario === "administrativo" ? "administrativo" : carrera;
 
-    // Validar que si NO es administrativo, haya seleccionado una carrera
     if (tipoUsuario !== "administrativo" && !carrera) {
       alert("Por favor selecciona tu facultad/programa");
+      return;
+    }
+
+    if (!tipoUsuario) {
+      alert("Por favor selecciona tu tipo de usuario");
       return;
     }
 
     const usuario = {
       nombre,
       apellido,
-      telefono,  // Ya viene solo con números
+      telefono,
       correo,
       carrera: carreraEnviar,
       tipoUsuario,
       password,
-      saldo: 0,
     };
 
     try {
@@ -125,7 +236,7 @@ export default function RegisterPage() {
       }
 
       if (res.ok) {
-        alert("Usuario registrado correctamente");
+        alert("✅ Usuario registrado correctamente");
         router.push("/autenticacion/login");
       } else {
         const errorMessage = typeof data === 'string' ? data : data.message || "Error al registrar usuario";
@@ -186,7 +297,7 @@ export default function RegisterPage() {
 
             {/* Tipo usuario */}
             <div className={styles.field}>
-              <label className={styles.label}>Tipo de usuario</label>
+              <label className={styles.label}>Tipo de usuario *</label>
               <div className={styles.tipoGrid}>
                 {tiposUsuario.map((t) => (
                   <button
@@ -195,7 +306,6 @@ export default function RegisterPage() {
                     className={`${styles.tipoBtn} ${tipoUsuario === t.value ? styles.tipoBtnActive : ""}`}
                     onClick={() => {
                       setTipoUsuario(t.value);
-                      // Si selecciona administrativo, limpiar carrera
                       if (t.value === "administrativo") {
                         setCarrera("");
                       }
@@ -210,7 +320,7 @@ export default function RegisterPage() {
             {/* Nombre y Apellido */}
             <div className={styles.row}>
               <div className={styles.field}>
-                <label className={styles.label}>Nombre</label>
+                <label className={styles.label}>Nombre *</label>
                 <input
                   type="text"
                   className={styles.input}
@@ -220,7 +330,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div className={styles.field}>
-                <label className={styles.label}>Apellido</label>
+                <label className={styles.label}>Apellido *</label>
                 <input
                   type="text"
                   className={styles.input}
@@ -234,48 +344,75 @@ export default function RegisterPage() {
             {/* Teléfono */}
             <div className={styles.field}>
               <label className={styles.label}>
-                Teléfono 
-                <span className={styles.labelHint}>(Máximo 10 dígitos)</span>
+                Teléfono * 
+                <span className={styles.labelHint}>(10 dígitos)</span>
               </label>
               <div className={styles.inputWrap}>
                 <input
                   type="tel"
-                  className={styles.input}
+                  className={`${styles.input} ${telefonoError ? styles.inputError : ""}`}
+                  style={{ paddingLeft: "0.9rem" }}
                   placeholder="Ej: 3102474495"
                   value={telefono}
                   onChange={manejarCambioTelefono}
                   required
                   maxLength={10}
                 />
+                {verificandoTelefono && (
+                  <small className={styles.helperText}>Verificando...</small>
+                )}
               </div>
               {telefono && telefono.length > 0 && (
                 <small className={styles.helperText}>
                   {telefono.length} / 10 dígitos
                 </small>
               )}
+              {telefonoError && (
+                <small className={styles.errorText}>{telefonoError}</small>
+              )}
+              {telefono && telefono.length === 10 && !telefonoError && !verificandoTelefono && (
+                <small className={styles.successText}>✓ Teléfono disponible</small>
+              )}
             </div>
 
             {/* Correo */}
             <div className={styles.field}>
-              <label className={styles.label}>Correo</label>
-              <input
-                type="email"
-                className={styles.input}
-                value={correo}
-                onChange={(e) => setCorreo(e.target.value)}
-                required
-              />
+              <label className={styles.label}>
+                Correo institucional * 
+                <span className={styles.labelHint}>(@campusucc.edu.co)</span>
+              </label>
+              <div className={styles.inputWrap}>
+                <input
+                  type="email"
+                  className={`${styles.input} ${correoError ? styles.inputError : ""}`}
+                  style={{ paddingLeft: "0.9rem" }}
+                  placeholder="estudiante@campusucc.edu.co"
+                  value={correo}
+                  onChange={manejarCambioCorreo}
+                  required
+                />
+                {verificandoCorreo && (
+                  <small className={styles.helperText}>Verificando...</small>
+                )}
+              </div>
+              {correoError && (
+                <small className={styles.errorText}>{correoError}</small>
+              )}
+              {correo && !correoError && validarCorreoInstitucional(correo) && !verificandoCorreo && (
+                <small className={styles.successText}>✓ Correo válido</small>
+              )}
             </div>
 
-            {/* Campo de carrera: solo visible si NO es administrativo */}
+            {/* Campo de carrera */}
             {tipoUsuario !== "administrativo" && (
               <div className={styles.field}>
-                <label className={styles.label}>Facultad / Programa</label>
+                <label className={styles.label}>Facultad / Programa *</label>
                 <select
                   className={styles.input}
+                  style={{ paddingLeft: "0.9rem" }}
                   value={carrera}
                   onChange={(e) => setCarrera(e.target.value)}
-                  required={tipoUsuario !== "administrativo"}
+                  required
                 >
                   <option value="">Selecciona</option>
                   {facultades.map((f) => (
@@ -287,14 +424,17 @@ export default function RegisterPage() {
 
             {/* Contraseña */}
             <div className={styles.field}>
-              <label className={styles.label}>Contraseña</label>
+              <label className={styles.label}>
+                Contraseña * 
+                <span className={styles.labelHint}>(8+ caracteres, mayúscula, minúscula, número, carácter especial)</span>
+              </label>
               <div className={styles.inputWrap}>
                 <input
                   type={showPass ? "text" : "password"}
-                  className={styles.input}
+                  className={`${styles.input} ${passwordError ? styles.inputError : ""}`}
                   style={{ paddingLeft: "0.9rem", paddingRight: "2.8rem" }}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={manejarCambioPassword}
                   required
                 />
                 <button
@@ -306,15 +446,37 @@ export default function RegisterPage() {
                   {showPass ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
+              {passwordError && (
+                <small className={styles.errorText}>{passwordError}</small>
+              )}
+              
+              {/* Requisitos de contraseña */}
+              <div className={styles.passwordReqs}>
+                <small className={password.length >= 8 ? styles.reqMet : styles.reqUnmet}>
+                  {password.length >= 8 ? "✓" : "○"} Mínimo 8 caracteres
+                </small>
+                <small className={/[A-Z]/.test(password) ? styles.reqMet : styles.reqUnmet}>
+                  {/[A-Z]/.test(password) ? "✓" : "○"} Una mayúscula
+                </small>
+                <small className={/[a-z]/.test(password) ? styles.reqMet : styles.reqUnmet}>
+                  {/[a-z]/.test(password) ? "✓" : "○"} Una minúscula
+                </small>
+                <small className={/\d/.test(password) ? styles.reqMet : styles.reqUnmet}>
+                  {/\d/.test(password) ? "✓" : "○"} Un número
+                </small>
+                <small className={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? styles.reqMet : styles.reqUnmet}>
+                  {/[!@#$%^&*(),.?":{}|<>]/.test(password) ? "✓" : "○"} Un carácter especial
+                </small>
+              </div>
             </div>
 
             {/* Confirmar contraseña */}
             <div className={styles.field}>
-              <label className={styles.label}>Confirmar contraseña</label>
+              <label className={styles.label}>Confirmar contraseña *</label>
               <div className={styles.inputWrap}>
                 <input
                   type={showConfirm ? "text" : "password"}
-                  className={styles.input}
+                  className={`${styles.input} ${confirmPassword && password !== confirmPassword ? styles.inputError : ""}`}
                   style={{ paddingLeft: "0.9rem", paddingRight: "2.8rem" }}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -329,9 +491,19 @@ export default function RegisterPage() {
                   {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
+              {confirmPassword && password !== confirmPassword && (
+                <small className={styles.errorText}>Las contraseñas no coinciden</small>
+              )}
+              {confirmPassword && password === confirmPassword && !passwordError && (
+                <small className={styles.successText}>✓ Las contraseñas coinciden</small>
+              )}
             </div>
 
-            <button type="submit" className={styles.submitBtn}>
+            <button 
+              type="submit" 
+              className={styles.submitBtn}
+              disabled={isFormInvalid ? true : undefined}
+            >
               Crear cuenta
             </button>
 
