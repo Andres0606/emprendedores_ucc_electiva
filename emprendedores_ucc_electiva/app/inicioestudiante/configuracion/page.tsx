@@ -9,13 +9,18 @@ export default function ConfiguracionPage() {
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [email, setEmail] = useState("");
   const [carrera, setCarrera] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [usuarioId, setUsuarioId] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [editNombre, setEditNombre] = useState("");
+  const [editTelefono, setEditTelefono] = useState("");
 
   useEffect(() => {
     const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
@@ -25,18 +30,112 @@ export default function ConfiguracionPage() {
 
     setTipoUsuario(tipo.toLowerCase());
     setNombreUsuario(nombre);
+    setEditNombre(nombre);
     setEmail(usuario.correo || "");
     setUsuarioId(id);
+    setTelefono(usuario.telefono || "");
+    setEditTelefono(usuario.telefono || "");
 
-    // Para estudiantes: mostrar carrera en lugar de facultad
     if (tipo.toLowerCase() === "estudiante") {
       const carreraUsuario = usuario.carrera || "";
       setCarrera(carreraUsuario);
     }
   }, []);
 
+  const handleActualizarPerfil = async () => {
+    setError("");
+    setSuccess("");
+    
+    // Validaciones
+    if (!editNombre.trim()) {
+      setError("El nombre no puede estar vacío");
+      return;
+    }
+    
+    if (editTelefono && editTelefono.length !== 10) {
+      setError("El teléfono debe tener exactamente 10 dígitos");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Obtener datos actuales del usuario
+      const resGet = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+      if (!resGet.ok) {
+        throw new Error("Error al obtener datos del usuario");
+      }
+      const usuarioActual = await resGet.json();
+      
+      // Actualizar datos
+      const usuarioActualizado = {
+        ...usuarioActual,
+        nombre: editNombre,
+        apellido: usuarioActual.apellido,
+        telefono: editTelefono,
+        tipoUsuario: usuarioActual.tipoUsuario,
+        carrera: usuarioActual.carrera
+      };
+      
+      const resUpdate = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(usuarioActualizado)
+      });
+      
+      if (!resUpdate.ok) {
+        const errorData = await resUpdate.json();
+        throw new Error(errorData.message || "Error al actualizar perfil");
+      }
+      
+      const usuarioGuardado = await resUpdate.json();
+      
+      // Actualizar sessionStorage
+      sessionStorage.setItem("nombreUsuario", editNombre);
+      const usuarioStorage = JSON.parse(sessionStorage.getItem("usuario") || "{}");
+      usuarioStorage.nombre = editNombre;
+      usuarioStorage.telefono = editTelefono;
+      sessionStorage.setItem("usuario", JSON.stringify(usuarioStorage));
+      
+      setNombreUsuario(editNombre);
+      setTelefono(editTelefono);
+      setSuccess("Perfil actualizado correctamente");
+      setEditMode(false);
+      setTimeout(() => setSuccess(""), 3000);
+      
+    } catch (error: any) {
+      console.error("Error al actualizar perfil:", error);
+      setError(error.message || "Error al actualizar perfil");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Validar contraseña segura
+  const validarPasswordSegura = (password: string): { valido: boolean; mensaje: string } => {
+    if (password.length < 8) {
+      return { valido: false, mensaje: "La contraseña debe tener al menos 8 caracteres" };
+    }
+    if (!/[A-Z]/.test(password)) {
+      return { valido: false, mensaje: "La contraseña debe contener al menos una letra mayúscula" };
+    }
+    if (!/[a-z]/.test(password)) {
+      return { valido: false, mensaje: "La contraseña debe contener al menos una letra minúscula" };
+    }
+    if (!/\d/.test(password)) {
+      return { valido: false, mensaje: "La contraseña debe contener al menos un número" };
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return { valido: false, mensaje: "La contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?\":{}|<>)" };
+    }
+    return { valido: true, mensaje: "" };
+  };
+
   const handleChangePassword = async () => {
     setError("");
+    setSuccess("");
     
     // Validaciones
     if (!currentPassword) {
@@ -49,8 +148,10 @@ export default function ConfiguracionPage() {
       return;
     }
     
-    if (newPassword.length < 4) {
-      setError("La nueva contraseña debe tener al menos 4 caracteres");
+    // Validar contraseña segura
+    const validacion = validarPasswordSegura(newPassword);
+    if (!validacion.valido) {
+      setError(validacion.mensaje);
       return;
     }
     
@@ -102,10 +203,8 @@ export default function ConfiguracionPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-      
-      alert("Contraseña actualizada correctamente");
+      setSuccess("Contraseña actualizada correctamente");
+      setTimeout(() => setSuccess(""), 3000);
       
     } catch (error) {
       console.error("Error al cambiar contraseña:", error);
@@ -128,17 +227,25 @@ export default function ConfiguracionPage() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Datos de la cuenta</h2>
 
-            {/* Nombre - Solo lectura */}
+            {/* Nombre - Editable */}
             <div className={styles.formGroup}>
               <label className={styles.label}>Nombre completo</label>
-              <input
-                className={`${styles.input} ${styles.readonly}`}
-                type="text"
-                value={nombreUsuario}
-                readOnly
-                disabled
-              />
-              <small className={styles.helperText}>El nombre no se puede modificar</small>
+              {editMode ? (
+                <input
+                  className={styles.input}
+                  type="text"
+                  value={editNombre}
+                  onChange={(e) => setEditNombre(e.target.value)}
+                />
+              ) : (
+                <input
+                  className={`${styles.input} ${styles.readonly}`}
+                  type="text"
+                  value={nombreUsuario}
+                  readOnly
+                  disabled
+                />
+              )}
             </div>
 
             {/* Correo - Solo lectura */}
@@ -152,6 +259,35 @@ export default function ConfiguracionPage() {
                 disabled
               />
               <small className={styles.helperText}>El correo no se puede modificar</small>
+            </div>
+
+            {/* Teléfono - Editable */}
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Teléfono</label>
+              {editMode ? (
+                <input
+                  className={styles.input}
+                  type="tel"
+                  placeholder="3101234567"
+                  value={editTelefono}
+                  onChange={(e) => {
+                    let valor = e.target.value.replace(/\D/g, '');
+                    if (valor.length <= 10) {
+                      setEditTelefono(valor);
+                    }
+                  }}
+                  maxLength={10}
+                />
+              ) : (
+                <input
+                  className={`${styles.input} ${styles.readonly}`}
+                  type="tel"
+                  value={telefono || "No especificado"}
+                  readOnly
+                  disabled
+                />
+              )}
+              <small className={styles.helperText}>10 dígitos, solo números</small>
             </div>
 
             {/* Carrera para estudiantes - Solo lectura */}
@@ -168,6 +304,39 @@ export default function ConfiguracionPage() {
                 <small className={styles.helperText}>La carrera no se puede modificar</small>
               </div>
             )}
+
+            {/* Botones de edición */}
+            <div className={styles.editActions}>
+              {editMode ? (
+                <>
+                  <button 
+                    className={styles.btnSave} 
+                    onClick={handleActualizarPerfil}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Guardando..." : "Guardar cambios"}
+                  </button>
+                  <button 
+                    className={styles.btnCancel} 
+                    onClick={() => {
+                      setEditMode(false);
+                      setEditNombre(nombreUsuario);
+                      setEditTelefono(telefono);
+                      setError("");
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </>
+              ) : (
+                <button 
+                  className={styles.btnEdit} 
+                  onClick={() => setEditMode(true)}
+                >
+                  Editar perfil
+                </button>
+              )}
+            </div>
 
             {/* Cambio de contraseña */}
             <div className={styles.passwordSection}>
@@ -193,8 +362,31 @@ export default function ConfiguracionPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
-                <small className={styles.helperText}>Mínimo 4 caracteres</small>
+                <small className={styles.helperText}>
+                  Mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial
+                </small>
               </div>
+
+              {/* Requisitos de contraseña en tiempo real */}
+              {newPassword && (
+                <div className={styles.passwordReqs}>
+                  <small className={newPassword.length >= 8 ? styles.reqMet : styles.reqUnmet}>
+                    {newPassword.length >= 8 ? "✓" : "○"} Mínimo 8 caracteres
+                  </small>
+                  <small className={/[A-Z]/.test(newPassword) ? styles.reqMet : styles.reqUnmet}>
+                    {/[A-Z]/.test(newPassword) ? "✓" : "○"} Una mayúscula
+                  </small>
+                  <small className={/[a-z]/.test(newPassword) ? styles.reqMet : styles.reqUnmet}>
+                    {/[a-z]/.test(newPassword) ? "✓" : "○"} Una minúscula
+                  </small>
+                  <small className={/\d/.test(newPassword) ? styles.reqMet : styles.reqUnmet}>
+                    {/\d/.test(newPassword) ? "✓" : "○"} Un número
+                  </small>
+                  <small className={/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? styles.reqMet : styles.reqUnmet}>
+                    {/[!@#$%^&*(),.?":{}|<>]/.test(newPassword) ? "✓" : "○"} Un carácter especial
+                  </small>
+                </div>
+              )}
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>Confirmar nueva contraseña</label>
@@ -205,13 +397,34 @@ export default function ConfiguracionPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <small className={styles.errorText}>Las contraseñas no coinciden</small>
+                )}
+                {confirmPassword && newPassword === confirmPassword && newPassword && (
+                  <small className={styles.successText}>✓ Las contraseñas coinciden</small>
+                )}
               </div>
+
+              <button 
+                className={styles.btnChangePassword} 
+                onClick={handleChangePassword}
+                disabled={isLoading}
+              >
+                {isLoading ? "Cambiando..." : "Cambiar contraseña"}
+              </button>
             </div>
 
             {error && (
               <div className={styles.errorMessage}>
                 <span className={styles.errorIcon}>⚠️</span>
                 <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className={styles.successMessage}>
+                <span className={styles.successIcon}>✓</span>
+                <span>{success}</span>
               </div>
             )}
 
@@ -233,17 +446,6 @@ export default function ConfiguracionPage() {
               </button>
             </div>
           </section>
-
-          <div className={styles.saveRow}>
-            <button 
-              className={styles.btnSave} 
-              onClick={handleChangePassword}
-              disabled={isLoading}
-            >
-              {isLoading ? "Guardando..." : (saved ? "✓ Contraseña actualizada" : "Cambiar contraseña")}
-            </button>
-            {saved && <span className={styles.savedMsg}>Contraseña actualizada correctamente.</span>}
-          </div>
         </div>
 
       </div>

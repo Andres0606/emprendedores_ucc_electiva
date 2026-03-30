@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../css/inicioestudiante/inicioestudiante.module.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Emprendimiento {
   id?: string;
@@ -27,7 +28,6 @@ interface SeguimientoConFecha {
   id: string;
   emprendimientoId: string;
   fecha: string;
-  emprendimiento?: Emprendimiento;
 }
 
 interface Evento {
@@ -58,16 +58,26 @@ const quickLinks = [
 ];
 
 export default function InicioEstudiantePage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("resumen");
   const [tipoUsuario, setTipoUsuario] = useState("estudiante");
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [ultimoEmprendimiento, setUltimoEmprendimiento] = useState<Emprendimiento | null>(null);
   const [loadingUltimo, setLoadingUltimo] = useState(true);
   const [totalSeguidos, setTotalSeguidos] = useState(0);
-  const [totalProductosCarrito, setTotalProductosCarrito] = useState(0);
   const [proximosEventos, setProximosEventos] = useState<Evento[]>([]);
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [loadingActividades, setLoadingActividades] = useState(true);
+
+  // Función para cerrar sesión
+  const handleCerrarSesion = () => {
+    if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+      sessionStorage.clear();
+      localStorage.removeItem("categoriasInteres");
+      localStorage.removeItem("carrito");
+      router.push("/");
+    }
+  };
 
   // Función para obtener la fecha de hoy en formato YYYY-MM-DD
   const getFechaHoy = () => {
@@ -85,22 +95,6 @@ export default function InicioEstudiantePage() {
     if (diffDias === 1) return "ayer";
     if (diffDias <= 7) return `hace ${diffDias} días`;
     return fecha.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
-  };
-
-  // Obtener total de productos en carrito
-  const obtenerTotalProductosCarrito = () => {
-    const carritoGuardado = localStorage.getItem("carrito");
-    if (carritoGuardado) {
-      try {
-        const carrito = JSON.parse(carritoGuardado);
-        const total = carrito.reduce((sum: number, item: any) => sum + item.cantidad, 0);
-        setTotalProductosCarrito(total);
-      } catch (e) {
-        setTotalProductosCarrito(0);
-      }
-    } else {
-      setTotalProductosCarrito(0);
-    }
   };
 
   // Obtener próximos eventos
@@ -211,51 +205,54 @@ export default function InicioEstudiantePage() {
     }
   };
 
-  // Obtener el último emprendimiento seguido
+  // Obtener el último emprendimiento seguido (el más reciente)
   const obtenerUltimoSeguido = async (usuarioId: string) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}`);
+      console.log("🔍 Buscando seguimientos para usuario:", usuarioId);
+      
+      // USAR EL MISMO ENDPOINT QUE FUNCIONA EN LA PÁGINA DE SEGUIDOS
+      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
       
       if (!res.ok) {
-        console.log("⚠️ Error al obtener seguimientos");
+        console.log("⚠️ Error al obtener seguimientos, status:", res.status);
         return null;
       }
       
-      const seguimientos: SeguimientoConFecha[] = await res.json();
+      const emprendimientos: Emprendimiento[] = await res.json();
       
-      if (seguimientos.length === 0) {
+      console.log("📋 Todos los emprendimientos seguidos:", emprendimientos.map((e, i) => `${i+1}. ${e.nombre}`));
+      
+      if (emprendimientos.length === 0) {
+        console.log("❌ No hay seguimientos");
+        setTotalSeguidos(0);
         return null;
       }
       
-      const seguimientosOrdenados = [...seguimientos].sort((a, b) => 
-        new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
-      );
+      setTotalSeguidos(emprendimientos.length);
       
-      const ultimoSeguimiento = seguimientosOrdenados[0];
-      setTotalSeguidos(seguimientos.length);
+      // TOMAR EL ÚLTIMO EMPRENDIMIENTO (EL MÁS RECIENTE)
+      const ultimoEmprendimiento = emprendimientos[emprendimientos.length - 1];
       
-      const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${ultimoSeguimiento.emprendimientoId}`);
+      console.log("✅ Último emprendimiento seguido (más reciente):", ultimoEmprendimiento.nombre);
+      console.log("📌 Primer emprendimiento seguido (más antiguo) sería:", emprendimientos[0]?.nombre);
       
-      if (!resEmp.ok) {
-        return null;
+      // Obtener nombre de categoría
+      try {
+        const resCat = await fetch(`http://localhost:8080/api/categorias/${ultimoEmprendimiento.categoriaId}`);
+        let categoriaNombre = "Sin categoría";
+        if (resCat.ok) {
+          const categoria = await resCat.json();
+          categoriaNombre = categoria.nombre;
+        }
+        ultimoEmprendimiento.categoriaNombre = categoriaNombre;
+      } catch (e) {
+        ultimoEmprendimiento.categoriaNombre = "Sin categoría";
       }
       
-      const emprendimiento = await resEmp.json();
-      
-      const resCat = await fetch(`http://localhost:8080/api/categorias/${emprendimiento.categoriaId}`);
-      let categoriaNombre = "Sin categoría";
-      if (resCat.ok) {
-        const categoria = await resCat.json();
-        categoriaNombre = categoria.nombre;
-      }
-      
-      return {
-        ...emprendimiento,
-        categoriaNombre
-      };
+      return ultimoEmprendimiento;
       
     } catch (error) {
-      console.error("Error al obtener último seguido:", error);
+      console.error("Error al obtener seguidos:", error);
       return null;
     }
   };
@@ -288,9 +285,6 @@ export default function InicioEstudiantePage() {
       // Obtener próximos eventos
       obtenerProximosEventos();
       
-      // Obtener total de productos en carrito
-      obtenerTotalProductosCarrito();
-      
       if (usuarioId && tipo.toLowerCase() === "estudiante") {
         const ultimo = await obtenerUltimoSeguido(usuarioId);
         setUltimoEmprendimiento(ultimo);
@@ -309,7 +303,6 @@ export default function InicioEstudiantePage() {
   useEffect(() => {
     const handleStorageChange = () => {
       obtenerProximosEventos();
-      obtenerTotalProductosCarrito();
       const usuarioId = sessionStorage.getItem("usuarioId");
       if (usuarioId) {
         obtenerActividad(usuarioId);
@@ -322,15 +315,13 @@ export default function InicioEstudiantePage() {
 
   const esEstudiante = tipoUsuario === "estudiante";
 
-  // Stats dinámicos - SOLO 2 ITEMS
+  // Stats dinámicos - SOLO 1 ITEM (emprendimientos seguidos)
   const stats = esEstudiante
     ? [
         { value: totalSeguidos.toString(), label: "Emprendimientos seguidos", icon: "🔖" },
-        { value: totalProductosCarrito.toString(), label: "Productos explorados", icon: "🛒" },
       ]
     : [
         { value: "12", label: "Emprendimientos activos", icon: "🚀" },
-        { value: "45", label: "Estudiantes registrados", icon: "👥" },
       ];
 
   return (
@@ -355,6 +346,10 @@ export default function InicioEstudiantePage() {
             <Link href="/emprendimientos" className={styles.btnPrimary}>
               Explorar emprendimientos →
             </Link>
+            {/* Botón de cerrar sesión */}
+            <button onClick={handleCerrarSesion} className={styles.btnLogout}>
+              Cerrar sesión
+            </button>
           </div>
         </div>
         <div className={styles.heroDecor} aria-hidden="true">

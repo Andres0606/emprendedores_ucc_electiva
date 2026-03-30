@@ -44,7 +44,10 @@
   flex-wrap: wrap;
 }
 
-.avatarWrap { position: relative; flex-shrink: 0; }
+.avatarWrap { 
+  position: relative; 
+  flex-shrink: 0; 
+}
 
 .avatar {
   width: 78px;
@@ -59,23 +62,6 @@
   color: #fff;
   letter-spacing: -1px;
 }
-
-.avatarEdit {
-  position: absolute;
-  bottom: 0; right: 0;
-  background: #fff;
-  border: 1.5px solid #e0e7ef;
-  border-radius: 50%;
-  width: 26px; height: 26px;
-  font-size: 0.72rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, border-color 0.2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-.avatarEdit:hover { background: #e6f6fd; border-color: #009FE3; }
 
 .profileInfo {
   flex: 1;
@@ -104,13 +90,13 @@
   width: fit-content;
 }
 
-.profileFacultad {
+.profileCarrera {
   font-size: 0.83rem;
   color: #78909c;
   margin: 0;
 }
 
-.editBtn {
+.configBtn {
   background: #e6f6fd;
   border: 1.5px solid #b3e5fc;
   color: #009FE3;
@@ -118,12 +104,10 @@
   font-weight: 700;
   padding: 9px 18px;
   border-radius: 999px;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
+  text-decoration: none;
   transition: background 0.2s, border-color 0.2s;
 }
-.editBtn:hover {
+.configBtn:hover {
   background: #b3e5fc;
   border-color: #009FE3;
 }
@@ -143,7 +127,9 @@
   box-shadow: 0 2px 12px rgba(0,159,227,0.06);
 }
 
-.cardFull { grid-column: 1 / -1; }
+.cardFull { 
+  grid-column: 1 / -1; 
+}
 
 .cardTitle {
   font-size: 0.72rem;
@@ -153,29 +139,6 @@
   letter-spacing: 0.08em;
   margin: 0 0 14px;
 }
-
-.bioText {
-  font-size: 0.88rem;
-  color: #37474f;
-  line-height: 1.65;
-  margin: 0;
-}
-
-.textArea, .inputField {
-  width: 100%;
-  background: #f5f7fa;
-  border: 1.5px solid #e0e7ef;
-  border-radius: 9px;
-  color: #0d1b2a;
-  font-size: 0.88rem;
-  font-family: inherit;
-  padding: 9px 13px;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-.textArea:focus, .inputField:focus { border-color: #009FE3; }
 
 /* ── Data list ── */
 .dataList {
@@ -207,6 +170,61 @@
   color: #0d1b2a;
 }
 
+/* ── Compras ── */
+.comprasList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compraItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.compraInfo {
+  flex: 1;
+}
+
+.compraNombre {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin: 0 0 4px;
+}
+
+.compraDetalle {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0 0 4px;
+}
+
+.compraFecha {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.compraTotal {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #009FE3;
+  flex-shrink: 0;
+}
+
+.noDataText {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px;
+  margin: 0;
+}
+
 /* ── Categorías de interés ── */
 .catHeader {
   display: flex;
@@ -215,7 +233,6 @@
   margin-bottom: 16px;
 }
 
-/* Sobreescribe el margin-bottom del cardTitle cuando está dentro de catHeader */
 .catHeader .cardTitle {
   margin-bottom: 0;
 }
@@ -346,12 +363,4 @@
 @media (max-width: 680px) {
   .profileGrid { grid-template-columns: 1fr; }
   .profileHeader { flex-direction: column; align-items: flex-start; }
-}
-
-/* Agregar al final del archivo */
-
-.profileCarrera {
-  font-size: 0.83rem;
-  color: #78909c;
-  margin: 0;
 }

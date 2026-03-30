@@ -88,7 +88,142 @@
 }
 .input:focus { border-color: #009FE3; background: #fff; }
 
-/* ── Danger ── */
+.readonly {
+  background: #f0f2f5 !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e0e7ef !important;
+}
+
+.helperText {
+  font-size: 0.7rem;
+  color: #78909c;
+  margin-top: 4px;
+}
+
+/* ── Edit Actions ── */
+.editActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.btnEdit {
+  background: #009FE3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+.btnEdit:hover {
+  opacity: 0.88;
+}
+
+.btnSave {
+  background: #009FE3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+  box-shadow: 0 2px 8px rgba(0,159,227,0.2);
+}
+.btnSave:hover { opacity: 0.88; }
+
+.btnCancel {
+  background: #e2e8f0;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+.btnCancel:hover {
+  background: #cbd5e1;
+}
+
+/* ── Password Section ── */
+.passwordSection {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e7ef;
+}
+
+.passwordTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin: 0 0 16px 0;
+}
+
+.btnChangePassword {
+  background: #009FE3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+  margin-top: 8px;
+  width: 100%;
+}
+.btnChangePassword:hover {
+  opacity: 0.88;
+}
+
+/* ── Messages ── */
+.errorMessage {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #dc2626;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.errorIcon {
+  font-size: 1rem;
+}
+
+.successMessage {
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #2e7d32;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.successIcon {
+  font-size: 1rem;
+}
+
+/* ── Danger Zone ── */
 .danger {
   background: #fce4ec;
   border: 1.5px solid #f8bbd0;
@@ -124,7 +259,7 @@
 }
 .btnDanger:hover { background: #ffebee; }
 
-/* ── Save ── */
+/* ── Save Row ── */
 .saveRow {
   display: flex;
   align-items: center;
@@ -133,20 +268,6 @@
   padding-top: 18px;
   border-top: 1.5px solid #e0e7ef;
 }
-.btnSave {
-  background: #009FE3;
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.86rem;
-  padding: 10px 26px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  transition: opacity 0.2s;
-  box-shadow: 0 2px 8px rgba(0,159,227,0.2);
-}
-.btnSave:hover { opacity: 0.88; }
 
 .savedMsg {
   font-size: 0.8rem;
@@ -159,47 +280,43 @@
   .container { padding: 0 16px; }
 }
 
-/* Agregar al final de configuracion.module.css */
-
-.readonly {
-    background: #f0f2f5 !important;
-    color: #6c757d !important;
-    cursor: not-allowed;
-    border-color: #e0e7ef !important;
+/* Estilos para requisitos de contraseña */
+.passwordReqs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
 }
 
-.helperText {
-    font-size: 0.7rem;
-    color: #78909c;
-    margin-top: 4px;
+.reqMet {
+  color: #28a745;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.passwordSection {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #e0e7ef;
+.reqUnmet {
+  color: #6c757d;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.passwordTitle {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #0d1b2a;
-    margin: 0 0 16px 0;
+.errorText {
+  color: #dc3545;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
 }
 
-.errorMessage {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: #dc2626;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.errorIcon {
-    font-size: 1rem;
+.successText {
+  color: #28a745;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
 }

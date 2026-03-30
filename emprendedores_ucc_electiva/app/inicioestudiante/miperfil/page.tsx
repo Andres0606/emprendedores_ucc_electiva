@@ -15,13 +15,11 @@ const CATEGORIAS = [
 ];
 
 export default function MiPerfilPage() {
-  const [editing, setEditing] = useState(false);
   const [tipoUsuario, setTipoUsuario] = useState("estudiante");
   const [nombreUsuario, setNombreUsuario] = useState("");
-  const [bio, setBio] = useState("");
   const [carrera, setCarrera] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-
+  const [compras, setCompras] = useState<any[]>([]);
   const [selectedCats, setSelectedCats] = useState<Set<number>>(new Set());
   const [editingCats, setEditingCats] = useState(false);
 
@@ -30,50 +28,48 @@ export default function MiPerfilPage() {
       try {
         const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
         const nombre = sessionStorage.getItem("nombreUsuario") || "Usuario";
+        const usuarioId = sessionStorage.getItem("usuarioId");
         const usuarioGuardado = sessionStorage.getItem("usuario");
 
-        setTipoUsuario(tipo.toLowerCase());
-        setNombreUsuario(nombre);
-
-        if (tipo.toLowerCase() === "estudiante") {
-          setBio("Estudiante de la Universidad Cooperativa de Colombia. Apasionado/a por la innovación y el emprendimiento.");
-
-          if (usuarioGuardado) {
+        let nombreCompleto = nombre;
+        if (usuarioGuardado && (!nombre || nombre === "Usuario" || nombre.split(" ").length === 1)) {
+          try {
             const usuario = JSON.parse(usuarioGuardado);
-            const carreraUsuario = usuario.carrera || usuario.facultad;
-            if (carreraUsuario && carreraUsuario !== "Carrera no especificada") {
-              setCarrera(carreraUsuario);
-            } else {
-              const usuarioId = sessionStorage.getItem("usuarioId");
-              if (usuarioId) {
-                try {
-                  const res = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
-                  if (res.ok) {
-                    const data = await res.json();
-                    const carreraBackend = data.carrera || data.facultad;
-                    if (carreraBackend) {
-                      setCarrera(carreraBackend);
-                      usuario.carrera = carreraBackend;
-                      sessionStorage.setItem("usuario", JSON.stringify(usuario));
-                    } else {
-                      setCarrera("Carrera no especificada");
-                    }
-                  } else {
-                    setCarrera("Carrera no especificada");
-                  }
-                } catch (error) {
-                  console.error("Error al obtener carrera del backend:", error);
-                  setCarrera("Carrera no especificada");
-                }
+            if (usuario.nombre && usuario.apellido) {
+              nombreCompleto = `${usuario.nombre} ${usuario.apellido}`;
+              sessionStorage.setItem("nombreUsuario", nombreCompleto);
+            } else if (usuario.nombre) {
+              nombreCompleto = usuario.nombre;
+            }
+          } catch (e) {
+            console.error("Error al parsear usuario:", e);
+          }
+        }
+
+        setTipoUsuario(tipo.toLowerCase());
+        setNombreUsuario(nombreCompleto);
+
+        // Obtener carrera del usuario desde el backend
+        if (usuarioId) {
+          try {
+            const res = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+            if (res.ok) {
+              const data = await res.json();
+              const carreraBackend = data.carrera || data.facultad;
+              if (carreraBackend && carreraBackend !== "Carrera no especificada") {
+                setCarrera(carreraBackend);
               } else {
                 setCarrera("Carrera no especificada");
               }
+            } else {
+              setCarrera("Carrera no especificada");
             }
-          } else {
+          } catch (error) {
+            console.error("Error al obtener carrera:", error);
             setCarrera("Carrera no especificada");
           }
         } else {
-          setBio("Administrativo de la Universidad Cooperativa de Colombia. Apoyando y fomentando la cultura emprendedora en la comunidad UCC.");
+          setCarrera("Carrera no especificada");
         }
 
         // Cargar categorías guardadas
@@ -82,11 +78,32 @@ export default function MiPerfilPage() {
           setSelectedCats(new Set(JSON.parse(catsGuardadas)));
         }
 
+        // Cargar compras realizadas
+        await cargarCompras(usuarioId);
+
       } catch (error) {
         console.error("Error al cargar datos del usuario:", error);
         setCarrera("Carrera no especificada");
       } finally {
         setIsLoading(false);
+      }
+    };
+
+    const cargarCompras = async (usuarioId: string | null) => {
+      if (!usuarioId) return;
+      
+      try {
+        // Si tienes endpoint de compras, descomenta esto
+        // const res = await fetch(`http://localhost:8080/api/compras/usuario/${usuarioId}`);
+        // if (res.ok) {
+        //   const data = await res.json();
+        //   setCompras(data);
+        // }
+        // Si no hay endpoint, dejar array vacío
+        setCompras([]);
+      } catch (error) {
+        console.error("Error al cargar compras:", error);
+        setCompras([]);
       }
     };
 
@@ -126,21 +143,12 @@ export default function MiPerfilPage() {
         <div className={styles.profileHeader}>
           <div className={styles.avatarWrap}>
             <div className={styles.avatar}>
-              {nombreUsuario.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              {nombreUsuario.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
             </div>
-            <button className={styles.avatarEdit} title="Cambiar foto">📷</button>
           </div>
 
           <div className={styles.profileInfo}>
-            {editing ? (
-              <input
-                className={styles.inputField}
-                value={nombreUsuario}
-                onChange={(e) => setNombreUsuario(e.target.value)}
-              />
-            ) : (
-              <h1 className={styles.profileName}>{nombreUsuario}</h1>
-            )}
+            <h1 className={styles.profileName}>{nombreUsuario}</h1>
             <span className={styles.profileBadge}>
               {esEstudiante ? "Estudiante UCC" : "Administrativo UCC"}
             </span>
@@ -149,30 +157,15 @@ export default function MiPerfilPage() {
             )}
           </div>
 
-          <button className={styles.editBtn} onClick={() => setEditing(!editing)}>
-            {editing ? "✓ Guardar" : "Editar perfil"}
-          </button>
+          <Link href="/inicioestudiante/configuracion" className={styles.configBtn}>
+            Configuración
+          </Link>
         </div>
 
         {/* Grid */}
         <div className={styles.profileGrid}>
 
-          {/* Sobre mí - EDITABLE */}
-          <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Sobre mí</h2>
-            {editing ? (
-              <textarea
-                className={styles.textArea}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={4}
-              />
-            ) : (
-              <p className={styles.bioText}>{bio}</p>
-            )}
-          </section>
-
-          {/* Datos académicos - NO EDITABLE */}
+          {/* Datos académicos */}
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>
               {esEstudiante ? "Datos académicos" : "Información"}
@@ -196,6 +189,33 @@ export default function MiPerfilPage() {
             </ul>
           </section>
 
+          {/* Compras realizadas */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>Mis compras</h2>
+            {compras && compras.length > 0 ? (
+              <div className={styles.comprasList}>
+                {compras.map((compra, index) => (
+                  <div key={index} className={styles.compraItem}>
+                    <div className={styles.compraInfo}>
+                      <p className={styles.compraNombre}>{compra.productoNombre || "Producto"}</p>
+                      <p className={styles.compraDetalle}>
+                        {compra.emprendimientoNombre} • {compra.cantidad} unidades
+                      </p>
+                      <p className={styles.compraFecha}>
+                        {compra.fecha ? new Date(compra.fecha).toLocaleDateString('es-CO') : "Fecha no disponible"}
+                      </p>
+                    </div>
+                    <div className={styles.compraTotal}>
+                      ${compra.total?.toLocaleString() || "0"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.noDataText}>Aún no has realizado compras</p>
+            )}
+          </section>
+
           {/* Categorías de interés */}
           <section className={`${styles.card} ${styles.cardFull}`}>
             <div className={styles.catHeader}>
@@ -208,7 +228,7 @@ export default function MiPerfilPage() {
               </button>
             </div>
 
-            {/* Chips seleccionados - SIEMPRE VISIBLES */}
+            {/* Chips seleccionados */}
             <div className={styles.selectedCats}>
               {selectedCats.size === 0 ? (
                 <span className={styles.noSelected}>
@@ -241,7 +261,7 @@ export default function MiPerfilPage() {
             {/* Separador */}
             <hr className={styles.catDivider} />
             
-            {/* Todas las categorías - SIEMPRE VISIBLES */}
+            {/* Todas las categorías */}
             <p className={styles.catAllLabel}>Todas las categorías</p>
             <div className={styles.allCats}>
               {CATEGORIAS.map((cat) => (
