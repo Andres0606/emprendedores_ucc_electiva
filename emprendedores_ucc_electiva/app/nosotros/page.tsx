@@ -34,12 +34,7 @@ const valores = [
   },
 ];
 
-const cifras = [
-  { val: "2020",   lbl: "Año de fundación" },
-  { val: "120+",   lbl: "Emprendimientos" },
-  { val: "3.200+", lbl: "Estudiantes" },
-  { val: "8",      lbl: "Facultades" },
-];
+
 
 export default function NosotrosPage() {
   return (
@@ -63,14 +58,6 @@ export default function NosotrosPage() {
               Universidad Cooperativa de Colombia, sede Medellín. Conectamos
               talento, ideas e innovación en un solo lugar.
             </p>
-          </div>
-          <div className={styles.heroCifras}>
-            {cifras.map((c) => (
-              <div key={c.lbl} className={styles.heroCifra}>
-                <span className={styles.heroCifraVal}>{c.val}</span>
-                <span className={styles.heroCifraLbl}>{c.lbl}</span>
-              </div>
-            ))}
           </div>
         </section>
 
