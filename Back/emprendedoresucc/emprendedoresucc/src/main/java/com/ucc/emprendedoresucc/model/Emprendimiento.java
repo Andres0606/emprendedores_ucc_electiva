@@ -17,16 +17,15 @@ public class Emprendimiento {
     private String categoriaId;
     private String usuarioId;
     private String estado;
-    private String telefono;  // 👈 NUEVO CAMPO
+    private String telefono;
 
-    // 🔥 NUNCA NULL
+    // NUNCA NULL
     private List<String> imagenes = new ArrayList<>();
     private List<Producto> productos = new ArrayList<>();
 
     public Emprendimiento() {}
 
     // GETTERS Y SETTERS
-
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -45,8 +44,8 @@ public class Emprendimiento {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
-    public String getTelefono() { return telefono; }  // 👈 GETTER
-    public void setTelefono(String telefono) { this.telefono = telefono; }  // 👈 SETTER
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
 
     public List<String> getImagenes() { return imagenes; }
     public void setImagenes(List<String> imagenes) {

@@ -7,17 +7,57 @@ public class Producto {
     private int stock;
     private String imagen;
 
+    // Constructor por defecto (requerido por Spring/Jackson)
     public Producto() {}
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    // Constructor con parámetros
+    public Producto(String nombre, double precio, int stock, String imagen) {
+        this.nombre = nombre;
+        this.precio = precio;
+        this.stock = stock;
+        this.imagen = imagen;
+    }
 
-    public double getPrecio() { return precio; }
-    public void setPrecio(double precio) { this.precio = precio; }
+    // Getters y Setters
+    public String getNombre() { 
+        return nombre; 
+    }
+    
+    public void setNombre(String nombre) { 
+        this.nombre = nombre; 
+    }
 
-    public int getStock() { return stock; }
-    public void setStock(int stock) { this.stock = stock; }
+    public double getPrecio() { 
+        return precio; 
+    }
+    
+    public void setPrecio(double precio) { 
+        this.precio = precio; 
+    }
 
-    public String getImagen() { return imagen; }
-    public void setImagen(String imagen) { this.imagen = imagen; }
+    public int getStock() { 
+        return stock; 
+    }
+    
+    public void setStock(int stock) { 
+        this.stock = stock; 
+    }
+
+    public String getImagen() { 
+        return imagen; 
+    }
+    
+    public void setImagen(String imagen) { 
+        this.imagen = imagen; 
+    }
+
+    @Override
+    public String toString() {
+        return "Producto{" +
+                "nombre='" + nombre + '\'' +
+                ", precio=" + precio +
+                ", stock=" + stock +
+                ", imagen='" + imagen + '\'' +
+                '}';
+    }
 }

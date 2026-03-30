@@ -27,6 +27,13 @@ type Producto = {
   imagen: string;
 };
 
+// Función para validar URL de imagen
+const validarURLImagen = (url: string): boolean => {
+  if (!url || url.trim() === "") return false;
+  const urlPattern = /^(https?:\/\/)([a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=]+)$/i;
+  return urlPattern.test(url.trim());
+};
+
 // ── Componente reutilizable para el helper de imagen ──
 function ImageHelper() {
   const [open, setOpen] = useState(false);
@@ -141,6 +148,8 @@ export default function MiEmprendimientoPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [telefonoError, setTelefonoError] = useState("");
+  const [verificandoTelefono, setVerificandoTelefono] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -182,12 +191,67 @@ export default function MiEmprendimientoPage() {
   const [prodPrecio, setProdPrecio] = useState("");
   const [prodStock, setProdStock]   = useState("");
   const [prodImagen, setProdImagen] = useState("");
+  const [urlError, setUrlError] = useState("");
 
   // Paso 3
   const [imagenes, setImagenes] = useState<string[]>([""]);
+  const [imagenesErrores, setImagenesErrores] = useState<string[]>([]);
+
+  // Función para verificar teléfono en backend
+  const verificarTelefonoEmprendimiento = async (telefono: string) => {
+    if (telefono.length === 10) {
+      setVerificandoTelefono(true);
+      try {
+        const res = await fetch(`http://localhost:8080/api/emprendimientos/verificar-telefono/${telefono}`);
+        const data = await res.json();
+        if (data.existe) {
+          setTelefonoError("Este número de teléfono ya está registrado en otro emprendimiento");
+        } else {
+          setTelefonoError("");
+        }
+      } catch (error) {
+        console.error("Error verificando teléfono:", error);
+        setTelefonoError("Error al verificar teléfono");
+      } finally {
+        setVerificandoTelefono(false);
+      }
+    } else {
+      setTelefonoError("");
+    }
+  };
+
+  // Manejar cambio de teléfono
+  const manejarCambioTelefono = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let valor = e.target.value.replace(/\D/g, '');
+    if (valor.length <= 10) {
+      setTelefono(valor);
+      if (valor.length === 10) {
+        verificarTelefonoEmprendimiento(valor);
+      } else {
+        setTelefonoError("");
+      }
+    }
+  };
 
   const agregarProducto = () => {
-    if (!prodNombre || !prodPrecio) return;
+    if (!prodNombre.trim()) {
+      alert("⚠️ El nombre del producto es obligatorio");
+      return;
+    }
+    if (!prodPrecio.trim()) {
+      alert("⚠️ El precio del producto es obligatorio");
+      return;
+    }
+    if (Number(prodPrecio) <= 0) {
+      alert("⚠️ El precio debe ser mayor a 0");
+      return;
+    }
+    
+    if (prodImagen && !validarURLImagen(prodImagen)) {
+      alert("⚠️ La URL de la imagen del producto debe comenzar con http:// o https://");
+      return;
+    }
+    
     setProductos([...productos, {
       id: Date.now().toString(),
       nombre: prodNombre,
@@ -195,21 +259,69 @@ export default function MiEmprendimientoPage() {
       stock: prodStock,
       imagen: prodImagen,
     }]);
-    setProdNombre(""); setProdPrecio(""); setProdStock(""); setProdImagen("");
+    setProdNombre(""); 
+    setProdPrecio(""); 
+    setProdStock(""); 
+    setProdImagen("");
+    setUrlError("");
   };
 
   const eliminarProducto = (id: string) =>
     setProductos(productos.filter((p) => p.id !== id));
 
-  const agregarImagen = () => setImagenes([...imagenes, ""]);
-  const actualizarImagen = (i: number, val: string) => {
-    const arr = [...imagenes]; arr[i] = val; setImagenes(arr);
+  const agregarImagen = () => {
+    setImagenes([...imagenes, ""]);
+    setImagenesErrores([...imagenesErrores, ""]);
   };
-  const eliminarImagen = (i: number) =>
+  
+  const actualizarImagen = (i: number, val: string) => {
+    const arr = [...imagenes]; 
+    arr[i] = val; 
+    setImagenes(arr);
+    
+    const erroresArr = [...imagenesErrores];
+    if (val && !validarURLImagen(val)) {
+      erroresArr[i] = "La URL debe comenzar con http:// o https://";
+    } else {
+      erroresArr[i] = "";
+    }
+    setImagenesErrores(erroresArr);
+  };
+  
+  const eliminarImagen = (i: number) => {
     setImagenes(imagenes.filter((_, idx) => idx !== i));
+    setImagenesErrores(imagenesErrores.filter((_, idx) => idx !== i));
+  };
+
+  const validarImagenesEmprendimiento = () => {
+    const imagenesValidas = imagenes.filter(img => img.trim() !== "" && validarURLImagen(img));
+    if (imagenesValidas.length === 0) {
+      alert("⚠️ Debes agregar al menos una imagen válida para tu emprendimiento (URL que comience con http:// o https://)");
+      return false;
+    }
+    return true;
+  };
+
+  const validarProductos = () => {
+    if (productos.length === 0) {
+      alert("⚠️ Debes agregar al menos un producto a tu emprendimiento");
+      return false;
+    }
+    return true;
+  };
 
   const publicarEmprendimiento = async () => {
     if (isPublishing) return;
+    
+    if (!validarProductos()) return;
+    if (!validarImagenesEmprendimiento()) return;
+    
+    if (telefonoError) {
+      alert("⚠️ " + telefonoError);
+      setPaso(1);
+      return;
+    }
+    
     setIsPublishing(true);
 
     const usuarioGuardado = sessionStorage.getItem("usuario");
@@ -242,30 +354,21 @@ export default function MiEmprendimientoPage() {
       return;
     }
 
-    const imagenesValidas = imagenes.filter(img => img.trim() !== "");
+    const imagenesValidas = imagenes.filter(img => img.trim() !== "" && validarURLImagen(img));
     if (imagenesValidas.length === 0) {
-      alert("⚠️ Debes agregar al menos una imagen para tu emprendimiento");
+      alert("⚠️ Debes agregar al menos una imagen válida para tu emprendimiento");
       setPaso(3);
       setIsPublishing(false);
       return;
     }
 
-    // 🔥 OBTENER EL ID CORRECTO DE LA CATEGORÍA SELECCIONADA
     const categoriaId = categoriaToId[categoria];
-    
     if (!categoriaId) {
       alert("⚠️ Por favor selecciona una categoría válida");
       setPaso(1);
       setIsPublishing(false);
       return;
     }
-
-    console.log("Publicando emprendimiento...");
-    console.log("Usuario:", usuario.nombre);
-    console.log("Tipo:", usuario.tipoUsuario);
-    console.log("Teléfono:", telefonoLimpio);
-    console.log("Categoría seleccionada:", categoria);
-    console.log("Categoría ID:", categoriaId);
 
     const data = {
       nombre,
@@ -279,7 +382,7 @@ export default function MiEmprendimientoPage() {
         nombre: p.nombre,
         precio: Number(p.precio),
         stock: Number(p.stock) || 0,
-        imagen: p.imagen
+        imagen: p.imagen || ""
       }))
     };
 
@@ -291,7 +394,7 @@ export default function MiEmprendimientoPage() {
       });
       const result = await res.json();
       if (res.ok) {
-        alert("¡Emprendimiento publicado correctamente!");
+        alert("✅ ¡Emprendimiento publicado correctamente!");
         router.push("/inicioemprendedor");
       } else {
         alert("Error: " + (result.message || result.error || "Error al publicar"));
@@ -302,6 +405,14 @@ export default function MiEmprendimientoPage() {
     } finally {
       setIsPublishing(false);
     }
+  };
+
+  const puedeAvanzarPaso2 = () => {
+    if (productos.length === 0) {
+      alert("⚠️ Debes agregar al menos un producto antes de continuar");
+      return false;
+    }
+    return true;
   };
 
   const pasos = [
@@ -422,18 +533,24 @@ export default function MiEmprendimientoPage() {
                     <input
                       type="tel"
                       placeholder="Ej: 3102474495"
-                      className={styles.input}
+                      className={`${styles.input} ${telefonoError ? styles.inputError : ""}`}
                       value={telefono}
-                      onChange={(e) => {
-                        const valor = e.target.value.replace(/\D/g, '');
-                        if (valor.length <= 10) setTelefono(valor);
-                      }}
+                      onChange={manejarCambioTelefono}
                     />
                   </div>
-                  {telefono && (
+                  {verificandoTelefono && (
+                    <small className={styles.helperText}>Verificando disponibilidad...</small>
+                  )}
+                  {telefono && telefono.length > 0 && (
                     <small className={`${styles.helperText} ${telefono.length === 10 ? styles.validText : styles.invalidText}`}>
                       {telefono.length}/10 dígitos {telefono.length === 10 ? "✅" : "— deben ser exactamente 10"}
                     </small>
+                  )}
+                  {telefonoError && (
+                    <small className={styles.errorText}>{telefonoError}</small>
+                  )}
+                  {telefono && telefono.length === 10 && !telefonoError && !verificandoTelefono && (
+                    <small className={styles.successText}>✓ Teléfono disponible</small>
                   )}
                 </div>
 
@@ -459,7 +576,7 @@ export default function MiEmprendimientoPage() {
                   type="button"
                   className={styles.btnNext}
                   onClick={() => setPaso(2)}
-                  disabled={!nombre || !descripcion || !categoria || telefono.length !== 10}
+                  disabled={!nombre || !descripcion || !categoria || telefono.length !== 10 || !!telefonoError}
                 >
                   Siguiente: Productos →
                 </button>
@@ -474,10 +591,10 @@ export default function MiEmprendimientoPage() {
                 <span className={styles.formTag}>Paso 2 de 3</span>
                 <h1 className={styles.formTitle}>Productos</h1>
                 <p className={styles.formSub}>Agrega los productos de tu emprendimiento</p>
+                <p className={styles.formWarning}>⚠️ Debes agregar al menos un producto para continuar</p>
               </div>
 
               <div className={styles.prodForm}>
-                {/* Fila 1: Nombre + Precio */}
                 <div className={styles.row}>
                   <div className={styles.field}>
                     <label className={styles.label}>Nombre del producto *</label>
@@ -503,7 +620,6 @@ export default function MiEmprendimientoPage() {
                   </div>
                 </div>
 
-                {/* Fila 2: Stock + URL imagen */}
                 <div className={styles.row}>
                   <div className={styles.field}>
                     <label className={styles.label}>Stock</label>
@@ -523,13 +639,20 @@ export default function MiEmprendimientoPage() {
                         <circle cx="7" cy="9" r="1.5"/>
                         <path d="M2 14l4-4 3 3 3-3 6 5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <input type="url" placeholder="https://i.postimg.cc/xxxx/imagen.jpg" className={styles.input}
-                        value={prodImagen} onChange={(e) => setProdImagen(e.target.value)}/>
+                      <input 
+                        type="url" 
+                        placeholder="https://i.postimg.cc/xxxx/imagen.jpg" 
+                        className={`${styles.input} ${prodImagen && !validarURLImagen(prodImagen) ? styles.inputError : ""}`}
+                        value={prodImagen} 
+                        onChange={(e) => setProdImagen(e.target.value)}
+                      />
                     </div>
+                    {prodImagen && !validarURLImagen(prodImagen) && (
+                      <small className={styles.errorText}>⚠️ La URL debe comenzar con http:// o https://</small>
+                    )}
                   </div>
                 </div>
 
-                {/* ✅ Helper FUERA del row → ocupa ancho completo */}
                 <ImageHelper />
 
                 <button type="button" className={styles.btnAgregar} onClick={agregarProducto}>
@@ -562,7 +685,15 @@ export default function MiEmprendimientoPage() {
 
               <div className={styles.formActions}>
                 <button type="button" className={styles.btnBack} onClick={() => setPaso(1)}>← Atrás</button>
-                <button type="button" className={styles.btnNext} onClick={() => setPaso(3)}>
+                <button 
+                  type="button" 
+                  className={styles.btnNext} 
+                  onClick={() => {
+                    if (puedeAvanzarPaso2()) {
+                      setPaso(3);
+                    }
+                  }}
+                >
                   Siguiente: Imágenes →
                 </button>
               </div>
@@ -576,12 +707,12 @@ export default function MiEmprendimientoPage() {
                 <span className={styles.formTag}>Paso 3 de 3</span>
                 <h1 className={styles.formTitle}>Imágenes</h1>
                 <p className={styles.formSub}>Agrega las URLs de las imágenes de tu emprendimiento</p>
+                <p className={styles.formWarning}>⚠️ Debes agregar al menos una imagen válida (URL que comience con http:// o https://)</p>
               </div>
 
               <div className={styles.fields}>
                 {imagenes.map((img, i) => (
                   <div key={i} style={{ width: "100%" }}>
-                    {/* Input en su propia fila */}
                     <div style={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
                       <div className={styles.field} style={{ flex: 1 }}>
                         <label className={styles.label}>URL imagen {i + 1}</label>
@@ -591,20 +722,29 @@ export default function MiEmprendimientoPage() {
                             <circle cx="7" cy="9" r="1.5"/>
                             <path d="M2 14l4-4 3 3 3-3 6 5" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
-                          <input type="url" placeholder="https://i.postimg.cc/xxxx/imagen.jpg" className={styles.input}
-                            value={img} onChange={(e) => actualizarImagen(i, e.target.value)}/>
+                          <input 
+                            type="url" 
+                            placeholder="https://i.postimg.cc/xxxx/imagen.jpg" 
+                            className={`${styles.input} ${imagenesErrores[i] ? styles.inputError : ""}`}
+                            value={img} 
+                            onChange={(e) => actualizarImagen(i, e.target.value)}
+                          />
                         </div>
+                        {imagenesErrores[i] && (
+                          <small className={styles.errorText}>{imagenesErrores[i]}</small>
+                        )}
+                        {img && !imagenesErrores[i] && validarURLImagen(img) && (
+                          <small className={styles.successText}>✓ URL válida</small>
+                        )}
                       </div>
                       {imagenes.length > 1 && (
-                        <button type="button" className={styles.imgDelBtn} onClick={() => eliminarImagen(i)}
-                          style={{ marginBottom: "2px" }}>
+                        <button type="button" className={styles.imgDelBtn} onClick={() => eliminarImagen(i)}>
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
                             <path d="M3 4h10M6 4V2h4v2M5 4l.5 9h5l.5-9" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </button>
                       )}
                     </div>
-                    {/* ✅ Helper FUERA del row → ocupa ancho completo */}
                     <ImageHelper />
                   </div>
                 ))}
@@ -614,7 +754,6 @@ export default function MiEmprendimientoPage() {
                 </button>
               </div>
 
-              {/* Resumen */}
               <div className={styles.resumen}>
                 <p className={styles.resumenTitle}>Resumen del emprendimiento</p>
                 <div className={styles.resumenGrid}>
@@ -637,6 +776,10 @@ export default function MiEmprendimientoPage() {
                   <div className={styles.resumenItem}>
                     <span className={styles.resumenLbl}>Productos</span>
                     <span className={styles.resumenVal}>{productos.length} agregados</span>
+                  </div>
+                  <div className={styles.resumenItem}>
+                    <span className={styles.resumenLbl}>Imágenes</span>
+                    <span className={styles.resumenVal}>{imagenes.filter(img => img.trim() !== "" && validarURLImagen(img)).length} válidas</span>
                   </div>
                 </div>
               </div>

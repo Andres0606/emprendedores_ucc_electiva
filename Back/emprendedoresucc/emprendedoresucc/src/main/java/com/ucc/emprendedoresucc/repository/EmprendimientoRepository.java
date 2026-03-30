@@ -10,5 +10,10 @@ public interface EmprendimientoRepository extends MongoRepository<Emprendimiento
     List<Emprendimiento> findByCategoriaId(String categoriaId);
 
     List<Emprendimiento> findByUsuarioId(String usuarioId);
-
+    
+    // Método para buscar emprendimiento por teléfono
+    Emprendimiento findByTelefono(String telefono);
+    
+    // Método para buscar todos los emprendimientos con un teléfono específico
+    List<Emprendimiento> findAllByTelefono(String telefono);
 }

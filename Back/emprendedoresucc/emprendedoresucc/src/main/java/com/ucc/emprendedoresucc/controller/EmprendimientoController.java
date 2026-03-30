@@ -14,20 +14,20 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/emprendimientos")
-@CrossOrigin("*")
+@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.OPTIONS})
 public class EmprendimientoController {
 
     @Autowired
     private EmprendimientoService emprendimientoService;
     
     @Autowired
-    private UsuarioService usuarioService;  // 👈 INYECTAR USUARIO SERVICE
+    private UsuarioService usuarioService;
 
-    // Crear emprendimiento - CON VERIFICACIÓN DE TIPO
+    // Crear emprendimiento - CON VERIFICACIÓN DE TIPO Y TELÉFONO DUPLICADO
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody Emprendimiento emprendimiento) {
         try {
-            // 👈 VERIFICAR QUE EL USUARIO EXISTA Y SEA EMPRENDEDOR
+            // Verificar que el usuario exista y sea emprendedor
             if (emprendimiento.getUsuarioId() == null || emprendimiento.getUsuarioId().trim().isEmpty()) {
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Usuario no especificado");
@@ -46,7 +46,7 @@ public class EmprendimientoController {
                 return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
             }
             
-            // 👈 VERIFICAR TIPO DE USUARIO
+            // Verificar tipo de usuario
             if (!"emprendedor".equalsIgnoreCase(usuario.getTipoUsuario())) {
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Permiso denegado");
@@ -54,7 +54,7 @@ public class EmprendimientoController {
                 return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
             }
             
-            // Validar teléfono (opcional)
+            // Validar teléfono
             if (emprendimiento.getTelefono() == null || emprendimiento.getTelefono().trim().isEmpty()) {
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Teléfono requerido");
@@ -62,15 +62,58 @@ public class EmprendimientoController {
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
             }
             
+            // Validar que el teléfono tenga 10 dígitos
+            String telefonoLimpio = emprendimiento.getTelefono().replaceAll("\\D", "");
+            if (telefonoLimpio.length() != 10) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Teléfono inválido");
+                errorResponse.put("message", "El teléfono debe tener exactamente 10 dígitos");
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            }
+            emprendimiento.setTelefono(telefonoLimpio);
+            
+            // Validar que el teléfono no esté registrado en otro emprendimiento
+            Emprendimiento existente = emprendimientoService.obtenerPorTelefono(telefonoLimpio);
+            if (existente != null) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Teléfono duplicado");
+                errorResponse.put("message", "El número de teléfono ya está registrado en otro emprendimiento. Por favor usa otro número");
+                return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+            }
+            
             Emprendimiento nuevo = emprendimientoService.crearEmprendimiento(emprendimiento);
             return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
             
+        } catch (IllegalArgumentException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error de validación");
+            errorResponse.put("message", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Error al crear emprendimiento");
             errorResponse.put("message", e.getMessage());
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // Verificar si teléfono ya está registrado en algún emprendimiento
+    @GetMapping("/verificar-telefono/{telefono}")
+    public ResponseEntity<?> verificarTelefono(@PathVariable String telefono) {
+        try {
+            String telefonoLimpio = telefono.replaceAll("\\D", "");
+            Emprendimiento emprendimiento = emprendimientoService.obtenerPorTelefono(telefonoLimpio);
+            Map<String, Object> response = new HashMap<>();
+            response.put("existe", emprendimiento != null);
+            response.put("message", emprendimiento != null ? 
+                "El teléfono ya está registrado en otro emprendimiento" : 
+                "Teléfono disponible");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
@@ -122,6 +165,11 @@ public class EmprendimientoController {
     public ResponseEntity<?> actualizar(@PathVariable String id, @RequestBody Emprendimiento emp) {
         try {
             return ResponseEntity.ok(emprendimientoService.actualizarEmprendimiento(id, emp));
+        } catch (IllegalArgumentException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error de validación");
+            errorResponse.put("message", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error al actualizar");

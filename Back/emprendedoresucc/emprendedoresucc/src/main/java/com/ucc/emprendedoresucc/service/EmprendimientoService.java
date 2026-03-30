@@ -4,9 +4,6 @@ import com.ucc.emprendedoresucc.model.Emprendimiento;
 import com.ucc.emprendedoresucc.repository.EmprendimientoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.ucc.emprendedoresucc.service.EmprendimientoService;
-
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,25 +15,29 @@ public class EmprendimientoService {
     @Autowired
     private EmprendimientoRepository emprendimientoRepository;
 
-
-    // Crear un nuevo emprendimiento
-    // En EmprendimientoService.java - actualizar crearEmprendimiento()
+    // Crear un nuevo emprendimiento con validación de teléfono duplicado
     public Emprendimiento crearEmprendimiento(Emprendimiento emprendimiento) {
 
         if (emprendimiento.getNombre() == null || emprendimiento.getNombre().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del emprendimiento es obligatorio");
         }
 
-        // 👈 VALIDAR TELÉFONO
+        // Validar teléfono
         if (emprendimiento.getTelefono() == null || emprendimiento.getTelefono().trim().isEmpty()) {
             throw new IllegalArgumentException("El teléfono de contacto es obligatorio");
+        }
+
+        // Validar que el teléfono no esté registrado en otro emprendimiento
+        Emprendimiento existentePorTelefono = emprendimientoRepository.findByTelefono(emprendimiento.getTelefono());
+        if (existentePorTelefono != null) {
+            throw new IllegalArgumentException("El número de teléfono ya está registrado en otro emprendimiento. Por favor usa otro número");
         }
 
         if (emprendimiento.getEstado() == null || emprendimiento.getEstado().trim().isEmpty()) {
             emprendimiento.setEstado("pendiente");
         }
 
-        // 🔥 PROTECCIÓN IMPORTANTE
+        // Protección contra null
         if (emprendimiento.getProductos() == null) {
             emprendimiento.setProductos(new ArrayList<>());
         }
@@ -48,41 +49,37 @@ public class EmprendimientoService {
         return emprendimientoRepository.save(emprendimiento);
     }
 
-    // 🔥 ESTE ES EL MÁS IMPORTANTE (ARREGLA EL ERROR 500)
+    // Obtener todos los emprendimientos
     public List<Emprendimiento> obtenerTodos() {
+        try {
+            List<Emprendimiento> lista = emprendimientoRepository.findAll();
 
-    try {
-        List<Emprendimiento> lista = emprendimientoRepository.findAll();
+            if (lista == null) {
+                return new ArrayList<>();
+            }
 
-        if (lista == null) {
+            for (Emprendimiento emp : lista) {
+                if (emp.getProductos() == null) {
+                    emp.setProductos(new ArrayList<>());
+                }
+                if (emp.getImagenes() == null) {
+                    emp.setImagenes(new ArrayList<>());
+                }
+                if (emp.getEstado() == null) {
+                    emp.setEstado("pendiente");
+                }
+            }
+
+            return lista;
+
+        } catch (Exception e) {
+            e.printStackTrace();
             return new ArrayList<>();
         }
-
-        for (Emprendimiento emp : lista) {
-            if (emp.getProductos() == null) {
-                emp.setProductos(new ArrayList<>());
-            }
-            if (emp.getImagenes() == null) {
-                emp.setImagenes(new ArrayList<>());
-            }
-            // 👈 NO MODIFICAR EL ESTADO SI YA TIENE UNO VÁLIDO
-            // Solo poner "pendiente" si es null (por si hay datos antiguos)
-            if (emp.getEstado() == null) {
-                emp.setEstado("pendiente");
-            }
-        }
-
-        return lista;
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        return new ArrayList<>();
     }
-}
 
     // Obtener emprendimiento por ID
     public Optional<Emprendimiento> obtenerPorId(String id) {
-
         Optional<Emprendimiento> empOpt = emprendimientoRepository.findById(id);
 
         empOpt.ifPresent(emp -> {
@@ -97,9 +94,16 @@ public class EmprendimientoService {
         return empOpt;
     }
 
+    // Obtener emprendimiento por teléfono
+    public Emprendimiento obtenerPorTelefono(String telefono) {
+        if (telefono == null || telefono.trim().isEmpty()) {
+            return null;
+        }
+        return emprendimientoRepository.findByTelefono(telefono);
+    }
+
     // Obtener emprendimientos por usuarioId
     public List<Emprendimiento> obtenerPorUsuarioId(String usuarioId) {
-
         if (usuarioId == null || usuarioId.trim().isEmpty()) {
             throw new IllegalArgumentException("El ID de usuario no puede estar vacío");
         }
@@ -120,7 +124,6 @@ public class EmprendimientoService {
 
     // Obtener emprendimientos por categoría
     public List<Emprendimiento> obtenerPorCategoriaId(String categoriaId) {
-
         List<Emprendimiento> lista = emprendimientoRepository.findByCategoriaId(categoriaId);
 
         for (Emprendimiento emp : lista) {
@@ -135,17 +138,24 @@ public class EmprendimientoService {
         return lista;
     }
 
-    // Actualizar emprendimiento completo
+    // Actualizar emprendimiento completo con validación de teléfono
     public Emprendimiento actualizarEmprendimiento(String id, Emprendimiento actualizado) {
-
         return emprendimientoRepository.findById(id)
                 .map(emp -> {
+                    // Validar teléfono duplicado en actualización (si cambió)
+                    if (actualizado.getTelefono() != null && !actualizado.getTelefono().equals(emp.getTelefono())) {
+                        Emprendimiento existentePorTelefono = emprendimientoRepository.findByTelefono(actualizado.getTelefono());
+                        if (existentePorTelefono != null && !existentePorTelefono.getId().equals(id)) {
+                            throw new IllegalArgumentException("El número de teléfono ya está registrado en otro emprendimiento");
+                        }
+                        emp.setTelefono(actualizado.getTelefono());
+                    }
 
                     emp.setNombre(actualizado.getNombre());
                     emp.setDescripcion(actualizado.getDescripcion());
                     emp.setCategoriaId(actualizado.getCategoriaId());
 
-                    // 🔥 PROTEGER NULL
+                    // Proteger NULL
                     emp.setImagenes(
                             actualizado.getImagenes() != null ? actualizado.getImagenes() : new ArrayList<>()
                     );
@@ -159,42 +169,35 @@ public class EmprendimientoService {
                 .orElseThrow(() -> new RuntimeException("Emprendimiento no encontrado con id: " + id));
     }
 
-   // Actualizar estado - Agrega más estados válidos
-public Emprendimiento actualizarEstado(String id, String nuevoEstado) {
+    // Actualizar estado
+    public Emprendimiento actualizarEstado(String id, String nuevoEstado) {
+        return emprendimientoRepository.findById(id)
+                .map(emp -> {
+                    if (!"activo".equals(nuevoEstado) && 
+                        !"pausado".equals(nuevoEstado) && 
+                        !"pendiente".equals(nuevoEstado) && 
+                        !"rechazado".equals(nuevoEstado)) {
+                        throw new IllegalArgumentException("Estado no válido. Estados permitidos: activo, pausado, pendiente, rechazado");
+                    }
 
-    return emprendimientoRepository.findById(id)
-            .map(emp -> {
-                // 👈 ACEPTAR MÁS ESTADOS
-                if (!"activo".equals(nuevoEstado) && 
-                    !"pausado".equals(nuevoEstado) && 
-                    !"pendiente".equals(nuevoEstado) && 
-                    !"rechazado".equals(nuevoEstado)) {
-                    throw new IllegalArgumentException("Estado no válido. Estados permitidos: activo, pausado, pendiente, rechazado");
-                }
-
-                emp.setEstado(nuevoEstado);
-                return emprendimientoRepository.save(emp);
-            })
-            .orElseThrow(() -> new RuntimeException("Emprendimiento no encontrado con id: " + id));
-}
+                    emp.setEstado(nuevoEstado);
+                    return emprendimientoRepository.save(emp);
+                })
+                .orElseThrow(() -> new RuntimeException("Emprendimiento no encontrado con id: " + id));
+    }
 
     // Eliminar
     public void eliminarEmprendimiento(String id) {
-
         if (!emprendimientoRepository.existsById(id)) {
             throw new RuntimeException("Emprendimiento no encontrado con id: " + id);
         }
-
         emprendimientoRepository.deleteById(id);
     }
 
     // Verificar propietario
     public boolean esPropietario(String emprendimientoId, String usuarioId) {
-
         return emprendimientoRepository.findById(emprendimientoId)
                 .map(emp -> usuarioId.equals(emp.getUsuarioId()))
                 .orElse(false);
     }
-
-    
 }
