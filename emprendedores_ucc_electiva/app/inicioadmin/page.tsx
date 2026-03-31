@@ -211,6 +211,17 @@ export default function InicioAdminPage() {
     }
   };
 
+  // Agregar después de las funciones existentes, por ejemplo después de eliminarEvento
+  const handleCerrarSesion = () => {
+    if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+      sessionStorage.clear();
+      localStorage.removeItem("categoriasInteres");
+      localStorage.removeItem("carrito");
+      localStorage.removeItem("eventos_ucc");
+      router.push("/");
+    }
+  };
+
   if (loading) return <main className={styles.main}><div className={styles.loadingContainer}><div className={styles.spinner} /><p>Cargando panel...</p></div></main>;
   if (error) return <main className={styles.main}><div className={styles.errorContainer}><p>{error}</p><button onClick={() => window.location.reload()} className={styles.btnPrimary}>Reintentar</button></div></main>;
 
@@ -228,10 +239,21 @@ export default function InicioAdminPage() {
 
       {/* Hero */}
       <div className={styles.hero}>
-        <div className={styles.heroContent}>
+        {/* Botón izquierda - Volver al inicio */}
+        <div className={styles.heroLeftButton}>
           <Link href="/" className={styles.btnVolverInicio}>
             ← Volver al inicio
           </Link>
+        </div>
+        
+        {/* Botón derecha - Cerrar sesión */}
+        <div className={styles.heroRightButton}>
+          <button onClick={handleCerrarSesion} className={styles.btnLogout}>
+            Cerrar sesión
+          </button>
+        </div>
+        
+        <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>Panel de <span className={styles.heroAccent}>Administración</span></h1>
           <p className={styles.heroSub}>Bienvenido, {usuario?.nombre} {usuario?.apellido}</p>
         </div>
@@ -380,16 +402,16 @@ export default function InicioAdminPage() {
       <div className={styles.quickSection}>
         <h3 className={styles.quickTitle}>Acciones rápidas</h3>
         <div className={styles.quickGrid}>
-          <Link href="/usuarios" className={styles.quickCard}>
-            <span className={styles.quickLabel}>👥 Gestionar usuarios</span>
+          <Link href="/inicioadmin/gestionUsuarios" className={styles.quickCard}>
+            <span className={styles.quickLabel}>Gestionar usuarios</span>
             <span className={styles.quickArrow}>→</span>
           </Link>
-          <Link href="/categorias" className={styles.quickCard}>
-            <span className={styles.quickLabel}>📁 Gestionar categorías</span>
+          <Link href="/inicioadmin/gestionEmprendimientos" className={styles.quickCard}>
+            <span className={styles.quickLabel}>Gestionar emprendimientos</span>
             <span className={styles.quickArrow}>→</span>
           </Link>
-          <Link href="/reportes" className={styles.quickCard}>
-            <span className={styles.quickLabel}>📊 Ver reportes</span>
+          <Link href="/inicioadmin/gestionCategorias" className={styles.quickCard}>
+            <span className={styles.quickLabel}>Gestionar categorias </span>
             <span className={styles.quickArrow}>→</span>
           </Link>
         </div>

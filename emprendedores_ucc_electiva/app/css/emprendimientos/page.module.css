@@ -549,13 +549,3 @@
   flex-wrap: wrap;
 }
 
-@media print {
-  .facturaConfirmarBtn,
-  .facturaVaciarBtn {
-    display: none;
-  }
-  
-  .facturaPrintBtn {
-    display: inline-flex !important;
-  }
-}

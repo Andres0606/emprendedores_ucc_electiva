@@ -339,8 +339,223 @@ export default function EmprendimientosPage() {
     setCarritoAbierto(true);
   };
 
-  const imprimirFactura = () => { window.print(); };
-
+const imprimirFactura = () => {
+  // Abrir una nueva ventana con solo la factura
+  const ventana = window.open('', '_blank');
+  if (ventana) {
+    ventana.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Factura ${numFactura}</title>
+        <meta charset="UTF-8">
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: white;
+            padding: 20px;
+          }
+          .factura {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #009FE3;
+          }
+          .header h1 {
+            color: #009FE3;
+            font-size: 28px;
+            margin: 5px 0;
+          }
+          .header p {
+            color: #666;
+            margin: 3px 0;
+          }
+          .info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+          }
+          .info div p {
+            margin: 5px 0;
+          }
+          .info strong {
+            color: #333;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: #333;
+          }
+          .text-right {
+            text-align: right;
+          }
+          .text-center {
+            text-align: center;
+          }
+          .totales {
+            width: 300px;
+            margin-left: auto;
+            margin-bottom: 25px;
+          }
+          .totales table {
+            width: 100%;
+            border: none;
+          }
+          .totales td {
+            border: none;
+            padding: 6px;
+          }
+          .total-final {
+            border-top: 2px solid #333 !important;
+            font-weight: bold;
+            font-size: 1.2em;
+            padding-top: 8px !important;
+            margin-top: 4px;
+          }
+          .aviso {
+            background: #fff3e0;
+            padding: 12px;
+            margin: 20px 0;
+            border: 1px solid #ffcc80;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #856404;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 11px;
+            color: #666;
+          }
+          @media print {
+            body {
+              padding: 0;
+              margin: 0;
+            }
+            .factura {
+              margin: 0;
+              padding: 0;
+            }
+            .info {
+              background: none;
+              border: 1px solid #eee;
+            }
+            @page {
+              margin: 1.5cm;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="factura">
+          <div class="header">
+            <h1>EmprendedoresUCC</h1>
+            <p>Universidad Cooperativa de Colombia</p>
+            <p>Villavicencio, Meta</p>
+          </div>
+          
+          <div class="info">
+            <div>
+              <p><strong>Factura N°:</strong> ${numFactura}</p>
+              <p><strong>Fecha:</strong> ${fechaFactura}</p>
+            </div>
+            <div>
+              <p><strong>Cliente:</strong> ${sessionStorage.getItem("nombreUsuario") || "Usuario"}</p>
+            </div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Emprendimiento</th>
+                <th class="text-center">Cant.</th>
+                <th class="text-right">Precio u.</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsCarrito.map(item => `
+                <tr>
+                  <td>${item.nombre}</td>
+                  <td>${item.emprendimientoNombre}</td>
+                  <td class="text-center">${item.cantidad}</td>
+                  <td class="text-right">${fmt(item.precio)}</td>
+                  <td class="text-right">${fmt(item.precio * item.cantidad)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="totales">
+            <table>
+              <tr>
+                <td>Subtotal</td>
+                <td class="text-right">${fmt(subtotal)}</td>
+              </tr>
+              <tr>
+                <td>Descuento</td>
+                <td class="text-right">$0</td>
+              </tr>
+              <tr class="total-final">
+                <td><strong>TOTAL A PAGAR</strong></td>
+                <td class="text-right"><strong>${fmt(subtotal)}</strong></td>
+              </tr>
+            </table>
+          </div>
+          
+          <div class="aviso">
+            ⚠️ Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.
+          </div>
+          
+          <div class="footer">
+            <p>Gracias por apoyar los emprendimientos estudiantiles</p>
+            <p>EmprendedoresUCC · Universidad Cooperativa de Colombia · Villavicencio</p>
+          </div>
+        </div>
+        
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 500);
+            
+            window.onafterprint = function() {
+              window.close();
+            };
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    ventana.document.close();
+  }
+};
   const cerrarDrawer = () => {
     setCarritoAbierto(false);
     setVistaFactura(false);

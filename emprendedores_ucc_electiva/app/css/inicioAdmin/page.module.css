@@ -18,14 +18,24 @@
   padding: 36px 56px 32px;
 }
 
-.heroContent {
-  position: relative;
-  z-index: 2;
-  max-width: 600px;
+/* Botón izquierda - Volver al inicio */
+.heroLeftButton {
+  position: absolute;
+  top: 32px;
+  left: 56px;
+  z-index: 10;
 }
 
-/* 🔥 BOTÓN VOLVER AL INICIO - ESTILO COMO EL DEL ESTUDIANTE */
-.btnVolverInicio {
+/* Botón derecha - Cerrar sesión */
+.heroRightButton {
+  position: absolute;
+  top: 32px;
+  right: 56px;
+  z-index: 10;
+}
+
+/* 🔥 AMBOS BOTONES CON EL MISMO ESTILO */
+.btnVolverInicio, .btnLogout {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -37,15 +47,23 @@
   padding: 11px 22px;
   border-radius: 999px;
   text-decoration: none;
-  margin-bottom: 20px;
   transition: opacity 0.2s, transform 0.2s;
-  width: fit-content;
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  cursor: pointer;
+  font-family: inherit;
 }
 
-.btnVolverInicio:hover {
+.btnVolverInicio:hover, .btnLogout:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .heroTitle {
