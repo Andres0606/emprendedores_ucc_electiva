@@ -280,8 +280,7 @@ const confirmarPedido = async () => {
     }
     
     // Vaciar carrito después de crear los pedidos
-    localStorage.setItem('carrito', '[]');
-    setItemsCarrito([]);
+    guardarCarrito([]);
     
     if (usuarioActual?.id) {
       try {
@@ -321,13 +320,36 @@ const confirmarPedido = async () => {
 
   // ── Leer carrito ──
   const leerCarrito = () => {
-    const data = JSON.parse(localStorage.getItem('carrito') || '[]');
-    setItemsCarrito(data);
-  };
+  if (!usuarioActual?.id) {
+    setItemsCarrito([]);
+    return;
+  }
+  const carritoKey = `carrito_${usuarioActual.id}`;
+  const data = JSON.parse(localStorage.getItem(carritoKey) || '[]');
+  setItemsCarrito(data);
+};
+const guardarCarrito = (items: ItemCarrito[]) => {
+  if (!usuarioActual?.id) return;
+  
+  // Validar que todos los items tengan emprendimientoId
+  const itemsValidos = items.filter(item => item.emprendimientoId);
+  
+  const carritoKey = `carrito_${usuarioActual.id}`;
+  localStorage.setItem(carritoKey, JSON.stringify(itemsValidos));
+  setItemsCarrito(itemsValidos);
+  
+  if (usuarioActual?.id) {
+    sincronizarCarritoConBackend(usuarioActual.id, itemsValidos);
+  }
+};
 
   useEffect(() => { 
-    leerCarrito(); 
-  }, []);
+  if (usuarioActual?.id) {
+    leerCarrito();
+  } else {
+    setItemsCarrito([]);
+  }
+}, [usuarioActual]);
 
   const totalItems = itemsCarrito.reduce((acc, i) => acc + i.cantidad, 0);
   const subtotal = itemsCarrito.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
@@ -349,39 +371,28 @@ const confirmarPedido = async () => {
 
   // ── Acciones drawer ──
   const cambiarCantidadDrawer = (idx: number, delta: number) => {
-    const c = [...itemsCarrito];
-    const nuevo = c[idx].cantidad + delta;
-    if (nuevo < 1 || nuevo > c[idx].stock) return;
-    c[idx].cantidad = nuevo;
-    localStorage.setItem('carrito', JSON.stringify(c));
-    setItemsCarrito(c);
-    
-    if (usuarioActual?.id) {
-      sincronizarCarritoConBackend(usuarioActual.id, c);
-    }
-  };
+  const c = [...itemsCarrito];
+  const nuevo = c[idx].cantidad + delta;
+  if (nuevo < 1 || nuevo > c[idx].stock) return;
+  c[idx].cantidad = nuevo;
+  guardarCarrito(c);
+};
 
   const eliminarItemDrawer = (idx: number) => {
-    const c = itemsCarrito.filter((_, i) => i !== idx);
-    localStorage.setItem('carrito', JSON.stringify(c));
-    setItemsCarrito(c);
-    
-    if (usuarioActual?.id) {
-      sincronizarCarritoConBackend(usuarioActual.id, c);
-    }
-  };
+  const c = itemsCarrito.filter((_, i) => i !== idx);
+  guardarCarrito(c);
+};
 
   const vaciarCarrito = async () => {
-    if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
-      localStorage.setItem('carrito', '[]');
-      setItemsCarrito([]);
-      setVistaFactura(false);
-      
-      if (usuarioActual?.id) {
-        await sincronizarCarritoConBackend(usuarioActual.id, []);
-      }
+  if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
+    guardarCarrito([]);
+    setVistaFactura(false);
+    
+    if (usuarioActual?.id) {
+      await sincronizarCarritoConBackend(usuarioActual.id, []);
     }
-  };
+  }
+};
 
   const abrirCarrito = () => {
     leerCarrito();
@@ -438,41 +449,45 @@ const confirmarPedido = async () => {
     setEstadoCarrito(prev => ({ ...prev, [idx]: { mostrarSelector: false, cantidad: 1 } }));
   };
 
-  const confirmarAgregarAlCarrito = async (
-    idx: number,
-    producto: Emprendimiento["productos"][0],
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
-    const cantidad = estadoCarrito[idx]?.cantidad || 1;
-    const carritoActual = JSON.parse(localStorage.getItem('carrito') || '[]');
-    const itemExistente = carritoActual.findIndex(
-      (item: any) =>
-        item.nombre === producto.nombre &&
-        item.emprendimientoId === (emprendimiento?.id || emprendimiento?._id)
-    );
-    if (itemExistente >= 0) {
-      carritoActual[itemExistente].cantidad += cantidad;
-    } else {
-      carritoActual.push({
-        nombre: producto.nombre,
-        precio: producto.precio,
-        imagen: producto.imagen,
-        cantidad,
-        stock: producto.stock,
-        emprendimientoId: emprendimiento?.id || emprendimiento?._id,
-        emprendimientoNombre: emprendimiento?.nombre,
-      });
-    }
-    localStorage.setItem('carrito', JSON.stringify(carritoActual));
-    leerCarrito();
-    lanzarAnimacion(event.currentTarget, producto.imagen || "🛒");
-    
-    if (usuarioActual?.id) {
-      await sincronizarCarritoConBackend(usuarioActual.id, carritoActual);
-    }
-    
-    cancelarSeleccion(idx);
-  };
+const confirmarAgregarAlCarrito = async (
+  idx: number,
+  producto: Emprendimiento["productos"][0],
+  event: React.MouseEvent<HTMLButtonElement>
+) => {
+  const cantidad = estadoCarrito[idx]?.cantidad || 1;
+  const carritoActual = [...itemsCarrito];
+  const empId = emprendimiento?.id || emprendimiento?._id;
+  
+  // 🔥 Validar que el ID del emprendimiento existe
+  if (!empId) {
+    console.error("No se pudo obtener el ID del emprendimiento");
+    alert("Error al agregar al carrito. Intenta de nuevo.");
+    return;
+  }
+  
+  const itemExistente = carritoActual.findIndex(
+    (item: any) =>
+      item.nombre === producto.nombre &&
+      item.emprendimientoId === empId
+  );
+  
+  if (itemExistente >= 0) {
+    carritoActual[itemExistente].cantidad += cantidad;
+  } else {
+    carritoActual.push({
+      nombre: producto.nombre,
+      precio: producto.precio,
+      imagen: producto.imagen,
+      cantidad,
+      stock: producto.stock,
+      emprendimientoId: empId, // ✅ Ahora es string, no undefined
+      emprendimientoNombre: emprendimiento?.nombre || "",
+    });
+  }
+  guardarCarrito(carritoActual);
+  lanzarAnimacion(event.currentTarget, producto.imagen || "🛒");
+  cancelarSeleccion(idx);
+};
 
   // ── Auth ──
   useEffect(() => {
