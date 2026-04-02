@@ -1,0 +1,444 @@
+/* =============================================
+   configuracion.module.css — Tema UCC
+   ============================================= */
+
+:root {
+  --blue-dark:    #006fa8;
+  --blue-main:    #009FE3;
+  --blue-soft:    #e6f6fd;
+  --blue-border:  #b3e5fc;
+  --green-acc:    #8DC63F;
+  --text-dark:    #0d1b2a;
+  --text-mid:     #37474f;
+  --text-muted:   #78909c;
+  --bg:           #f5f7fa;
+  --white:        #ffffff;
+  --border:       #e0e7ef;
+  --radius:       14px;
+  --radius-sm:    9px;
+  --shadow:       0 2px 12px rgba(0,159,227,0.08);
+}
+
+.main {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-dark);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  padding-bottom: 80px;
+}
+
+/* ── Loading ── */
+.centered {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue-main);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.heroBanner {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #006fa8 0%, #009FE3 50%, #00b4ef 100%);
+  padding: 32px 56px 28px;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 560px;
+}
+
+.heroBadge {
+  display: inline-flex;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.heroTitle {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #fff;
+  margin: 0 0 8px;
+}
+.heroName { color: var(--green-acc); }
+
+.heroSub {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.heroActions { display: flex; gap: 12px; }
+
+.btnSecondary {
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.5);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 11px 22px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btnSecondary:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+
+.heroDecor    { position: absolute; top: 0; right: 0; width: 380px; height: 100%; z-index: 1; pointer-events: none; }
+.decorCircle1 { position: absolute; top: -60px; right: -60px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.1), transparent 70%); }
+.decorCircle2 { position: absolute; bottom: -40px; right: 100px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(141,198,63,0.15), transparent 70%); }
+
+/* ══════════════════════════════════════
+   BODY
+══════════════════════════════════════ */
+.body {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Avatar / resumen ── */
+.profileRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: var(--shadow);
+}
+
+.avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-soft), var(--blue-border));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 800; color: var(--blue-main);
+  flex-shrink: 0;
+}
+
+.profileInfo { display: flex; flex-direction: column; gap: 4px; }
+.profileNombre  { font-size: 1rem; font-weight: 800; color: var(--text-dark); margin: 0; }
+.profileBadge {
+  display: inline-block;
+  background: var(--blue-soft);
+  border: 1px solid var(--blue-border);
+  color: var(--blue-main);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  width: fit-content;
+}
+.profileCarrera { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
+
+/* ══════════════════════════════════════
+   CARDS
+══════════════════════════════════════ */
+.card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cardTitle {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--border);
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Form ── */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formGroup { display: flex; flex-direction: column; gap: 5px; }
+
+.formLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.formInput {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  font-size: 0.88rem;
+  font-family: inherit;
+  padding: 10px 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.formInput:focus { border-color: var(--blue-main); background: var(--white); }
+
+.formInputDisabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  background: #f0f3f7 !important;
+}
+
+.formHelper {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── Mensajes ── */
+.errorBanner {
+  background: #fce4ec;
+  border: 1.5px solid #f8bbd0;
+  color: #b71c1c;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+}
+
+.successBanner {
+  background: #e8f5e9;
+  border: 1.5px solid #a5d6a7;
+  color: #1b5e20;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Requisitos contraseña ── */
+.passReqs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.passReq {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+
+.passReqOk {
+  color: #1b5e20;
+  background: #e8f5e9;
+  border-color: #a5d6a7;
+}
+
+/* ── Botones ── */
+.btnPrimary {
+  background: var(--blue-main);
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.18s;
+  box-shadow: 0 2px 8px rgba(0,159,227,0.2);
+}
+.btnPrimary:hover    { opacity: 0.88; }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ══════════════════════════════════════
+   ZONA DE PELIGRO
+══════════════════════════════════════ */
+.dangerCard {
+  background: #fce4ec;
+  border: 1.5px solid #f8bbd0;
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dangerTitle {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #b71c1c;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0;
+}
+
+.dangerDesc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.btnDanger {
+  background: var(--white);
+  border: 1.5px solid #ef9a9a;
+  color: #c62828;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  width: fit-content;
+  transition: all 0.18s;
+}
+.btnDanger:hover { background: #c62828; color: #fff; border-color: #c62828; }
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13,27,42,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.18s ease;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+  animation: slideUp 0.22s ease;
+}
+@keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1.5px solid var(--border);
+}
+.modalTitle { font-size: 1rem; font-weight: 800; color: var(--text-dark); margin: 0; }
+.modalClose {
+  width: 30px; height: 30px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s;
+}
+.modalClose:hover { background: #fce4ec; border-color: #f8bbd0; color: #c62828; }
+
+.modalBody {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modalTexto { font-size: 0.86rem; color: var(--text-dark); line-height: 1.6; margin: 0; }
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1.5px solid var(--border);
+}
+
+.btnCancelar {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s;
+}
+.btnCancelar:hover { background: var(--border); }
+
+.btnDangerConfirm {
+  background: #c62828;
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.18s;
+}
+.btnDangerConfirm:hover    { opacity: 0.88; }
+.btnDangerConfirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 720px) {
+  .heroBanner { padding: 36px 24px 28px; }
+  .body { padding: 24px 16px 0; }
+  .formGrid { grid-template-columns: 1fr; }
+}

@@ -198,4 +198,6 @@ public class EmprendimientoController {
             return ResponseEntity.status(500).body("Error al eliminar");
         }
     }
+
+    
 }

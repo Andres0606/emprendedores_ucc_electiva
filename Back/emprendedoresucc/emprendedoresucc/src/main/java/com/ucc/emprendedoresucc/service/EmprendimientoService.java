@@ -169,15 +169,15 @@ public class EmprendimientoService {
                 .orElseThrow(() -> new RuntimeException("Emprendimiento no encontrado con id: " + id));
     }
 
-    // Actualizar estado
+    // Actualizar estado - SIN PAUSADO
     public Emprendimiento actualizarEstado(String id, String nuevoEstado) {
         return emprendimientoRepository.findById(id)
                 .map(emp -> {
+                    // 🔥 ESTADOS PERMITIDOS: activo, pendiente, rechazado (eliminado pausado)
                     if (!"activo".equals(nuevoEstado) && 
-                        !"pausado".equals(nuevoEstado) && 
                         !"pendiente".equals(nuevoEstado) && 
                         !"rechazado".equals(nuevoEstado)) {
-                        throw new IllegalArgumentException("Estado no válido. Estados permitidos: activo, pausado, pendiente, rechazado");
+                        throw new IllegalArgumentException("Estado no válido. Estados permitidos: activo, pendiente, rechazado");
                     }
 
                     emp.setEstado(nuevoEstado);
@@ -201,3 +201,4 @@ public class EmprendimientoService {
                 .orElse(false);
     }
 }
+
