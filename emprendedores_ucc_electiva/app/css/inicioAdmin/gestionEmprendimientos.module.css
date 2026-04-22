@@ -532,3 +532,36 @@
   padding: 16px 0;
   margin: 0;
 }
+
+/* Estado Suspendido */
+.estadoSuspendido { 
+  background: #fff3e0; 
+  color: #e65100; 
+  border: 1px solid #ffb74d; 
+}
+
+.pill_suspendido.pillActive { 
+  background: #e65100 !important; 
+  border-color: #e65100 !important; 
+}
+
+.btnSuspender { 
+  background: #fff3e0; 
+  border-color: #ffb74d; 
+  color: #e65100; 
+}
+.btnSuspender:hover { 
+  background: #e65100; 
+  color: #fff; 
+  border-color: #e65100; 
+}
+
+.warningMsg {
+  font-size: 0.8rem;
+  color: #e65100;
+  background: #fff3e0;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 12px;
+  text-align: center;
+}

@@ -12,12 +12,6 @@ interface Producto {
   imagen: string;
 }
 
-interface HistorialEntry {
-  fecha: string;
-  accion: string;
-  admin: string;
-}
-
 interface Emprendimiento {
   id?: string;
   _id?: string;
@@ -28,12 +22,11 @@ interface Emprendimiento {
   usuarioId: string;
   emprendedorNombre?: string;
   emprendedorCorreo?: string;
-  estado: "pendiente" | "activo" | "rechazado";
+  estado: "pendiente" | "activo" | "rechazado" | "suspendido";
   telefono?: string;
   imagenes: string[];
   productos: Producto[];
   createdAt?: string;
-  historial?: HistorialEntry[];
 }
 
 interface Usuario {
@@ -52,19 +45,14 @@ interface Categoria {
   nombre: string;
 }
 
-type EstadoFiltro = "todos" | "pendiente" | "activo" | "rechazado";
+type EstadoFiltro = "todos" | "pendiente" | "activo" | "rechazado" | "suspendido";
 
 const ESTADO_CONFIG = {
   pendiente: { label: "Pendiente",  cls: "estadoPendiente" },
-  activo:    { label: "Activo",     cls: "estadoActivo"    },
+  activo:    { label: "Activo",     cls: "estadoActivo" },
   rechazado: { label: "Rechazado",  cls: "estadoRechazado" },
+  suspendido: { label: "Suspendido", cls: "estadoSuspendido" },
 };
-
-function formatFecha(str?: string) {
-  if (!str) return "—";
-  const d = new Date(str);
-  return d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
-}
 
 export default function GestionEmprendimientosPage() {
   const router = useRouter();
@@ -80,10 +68,10 @@ export default function GestionEmprendimientosPage() {
   const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro>("todos");
   const [filtroCategoria, setFiltroCategoria] = useState("todos");
 
-  // Detalle / historial
-  const [detalleId, setDetalleId]     = useState<string | null>(null);
-  const [historialId, setHistorialId] = useState<string | null>(null);
+  // Modal de detalle
+  const [detalleId, setDetalleId] = useState<string | null>(null);
   const [rechazarModal, setRechazarModal] = useState<{ id: string } | null>(null);
+  const [suspenderModal, setSuspenderModal] = useState<{ id: string; nombre: string } | null>(null);
 
   useEffect(() => {
     const usr = sessionStorage.getItem("usuario");
@@ -149,22 +137,20 @@ export default function GestionEmprendimientosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado }),
       });
-      if (res.ok) cargarTodo();
-      else alert("Error al actualizar el estado.");
-    } catch { alert("Error de conexión."); }
-  }
-
-  async function eliminar(id: string) {
-    if (!confirm("¿Eliminar este emprendimiento? Esta acción no se puede deshacer.")) return;
-    try {
-      const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}`, { method: "DELETE" });
-      if (res.ok) cargarTodo();
-      else alert("Error al eliminar.");
+      if (res.ok) {
+        cargarTodo();
+      } else {
+        alert("Error al actualizar el estado.");
+      }
     } catch { alert("Error de conexión."); }
   }
 
   function handleRechazar(id: string) {
     setRechazarModal({ id });
+  }
+
+  function handleSuspender(id: string, nombre: string) {
+    setSuspenderModal({ id, nombre });
   }
 
   function confirmarRechazo() {
@@ -173,17 +159,22 @@ export default function GestionEmprendimientosPage() {
     setRechazarModal(null);
   }
 
-  const detalleEmp  = emprendimientos.find(e => (e.id || e._id) === detalleId);
-  const historialEmp = emprendimientos.find(e => (e.id || e._id) === historialId);
+  function confirmarSuspension() {
+    if (!suspenderModal) return;
+    cambiarEstado(suspenderModal.id, "suspendido");
+    setSuspenderModal(null);
+  }
 
+  const detalleEmp = emprendimientos.find(e => (e.id || e._id) === detalleId);
   const catsFiltro = Array.from(categorias.entries());
 
   // Contadores por estado
   const contadores = useMemo(() => ({
-    todos:     emprendimientos.length,
-    pendiente: emprendimientos.filter(e => e.estado === "pendiente").length,
-    activo:    emprendimientos.filter(e => e.estado === "activo").length,
-    rechazado: emprendimientos.filter(e => e.estado === "rechazado").length,
+    todos:      emprendimientos.length,
+    pendiente:  emprendimientos.filter(e => e.estado === "pendiente").length,
+    activo:     emprendimientos.filter(e => e.estado === "activo").length,
+    rechazado:  emprendimientos.filter(e => e.estado === "rechazado").length,
+    suspendido: emprendimientos.filter(e => e.estado === "suspendido").length,
   }), [emprendimientos]);
 
   if (loading) return (
@@ -217,13 +208,13 @@ export default function GestionEmprendimientosPage() {
 
       {/* Pills de estado */}
       <div className={styles.estadoPills}>
-        {(["todos", "pendiente", "activo", "rechazado"] as const).map(est => (
+        {(["todos", "pendiente", "activo", "rechazado", "suspendido"] as const).map(est => (
           <button
             key={est}
             className={`${styles.pill} ${filtroEstado === est ? styles.pillActive : ""} ${est !== "todos" ? styles[`pill_${est}`] : ""}`}
             onClick={() => setFiltroEstado(est)}
           >
-            {est === "todos" ? "Todos" : ESTADO_CONFIG[est].label}
+            {est === "todos" ? "Todos" : ESTADO_CONFIG[est]?.label || est}
             <span className={styles.pillCount}>{contadores[est]}</span>
           </button>
         ))}
@@ -267,6 +258,7 @@ export default function GestionEmprendimientosPage() {
             <tbody>
               {filtrados.map(emp => {
                 const id = emp.id || emp._id || "";
+                const config = ESTADO_CONFIG[emp.estado];
                 return (
                   <tr key={id} className={styles.tableRow}>
                     {/* Nombre */}
@@ -294,30 +286,46 @@ export default function GestionEmprendimientosPage() {
 
                     {/* Estado */}
                     <td>
-                      <span className={`${styles.estadoBadge} ${styles[ESTADO_CONFIG[emp.estado]?.cls || "estadoPendiente"]}`}>
-                        {ESTADO_CONFIG[emp.estado]?.label || emp.estado}
+                      <span className={`${styles.estadoBadge} ${styles[config?.cls || "estadoPendiente"]}`}>
+                        {config?.label || emp.estado}
                       </span>
                     </td>
 
-                    {/* Acciones */}
+                    {/* Acciones - SIN HISTORIAL */}
                     <td>
                       <div className={styles.acciones}>
-                        <button className={styles.btnAccion} title="Ver detalles" onClick={() => setDetalleId(id)}>Detalles</button>
-                        <button className={styles.btnAccion} title="Ver historial" onClick={() => setHistorialId(id)}>Historial</button>
+                        <button className={styles.btnAccion} title="Ver detalles" onClick={() => setDetalleId(id)}>
+                          Detalles
+                        </button>
 
-                        {emp.estado === "pendiente" && <>
-                          <button className={`${styles.btnAccion} ${styles.btnAprobar}`} onClick={() => cambiarEstado(id, "activo")}>Aprobar</button>
-                          <button className={`${styles.btnAccion} ${styles.btnRechazar}`} onClick={() => handleRechazar(id)}>Rechazar</button>
-                        </>}
+                        {emp.estado === "pendiente" && (
+                          <>
+                            <button className={`${styles.btnAccion} ${styles.btnAprobar}`} onClick={() => cambiarEstado(id, "activo")}>
+                              Aprobar
+                            </button>
+                            <button className={`${styles.btnAccion} ${styles.btnRechazar}`} onClick={() => handleRechazar(id)}>
+                              Rechazar
+                            </button>
+                          </>
+                        )}
 
-                        {emp.estado === "activo" && <>
-                          <button className={`${styles.btnAccion} ${styles.btnEliminar}`} onClick={() => eliminar(id)}>Eliminar</button>
-                        </>}
+                        {emp.estado === "activo" && (
+                          <button className={`${styles.btnAccion} ${styles.btnSuspender}`} onClick={() => handleSuspender(id, emp.nombre)}>
+                            Suspender
+                          </button>
+                        )}
 
-                        {emp.estado === "rechazado" && <>
-                          <button className={`${styles.btnAccion} ${styles.btnAprobar}`} onClick={() => cambiarEstado(id, "pendiente")}>Reabrir</button>
-                          <button className={`${styles.btnAccion} ${styles.btnEliminar}`} onClick={() => eliminar(id)}>Eliminar</button>
-                        </>}
+                        {emp.estado === "suspendido" && (
+                          <button className={`${styles.btnAccion} ${styles.btnAprobar}`} onClick={() => cambiarEstado(id, "activo")}>
+                            Activar
+                          </button>
+                        )}
+
+                        {emp.estado === "rechazado" && (
+                          <button className={`${styles.btnAccion} ${styles.btnAprobar}`} onClick={() => cambiarEstado(id, "pendiente")}>
+                            Reabrir
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -358,36 +366,7 @@ export default function GestionEmprendimientosPage() {
         </div>
       )}
 
-      {/* ── Modal: Historial ── */}
-      {historialEmp && (
-        <div className={styles.overlay} onClick={() => setHistorialId(null)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Historial — {historialEmp.nombre}</h2>
-              <button className={styles.modalClose} onClick={() => setHistorialId(null)}>✕</button>
-            </div>
-            <div className={styles.modalBody}>
-              {historialEmp.historial && historialEmp.historial.length > 0 ? (
-                <ul className={styles.timeline}>
-                  {historialEmp.historial.map((h, i) => (
-                    <li key={i} className={styles.timelineItem}>
-                      <div className={styles.timelineDot} />
-                      <div className={styles.timelineContent}>
-                        <p className={styles.timelineAccion}>{h.accion}</p>
-                        <p className={styles.timelineMeta}>{formatFecha(h.fecha)} · {h.admin}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className={styles.emptyModal}>Este emprendimiento aún no tiene historial de cambios registrado.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Rechazar (sin motivo) ── */}
+      {/* ── Modal: Rechazar ── */}
       {rechazarModal && (
         <div className={styles.overlay} onClick={() => setRechazarModal(null)}>
           <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
@@ -400,8 +379,34 @@ export default function GestionEmprendimientosPage() {
             </div>
             <div className={styles.modalFooter}>
               <button className={styles.btnCancelar} onClick={() => setRechazarModal(null)}>Cancelar</button>
-              <button className={`${styles.btnAccion} ${styles.btnRechazar}`} style={{ padding: "9px 20px" }} onClick={confirmarRechazo}>
+              <button className={`${styles.btnAccion} ${styles.btnRechazar}`} onClick={confirmarRechazo}>
                 Confirmar rechazo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Suspender ── */}
+      {suspenderModal && (
+        <div className={styles.overlay} onClick={() => setSuspenderModal(null)}>
+          <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Suspender emprendimiento</h2>
+              <button className={styles.modalClose} onClick={() => setSuspenderModal(null)}>✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.confirmMsg}>
+                ¿Estás seguro de que deseas suspender <strong>{suspenderModal.nombre}</strong>?
+              </p>
+              <p className={styles.warningMsg}>
+                El emprendimiento quedará oculto de la plataforma hasta que un administrador lo active nuevamente.
+              </p>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.btnCancelar} onClick={() => setSuspenderModal(null)}>Cancelar</button>
+              <button className={`${styles.btnAccion} ${styles.btnSuspender}`} onClick={confirmarSuspension}>
+                Confirmar suspensión
               </button>
             </div>
           </div>

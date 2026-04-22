@@ -169,17 +169,18 @@ public class EmprendimientoService {
                 .orElseThrow(() -> new RuntimeException("Emprendimiento no encontrado con id: " + id));
     }
 
-    // Actualizar estado - SIN PAUSADO
+    // Actualizar método actualizarEstado
     public Emprendimiento actualizarEstado(String id, String nuevoEstado) {
         return emprendimientoRepository.findById(id)
                 .map(emp -> {
-                    // 🔥 ESTADOS PERMITIDOS: activo, pendiente, rechazado (eliminado pausado)
+                    // 🔥 NUEVOS ESTADOS PERMITIDOS: activo, pendiente, rechazado, suspendido
                     if (!"activo".equals(nuevoEstado) && 
                         !"pendiente".equals(nuevoEstado) && 
-                        !"rechazado".equals(nuevoEstado)) {
-                        throw new IllegalArgumentException("Estado no válido. Estados permitidos: activo, pendiente, rechazado");
+                        !"rechazado".equals(nuevoEstado) &&
+                        !"suspendido".equals(nuevoEstado)) {
+                        throw new IllegalArgumentException("Estado no válido. Estados permitidos: activo, pendiente, rechazado, suspendido");
                     }
-
+                    
                     emp.setEstado(nuevoEstado);
                     return emprendimientoRepository.save(emp);
                 })

@@ -146,7 +146,7 @@ export default function Header() {
                 
                 {/* Mis emprendimientos (solo para emprendedores) */}
                 {puedeVerEmprendimientos && (
-                  <Link href="/mis-emprendimientos" className={styles.dropdownItem}>
+                  <Link href="/inicioemprendedor/misemprendimientos" className={styles.dropdownItem}>
                     <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                       <rect x="2" y="4" width="16" height="13" rx="2"/>
                       <path d="M2 7l8 5 8-5"/>
@@ -241,7 +241,7 @@ export default function Header() {
               
               {/* Mis emprendimientos (solo para emprendedores) */}
               {puedeVerEmprendimientos && (
-                <Link href="/mis-emprendimientos" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+                <Link href="/inicioemprendedor/misemprendimientos" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
                   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                     <rect x="2" y="4" width="16" height="13" rx="2"/>
                     <path d="M2 7l8 5 8-5"/>

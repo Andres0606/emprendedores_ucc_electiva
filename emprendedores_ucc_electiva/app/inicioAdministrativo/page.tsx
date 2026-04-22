@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import styles from "../css/inicioestudiante/inicioestudiante.module.css";
+import styles from "../css/inicioadministrativo/inicioadministrativo.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -61,21 +61,19 @@ interface ItemCarrito {
   emprendimientoNombre: string;
 }
 
-// Quick Links
 const quickLinks = [
-  { href: "/inicioestudiante/miperfil", label: "Mi Perfil", bg: "#e8f0fe", color: "#1565c0" },
-  { href: "/inicioestudiante/seguidos", label: "Seguidos", bg: "#e8f5e9", color: "#2e7d32" },
-  { href: "/inicioestudiante/configuracion", label: "Configuración", bg: "#fce4ec", color: "#c62828" },
+  { href: "/inicioadministrativo/miperfil", label: "Mi Perfil" },
+  { href: "/inicioadministrativo/seguidos", label: "Seguidos" },
+  { href: "/inicioadministrativo/configuracion", label: "Configuración" },
 ];
 
 const fmt = (precio: number) => `$${precio.toLocaleString()}`;
 
-export default function InicioEstudiantePage() {
+export default function InicioAdministrativoPage() {
   const router = useRouter();
   const carritoIconRef = useRef<HTMLDivElement>(null);
   
   const [activeTab, setActiveTab] = useState("resumen");
-  const [tipoUsuario, setTipoUsuario] = useState("estudiante");
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
   const [ultimoEmprendimiento, setUltimoEmprendimiento] = useState<Emprendimiento | null>(null);
@@ -84,6 +82,7 @@ export default function InicioEstudiantePage() {
   const [proximosEventos, setProximosEventos] = useState<Evento[]>([]);
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [loadingActividades, setLoadingActividades] = useState(true);
+  const [forceRender, setForceRender] = useState(0);
 
   // Carrito
   const [itemsCarrito, setItemsCarrito] = useState<ItemCarrito[]>([]);
@@ -95,7 +94,6 @@ export default function InicioEstudiantePage() {
   const [creandoPedido, setCreandoPedido] = useState(false);
   const [pedidoCreado, setPedidoCreado] = useState(false);
 
-  // Función para cerrar sesión
   const handleCerrarSesion = () => {
     if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
       sessionStorage.clear();
@@ -107,7 +105,6 @@ export default function InicioEstudiantePage() {
     }
   };
 
-  // Funciones del carrito con ID de usuario
   const leerCarrito = () => {
     const uid = sessionStorage.getItem("usuarioId");
     if (!uid) {
@@ -251,7 +248,7 @@ export default function InicioEstudiantePage() {
             <div class="info"><div><p><strong>Factura N°:</strong> ${numFactura}</p><p><strong>Fecha:</strong> ${fechaFactura}</p></div><div><p><strong>Cliente:</strong> ${nombreUsuario}</p></div></div>
             <table><thead><tr><th>Producto</th><th>Emprendimiento</th><th class="text-center">Cant.</th><th class="text-right">Precio u.</th><th class="text-right">Total</th></tr></thead>
             <tbody>${itemsCarrito.map(item => `<tr><td>${item.nombre}</td><td>${item.emprendimientoNombre}</td><td class="text-center">${item.cantidad}</td><td class="text-right">${fmt(item.precio)}</td><td class="text-right">${fmt(item.precio * item.cantidad)}</td></tr>`).join('')}</tbody></table>
-            <div class="totales"><table><tr><td>Subtotal</td><td class="text-right">${fmt(subtotal)}</td></tr><tr><td>Descuento</td><td class="text-right">$0</td></tr><tr class="total-final"><td><strong>TOTAL A PAGAR</strong></td><td class="text-right"><strong>${fmt(subtotal)}</strong></td></tr></table></div>
+            <div class="totales"><tr><td>Subtotal</td><td class="text-right">${fmt(subtotal)}</td></tr><tr><td>Descuento</td><td class="text-right">$0</td><tr><tr class="total-final"><td><strong>TOTAL A PAGAR</strong></td><td class="text-right"><strong>${fmt(subtotal)}</strong></td></tr></tr></div>
             <div class="aviso">⚠️ Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.</div>
             <div class="footer"><p>Gracias por apoyar los emprendimientos estudiantiles</p><p>EmprendedoresUCC · Universidad Cooperativa de Colombia · Villavicencio</p></div>
           </div>
@@ -385,103 +382,106 @@ export default function InicioEstudiantePage() {
     }
   };
 
-  const obtenerUltimoSeguido = async (usuarioId: string) => {
+  // 🔥 FUNCIÓN PRINCIPAL PARA CARGAR SEGUIDOS
+  const cargarSeguidos = async (uid: string) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
+      console.log("🔍 Cargando seguidos para:", uid);
       
-      if (!res.ok) return null;
+      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${uid}/emprendimientos`);
       
-      const emprendimientos: Emprendimiento[] = await res.json();
-      
-      if (emprendimientos.length === 0) {
-        setTotalSeguidos(0);
-        return null;
+      if (!res.ok) {
+        console.log("❌ Error en la petición");
+        return;
       }
       
-      setTotalSeguidos(emprendimientos.length);
+      const data = await res.json();
+      console.log("📊 Datos recibidos:", data);
+      console.log("🔢 Cantidad:", data.length);
       
-      const ultimoEmprendimiento = emprendimientos[emprendimientos.length - 1];
+      // 🔥 ACTUALIZAR EL ESTADO
+      setTotalSeguidos(data.length);
+      
+      // 🔥 FORZAR RE-RENDER
+      setForceRender(prev => prev + 1);
+      
+      if (data.length === 0) {
+        setUltimoEmprendimiento(null);
+        return;
+      }
+      
+      const ultimo = data[data.length - 1];
       
       try {
-        const resCat = await fetch(`http://localhost:8080/api/categorias/${ultimoEmprendimiento.categoriaId}`);
-        let categoriaNombre = "Sin categoría";
+        const resCat = await fetch(`http://localhost:8080/api/categorias/${ultimo.categoriaId}`);
         if (resCat.ok) {
-          const categoria = await resCat.json();
-          categoriaNombre = categoria.nombre;
+          const cat = await resCat.json();
+          ultimo.categoriaNombre = cat.nombre;
         }
-        ultimoEmprendimiento.categoriaNombre = categoriaNombre;
       } catch (e) {
-        ultimoEmprendimiento.categoriaNombre = "Sin categoría";
+        ultimo.categoriaNombre = "Sin categoría";
       }
       
-      return ultimoEmprendimiento;
+      setUltimoEmprendimiento(ultimo);
       
     } catch (error) {
-      console.error("Error al obtener seguidos:", error);
-      return null;
+      console.error("❌ Error:", error);
     }
   };
 
+  // 🔥 CARGA INICIAL
   useEffect(() => {
-    const cargarDatos = async () => {
-      const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
+    const init = async () => {
+      console.log("🚀 Iniciando carga...");
+      
+      const uid = sessionStorage.getItem("usuarioId");
       const nombre = sessionStorage.getItem("nombreUsuario") || "Usuario";
-      const usuarioIdStorage = sessionStorage.getItem("usuarioId");
       const usuarioGuardado = sessionStorage.getItem("usuario");
       
       let nombreCompleto = nombre;
-      if (usuarioGuardado && (!nombre || nombre === "Usuario" || nombre.split(" ").length === 1)) {
+      if (usuarioGuardado) {
         try {
           const usuario = JSON.parse(usuarioGuardado);
           if (usuario.nombre && usuario.apellido) {
             nombreCompleto = `${usuario.nombre} ${usuario.apellido}`;
-            sessionStorage.setItem("nombreUsuario", nombreCompleto);
           } else if (usuario.nombre) {
             nombreCompleto = usuario.nombre;
           }
-        } catch (e) {
-          console.error("Error al parsear usuario:", e);
-        }
+        } catch (e) {}
       }
       
-      setTipoUsuario(tipo.toLowerCase());
       setNombreUsuario(nombreCompleto);
-      
       obtenerProximosEventos();
       
-      if (usuarioIdStorage && tipo.toLowerCase() === "estudiante") {
-        const ultimo = await obtenerUltimoSeguido(usuarioIdStorage);
-        setUltimoEmprendimiento(ultimo);
-        await obtenerActividad(usuarioIdStorage);
-      } else {
-        setLoadingActividades(false);
+      if (uid) {
+        await cargarSeguidos(uid);
+        await obtenerActividad(uid);
       }
       
       setLoadingUltimo(false);
+      console.log("✅ Carga completada");
     };
     
-    cargarDatos();
+    init();
   }, []);
 
+  // 🔥 EFECTO PARA VER CUANDO CAMBIA totalSeguidos
   useEffect(() => {
-    const handleStorageChange = () => {
-      obtenerProximosEventos();
-      leerCarrito();
-      const usuarioIdStorage = sessionStorage.getItem("usuarioId");
-      if (usuarioIdStorage) {
-        obtenerActividad(usuarioIdStorage);
+    console.log("🔄 totalSeguidos CAMBIÓ a:", totalSeguidos);
+  }, [totalSeguidos]);
+
+  // ESCUCHAR FOCO DE LA PÁGINA
+  useEffect(() => {
+    const handleFocus = () => {
+      const uid = sessionStorage.getItem("usuarioId");
+      if (uid) {
+        console.log("📌 Recargando por foco...");
+        cargarSeguidos(uid);
       }
     };
     
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
-
-  const esEstudiante = tipoUsuario === "estudiante";
-
-  const stats = [
-    { value: totalSeguidos.toString(), label: "EMPRENDIMIENTOS SEGUIDOS" },
-  ];
 
   return (
     <>
@@ -635,7 +635,7 @@ export default function InicioEstudiantePage() {
       <main className={styles.main}>
         <section className={styles.heroBanner}>
           <div className={styles.heroContent}>
-            <span className={styles.heroBadge}>👋 Bienvenido de nuevo</span>
+            <span className={styles.heroBadge}>Panel Administrativo</span>
             <h1 className={styles.heroTitle}>Hola, <span className={styles.heroName}>{nombreUsuario}</span></h1>
             <p className={styles.heroSub}>Descubre emprendimientos, sigue los que te inspiran y gestiona tu perfil.</p>
             <div className={styles.heroActions}>
@@ -650,13 +650,13 @@ export default function InicioEstudiantePage() {
           </div>
         </section>
 
+
+        {/* 🔥 STATS - Usando totalSeguidos directamente */}
         <section className={styles.statsBar}>
-          {stats.map((s) => (
-            <div key={s.label} className={styles.statItem}>
-              <span className={styles.statValue}>{s.value}</span>
-              <span className={styles.statLabel}>{s.label}</span>
-            </div>
-          ))}
+          <div className={styles.statItem}>
+            <span className={styles.statValue}>{totalSeguidos}</span>
+            <span className={styles.statLabel}>EMPRENDIMIENTOS SEGUIDOS</span>
+          </div>
         </section>
 
         <div className={styles.body}>

@@ -1,0 +1,226 @@
+/* =============================================
+   seguidos.module.css — Administrativo
+   Tema: Blanco + Azul UCC
+   ============================================= */
+
+.main {
+  min-height: 100vh;
+  background: #f5f7fa;
+  color: #0d1b2a;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  padding: 40px 0 80px;
+}
+
+.container {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #78909c;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 28px;
+  transition: color 0.2s;
+}
+.back:hover { color: #009FE3; }
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0d1b2a;
+  margin: 0 0 4px;
+}
+.subtitle {
+  font-size: 0.85rem;
+  color: #78909c;
+  margin: 0;
+}
+
+.btnExplore {
+  background: #009FE3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.84rem;
+  padding: 10px 20px;
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+  box-shadow: 0 2px 8px rgba(0,159,227,0.2);
+}
+.btnExplore:hover { opacity: 0.88; }
+
+/* ── Search ── */
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid #e0e7ef;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 6px rgba(0,159,227,0.06);
+  transition: border-color 0.2s;
+}
+.searchWrap:focus-within { border-color: #009FE3; }
+
+.searchIcon { font-size: 0.9rem; color: #78909c; flex-shrink: 0; }
+
+.searchInput {
+  background: none;
+  border: none;
+  outline: none;
+  color: #0d1b2a;
+  font-size: 0.88rem;
+  font-family: inherit;
+  flex: 1;
+}
+.searchInput::placeholder { color: #b0bec5; }
+
+/* ── List ── */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1.5px solid #e0e7ef;
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 1px 6px rgba(0,159,227,0.05);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  flex-wrap: wrap;
+}
+.item:hover {
+  border-color: #00b8f0;
+  box-shadow: 0 4px 16px rgba(0,159,227,0.1);
+}
+
+.itemAvatar {
+  width: 46px; height: 46px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #009FE3, #29b6f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.itemInfo { flex: 1; min-width: 130px; }
+
+.itemName {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin: 0 0 4px;
+}
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.76rem;
+  color: #78909c;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.catBadge {
+  background: #e6f6fd;
+  border: 1px solid #b3e5fc;
+  color: #009FE3;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.dot {
+  width: 3px; height: 3px;
+  background: #b0bec5;
+  border-radius: 50%;
+}
+
+.activeBadge {
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  color: #2e7d32;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.itemActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btnView {
+  background: #e6f6fd;
+  border: 1.5px solid #b3e5fc;
+  color: #009FE3;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.btnView:hover { background: #b3e5fc; }
+
+.btnDejar {
+  background: #fce4ec;
+  border: 1.5px solid #f8bbd0;
+  color: #c62828;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+.btnDejar:hover { background: #f8bbd0; }
+
+.empty {
+  text-align: center;
+  color: #78909c;
+  padding: 60px 20px;
+  font-size: 0.88rem;
+  background: #fff;
+  border: 1.5px dashed #e0e7ef;
+  border-radius: 12px;
+}
+
+@media (max-width: 580px) {
+  .itemActions { width: 100%; justify-content: flex-end; }
+}

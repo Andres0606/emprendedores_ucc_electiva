@@ -413,3 +413,24 @@
     min-width: auto;
   }
 }
+
+/* En inicioemprendedor.module.css */
+
+.badgeSuspendido {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffb74d;
+}
+
+.productoRowEmp {
+  font-size: 0.7rem;
+  color: #78909c;
+  margin: 2px 0 0;
+}
+
+.loadingText {
+  color: #78909c;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px;
+}

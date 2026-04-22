@@ -434,9 +434,6 @@
 }
 
 .btnEditar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: var(--blue-main);
   color: #fff;
   font-size: 0.84rem;
@@ -445,9 +442,25 @@
   border-radius: var(--radius-sm);
   text-decoration: none;
   transition: opacity 0.2s, transform 0.2s;
-  box-shadow: 0 2px 8px rgba(0,159,227,0.2);
+  border: none;  /* ← Esto elimina cualquier borde */
+  outline: none; /* ← Esto elimina el outline */
+  box-shadow: none; /* ← Esto elimina cualquier sombra que pueda parecer borde */
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
 }
-.btnEditar:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btnEditar:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btnEditar:focus,
+.btnEditar:active {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
 
 .btnToggle {
   display: flex;
@@ -785,4 +798,273 @@
 .btnPrimary:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+/* Modal de edición */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e7ef;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+
+.modalTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin: 0;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #78909c;
+  transition: color 0.2s;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.modalClose:hover {
+  background: #f5f7fa;
+  color: #c62828;
+}
+
+.modalBody {
+  padding: 24px;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e7ef;
+  background: #fafbfc;
+}
+
+/* Formulario */
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #37474f;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formInput,
+.formSelect,
+.formTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e0e7ef;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.formInput:focus,
+.formSelect:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: #009FE3;
+}
+
+.formTextarea {
+  resize: vertical;
+}
+
+.formHelper {
+  font-size: 0.7rem;
+  color: #78909c;
+  margin-top: 5px;
+}
+
+.formErrorBanner {
+  background: #fce4ec;
+  border: 1px solid #f8bbd0;
+  color: #c62828;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 20px;
+}
+
+/* Imágenes */
+.imagenesLista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.imagenItem {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e0e7ef;
+}
+
+.imagenPreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagenEliminar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagenEliminar:hover {
+  background: #c62828;
+}
+
+.agregarImagenRow {
+  display: flex;
+  gap: 8px;
+}
+
+.btnAgregarImagen {
+  background: #e6f6fd;
+  border: 1px solid #b3e5fc;
+  color: #009FE3;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btnAgregarImagen:hover {
+  background: #009FE3;
+  color: white;
+}
+
+/* Botones del modal */
+.btnCancelar {
+  background: #f5f7fa;
+  border: 1.5px solid #e0e7ef;
+  color: #37474f;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnCancelar:hover {
+  background: #e0e7ef;
+}
+
+.btnGuardar {
+  background: #009FE3;
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnGuardar:hover {
+  background: #006fa8;
+}
+
+.btnGuardar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Botón deshabilitado */
+.btnDisabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.btnDisabled:hover {
+  transform: none;
+  opacity: 0.6;
+}
+
+/* Tarjeta de advertencia para suspendido */
+.warningCardSuspendido {
+  background: #fce4ec;
+  border-color: #f8bbd0;
+}
+
+.warningCardSuspendido .warningText {
+  color: #c62828;
+}
+
+.warningCardSuspendido .warningIcon {
+  color: #c62828;
+}
+
+/* Badge para suspendido */
+.badgeSuspendido {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffb74d;
+}
+
+.pillSuspendido {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffb74d;
 }

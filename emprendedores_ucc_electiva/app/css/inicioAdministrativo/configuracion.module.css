@@ -1,0 +1,266 @@
+/* =============================================
+   configuracion.module.css — Administrativo
+   ============================================= */
+
+.main {
+  min-height: 100vh;
+  background: #f5f7fa;
+  color: #0d1b2a;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  padding: 40px 0 80px;
+}
+
+.container {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #78909c;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 28px;
+  transition: color 0.2s;
+}
+.back:hover { color: #009FE3; }
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0d1b2a;
+  margin: 0 0 28px;
+}
+
+.content {
+  background: #fff;
+  border: 1.5px solid #e0e7ef;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 2px 10px rgba(0,159,227,0.06);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0d1b2a;
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid #e0e7ef;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #78909c;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.input {
+  background: #f5f7fa;
+  border: 1.5px solid #e0e7ef;
+  border-radius: 9px;
+  color: #0d1b2a;
+  font-size: 0.88rem;
+  font-family: inherit;
+  padding: 10px 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input:focus { border-color: #009FE3; background: #fff; }
+
+.readonly {
+  background: #f0f2f5 !important;
+  color: #6c757d !important;
+  cursor: not-allowed;
+  border-color: #e0e7ef !important;
+}
+
+.helperText {
+  font-size: 0.7rem;
+  color: #78909c;
+  margin-top: 4px;
+}
+
+.editActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.btnEdit {
+  background: #009FE3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+.btnEdit:hover { opacity: 0.88; }
+
+.btnSave {
+  background: #009FE3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+  box-shadow: 0 2px 8px rgba(0,159,227,0.2);
+}
+.btnSave:hover { opacity: 0.88; }
+
+.btnCancel {
+  background: #e2e8f0;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+.btnCancel:hover { background: #cbd5e1; }
+
+.passwordSection {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e7ef;
+}
+
+.passwordTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin: 0 0 16px 0;
+}
+
+.btnChangePassword {
+  background: #009FE3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+  margin-top: 8px;
+  width: 100%;
+}
+.btnChangePassword:hover { opacity: 0.88; }
+
+.errorMessage {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #dc2626;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.errorIcon { font-size: 1rem; }
+
+.successMessage {
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #2e7d32;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.successIcon { font-size: 1rem; }
+
+.danger {
+  background: #fce4ec;
+  border: 1.5px solid #f8bbd0;
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 4px;
+}
+
+.dangerTitle {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #c62828;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dangerDesc {
+  font-size: 0.8rem;
+  color: #78909c;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.btnDanger {
+  background: #fff;
+  border: 1.5px solid #ef9a9a;
+  color: #c62828;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+.btnDanger:hover { background: #ffebee; }
+
+.passwordReqs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.reqMet { color: #28a745; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 0.25rem; }
+.reqUnmet { color: #6c757d; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 0.25rem; }
+.errorText { color: #dc3545; font-size: 0.75rem; margin-top: 0.25rem; display: block; }
+.successText { color: #28a745; font-size: 0.75rem; margin-top: 0.25rem; display: block; }
+
+@media (max-width: 680px) { .container { padding: 0 16px; } }

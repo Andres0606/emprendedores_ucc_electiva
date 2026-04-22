@@ -10,6 +10,7 @@ interface Producto {
   precio: number;
   stock: number;
   imagen: string;
+  createdAt?: string;  // 🔥 Añadido para ordenar por fecha
 }
 
 interface Emprendimiento {
@@ -24,7 +25,7 @@ interface Emprendimiento {
   telefono?: string;
   imagenes?: string[];
   productos?: Producto[];
-  createdAt?: string;
+  createdAt?: string;  // 🔥 Añadido para ordenar por fecha
 }
 
 interface Usuario {
@@ -53,15 +54,36 @@ export default function InicioEmprendedorPage() {
   const [totalProductos,  setTotalProductos]  = useState(0);
   const [loading,         setLoading]         = useState(true);
   const [ultimosProductos, setUltimosProductos] = useState<Producto[]>([]);
+  const [ultimoEmprendimiento, setUltimoEmprendimiento] = useState<Emprendimiento | null>(null);
 
-  const getTimestampFromId = (id: string) => {
-    try {
-      const hexTimestamp = id.substring(0, 8);
-      const timestamp = parseInt(hexTimestamp, 16) * 1000;
-      return timestamp;
-    } catch {
-      return 0;
+  // 🔥 Función para obtener timestamp de forma confiable
+  const getTimestamp = (item: any): number => {
+    // Prioridad: createdAt > id timestamp
+    if (item.createdAt) {
+      const timestamp = new Date(item.createdAt).getTime();
+      if (!isNaN(timestamp)) return timestamp;
     }
+    
+    // Fallback: extraer timestamp del ID de MongoDB
+    const id = item.id || item._id;
+    if (id && id.length > 8) {
+      try {
+        const hexTimestamp = id.substring(0, 8);
+        const timestamp = parseInt(hexTimestamp, 16) * 1000;
+        if (!isNaN(timestamp)) return timestamp;
+      } catch {}
+    }
+    
+    return 0;
+  };
+
+  // 🔥 Función para ordenar por fecha (más reciente primero)
+  const ordenarPorFecha = <T extends { createdAt?: string; id?: string; _id?: string }>(items: T[]): T[] => {
+    return [...items].sort((a, b) => {
+      const timestampA = getTimestamp(a);
+      const timestampB = getTimestamp(b);
+      return timestampB - timestampA;
+    });
   };
 
   const cargarDatos = async () => {
@@ -90,26 +112,42 @@ export default function InicioEmprendedorPage() {
         const emps: Emprendimiento[] = await res.json();
         const misEmprendimientos = emps.filter(e => String(e.usuarioId) === String(uid));
         
-        const ordenados = [...misEmprendimientos].sort((a, b) => {
-          const idA = a.id || a._id || "";
-          const idB = b.id || b._id || "";
-          const timestampA = getTimestampFromId(idA);
-          const timestampB = getTimestampFromId(idB);
-          return timestampB - timestampA;
-        });
+        // 🔥 Ordenar emprendimientos por fecha (más reciente primero)
+        const ordenados = ordenarPorFecha(misEmprendimientos);
         
         setEmprendimientos(ordenados);
         
+        // 🔥 Calcular total de productos
         const total = ordenados.reduce((sum, emp) => sum + (emp.productos?.length || 0), 0);
         setTotalProductos(total);
         
-        const ultimoEmp = ordenados[0];
-        if (ultimoEmp && ultimoEmp.productos && ultimoEmp.productos.length > 0) {
-          setUltimosProductos(ultimoEmp.productos.slice(-2));
-        } else {
-          setUltimosProductos([]);
+        // 🔥 OBTENER EL ÚLTIMO EMPRENDIMIENTO (el más reciente)
+        const ultimo = ordenados.length > 0 ? ordenados[0] : null;
+        setUltimoEmprendimiento(ultimo);
+        
+        // 🔥 OBTENER LOS ÚLTIMOS 2 PRODUCTOS DE TODOS LOS EMPRENDIMIENTOS
+        // Recolectar todos los productos con su fecha
+        const todosLosProductos: (Producto & { emprendimientoNombre: string; fechaCreacion: number })[] = [];
+        
+        for (const emp of ordenados) {
+          if (emp.productos && emp.productos.length > 0) {
+            for (const producto of emp.productos) {
+              todosLosProductos.push({
+                ...producto,
+                emprendimientoNombre: emp.nombre,
+                fechaCreacion: getTimestamp(producto)
+              });
+            }
+          }
         }
         
+        // 🔥 Ordenar todos los productos por fecha (más reciente primero)
+        const productosOrdenados = todosLosProductos.sort((a, b) => b.fechaCreacion - a.fechaCreacion);
+        
+        // 🔥 Tomar los últimos 2 productos
+        setUltimosProductos(productosOrdenados.slice(0, 2));
+        
+        // Cargar categorías para cada emprendimiento
         for (const emp of ordenados) {
           if (emp.categoriaId) {
             try {
@@ -135,11 +173,11 @@ export default function InicioEmprendedorPage() {
     cargarDatos();
   }, []);
 
-  // 🔥 ESCUCHAR CAMBIOS EN localStorage (cuando se crean productos)
+  // 🔥 ESCUCHAR CAMBIOS EN localStorage (cuando se crean productos o emprendimientos)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "productosActualizados") {
-        console.log("📦 Productos actualizados, recargando datos...");
+      if (e.key === "productosActualizados" || e.key === "emprendimientosActualizados") {
+        console.log("📦 Datos actualizados, recargando...");
         cargarDatos();
       }
     };
@@ -176,10 +214,9 @@ export default function InicioEmprendedorPage() {
     if (estado === "activo")    return styles.badgeActivo;
     if (estado === "pendiente") return styles.badgePendiente;
     if (estado === "rechazado") return styles.badgeRechazado;
+    if (estado === "suspendido") return styles.badgeSuspendido;
     return styles.badgePendiente;
   }
-
-  const ultimoEmprendimiento = emprendimientos.length > 0 ? emprendimientos[0] : null;
 
   return (
     <main className={styles.main}>
@@ -232,6 +269,7 @@ export default function InicioEmprendedorPage() {
         </nav>
 
         <div className={styles.summaryGrid}>
+          {/* ÚLTIMO EMPRENDIMIENTO */}
           <div className={styles.summaryCard}>
             <p className={styles.summaryLabel}>ÚLTIMO EMPRENDIMIENTO</p>
             {loading ? (
@@ -259,13 +297,14 @@ export default function InicioEmprendedorPage() {
               <>
                 <p className={styles.empName}>Aún no tienes un emprendimiento</p>
                 <p className={styles.empDesc}>Crea tu emprendimiento y empieza a publicar productos.</p>
-                <Link href="/inicioemprendedor/misemprendimientos" className={styles.btnLink}>
+                <Link href="/inicioemprendedor/crearemprendimiento" className={styles.btnLink}>
                   Crear emprendimiento →
                 </Link>
               </>
             )}
           </div>
 
+          {/* ÚLTIMOS PRODUCTOS (de todos los emprendimientos) */}
           <div className={styles.summaryCard}>
             <p className={styles.summaryLabel}>ÚLTIMOS PRODUCTOS</p>
             {loading ? (
@@ -276,7 +315,7 @@ export default function InicioEmprendedorPage() {
                   {ultimosProductos.map((p, i) => (
                     <div key={i} className={styles.productoRow}>
                       <div className={styles.productoRowImg}>
-                        {p.imagen
+                        {p.imagen && p.imagen.startsWith('http')
                           ? <img src={p.imagen} alt={p.nombre} />
                           : <span>{p.nombre[0]?.toUpperCase()}</span>
                         }
@@ -284,6 +323,9 @@ export default function InicioEmprendedorPage() {
                       <div className={styles.productoRowInfo}>
                         <p className={styles.productoRowNombre}>{p.nombre}</p>
                         <p className={styles.productoRowPrecio}>${p.precio.toLocaleString("es-CO")}</p>
+                        {(p as any).emprendimientoNombre && (
+                          <p className={styles.productoRowEmp}>📦 {(p as any).emprendimientoNombre}</p>
+                        )}
                       </div>
                       <span className={styles.productoRowStock}>Stock: {p.stock}</span>
                     </div>
@@ -302,7 +344,7 @@ export default function InicioEmprendedorPage() {
                     : "Primero crea un emprendimiento para poder agregar productos."}
                 </p>
                 <Link 
-                  href={ultimoEmprendimiento ? "/inicioemprendedor/misproductos" : "/inicioemprendedor/misemprendimientos"} 
+                  href={ultimoEmprendimiento ? "/inicioemprendedor/misproductos" : "/inicioemprendedor/crearemprendimiento"} 
                   className={styles.btnLink}
                 >
                   {ultimoEmprendimiento ? "Agregar producto →" : "Crear emprendimiento →"}

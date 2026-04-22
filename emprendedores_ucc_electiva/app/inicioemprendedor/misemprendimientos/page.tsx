@@ -36,15 +36,22 @@ interface Usuario {
   tipoUsuario: string;
 }
 
+interface Categoria {
+  id?: string;
+  _id?: string;
+  nombre: string;
+}
+
 const ESTADO_CONFIG: Record<string, {
   label: string;
   badgeCls: string;
   pillCls: string;
   mensaje: string;
 }> = {
-  activo:    { label: "Activo",    badgeCls: "badgeActivo",    pillCls: "pillActivo",    mensaje: "Tu emprendimiento está activo y visible para toda la comunidad." },
-  pendiente: { label: "Pendiente", badgeCls: "badgePendiente", pillCls: "pillPendiente", mensaje: "Tu emprendimiento está en revisión. Un administrador lo evaluará pronto." },
-  rechazado: { label: "Rechazado", badgeCls: "badgeRechazado", pillCls: "pillRechazado", mensaje: "Tu emprendimiento fue rechazado. Puedes crear uno nuevo." },
+  activo:    { label: "Activo",    badgeCls: "badgeActivo",    pillCls: "pillActivo",    mensaje: "✅ Tu emprendimiento está activo y visible para toda la comunidad." },
+  pendiente: { label: "Pendiente", badgeCls: "badgePendiente", pillCls: "pillPendiente", mensaje: "⏳ Tu emprendimiento está en revisión. Un administrador lo evaluará pronto." },
+  rechazado: { label: "Rechazado", badgeCls: "badgeRechazado", pillCls: "pillRechazado", mensaje: "❌ Tu emprendimiento fue rechazado. Puedes crear uno nuevo." },
+  suspendido: { label: "Suspendido", badgeCls: "badgeSuspendido", pillCls: "pillSuspendido", mensaje: "⚠️ Tu emprendimiento ha sido suspendido por incumplir las normas." },
 };
 
 export default function MisEmprendimientosPage() {
@@ -52,10 +59,25 @@ export default function MisEmprendimientosPage() {
 
   const [usuario,         setUsuario]         = useState<Usuario | null>(null);
   const [emprendimientos, setEmprendimientos] = useState<Emprendimiento[]>([]);
+  const [categorias,      setCategorias]      = useState<Categoria[]>([]);
   const [seleccionado,    setSeleccionado]    = useState<string | null>(null);
   const [loading,         setLoading]         = useState(true);
   const [error,           setError]           = useState<string | null>(null);
   const [imgIdx,          setImgIdx]          = useState(0);
+
+  // Estados para el modal de edición
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editandoEmp, setEditandoEmp] = useState<Emprendimiento | null>(null);
+  const [editForm, setEditForm] = useState({
+    nombre: "",
+    descripcion: "",
+    categoriaId: "",
+    telefono: "",
+    imagenes: [] as string[]
+  });
+  const [editandoLoading, setEditandoLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [nuevaImagen, setNuevaImagen] = useState("");
 
   useEffect(() => {
     const cargar = async () => {
@@ -68,24 +90,25 @@ export default function MisEmprendimientosPage() {
       if (!uid) { setLoading(false); return; }
 
       try {
+        // Cargar categorías
+        const resCat = await fetch("http://localhost:8080/api/categorias");
+        if (resCat.ok) {
+          const cats = await resCat.json();
+          setCategorias(cats);
+        }
+
         const res = await fetch("http://localhost:8080/api/emprendimientos");
         if (!res.ok) throw new Error("No se pudieron cargar los emprendimientos.");
         const data: Emprendimiento[] = await res.json();
 
         const mios = data.filter(e => String(e.usuarioId || "") === String(uid));
 
-        // Cargar categorías
+        // Mapa de categorías
         let categoriasMap: Record<string, string> = {};
-        try {
-          const resCat = await fetch("http://localhost:8080/api/categorias");
-          if (resCat.ok) {
-            const cats = await resCat.json();
-            cats.forEach((c: any) => {
-              const cid = c.id || c._id;
-              if (cid) categoriasMap[cid] = c.nombre;
-            });
-          }
-        } catch { /* categorías opcionales */ }
+        categorias.forEach((c: any) => {
+          const cid = c.id || c._id;
+          if (cid) categoriasMap[cid] = c.nombre;
+        });
 
         const miosConCat = mios.map(e => ({
           ...e,
@@ -115,14 +138,6 @@ export default function MisEmprendimientosPage() {
     return emp.estado === "activo" || emp.estado === "rechazado";
   };
 
-  const mensajeNoPuedeCrear = () => {
-    if (!emp) return "";
-    if (emp.estado === "pendiente") {
-      return "Tienes un emprendimiento en revisión. Espera a que sea evaluado antes de crear otro.";
-    }
-    return "";
-  };
-
   // Eliminar emprendimiento
   const eliminarEmprendimiento = async (id: string) => {
     if (!confirm("¿Estás seguro de que deseas eliminar este emprendimiento? Esta acción no se puede deshacer.")) return;
@@ -133,15 +148,12 @@ export default function MisEmprendimientosPage() {
       });
       
       if (res.ok) {
-        // Eliminar de la lista local
         const nuevosEmprendimientos = emprendimientos.filter(e => (e.id || e._id) !== id);
         setEmprendimientos(nuevosEmprendimientos);
         
-        // Si no quedan emprendimientos, limpiar selección
         if (nuevosEmprendimientos.length === 0) {
           setSeleccionado(null);
         } else {
-          // Seleccionar el primer emprendimiento restante
           setSeleccionado(nuevosEmprendimientos[0].id || nuevosEmprendimientos[0]._id || null);
         }
         
@@ -153,6 +165,114 @@ export default function MisEmprendimientosPage() {
     } catch (error) {
       console.error("Error al eliminar:", error);
       alert("Error de conexión al eliminar el emprendimiento");
+    }
+  };
+
+  // Abrir modal de edición (solo si no está suspendido)
+  const abrirEditModal = () => {
+    if (!emp || emp.estado === "suspendido") {
+      alert("No puedes editar un emprendimiento suspendido");
+      return;
+    }
+    setEditandoEmp(emp);
+    setEditForm({
+      nombre: emp.nombre,
+      descripcion: emp.descripcion || "",
+      categoriaId: emp.categoriaId || "",
+      telefono: emp.telefono || "",
+      imagenes: emp.imagenes || []
+    });
+    setEditError(null);
+    setNuevaImagen("");
+    setEditModalOpen(true);
+  };
+
+  // Cerrar modal
+  const cerrarEditModal = () => {
+    setEditModalOpen(false);
+    setEditandoEmp(null);
+    setEditForm({
+      nombre: "",
+      descripcion: "",
+      categoriaId: "",
+      telefono: "",
+      imagenes: []
+    });
+    setNuevaImagen("");
+    setEditError(null);
+  };
+
+  // Agregar nueva imagen
+  const agregarImagen = () => {
+    if (nuevaImagen.trim() && !editForm.imagenes.includes(nuevaImagen.trim())) {
+      setEditForm({
+        ...editForm,
+        imagenes: [...editForm.imagenes, nuevaImagen.trim()]
+      });
+      setNuevaImagen("");
+    }
+  };
+
+  // Eliminar imagen
+  const eliminarImagen = (index: number) => {
+    const nuevasImagenes = editForm.imagenes.filter((_, i) => i !== index);
+    setEditForm({ ...editForm, imagenes: nuevasImagenes });
+  };
+
+  // Guardar cambios
+  const guardarEdicion = async () => {
+    if (!editandoEmp) return;
+    
+    if (!editForm.nombre.trim()) {
+      setEditError("El nombre es obligatorio");
+      return;
+    }
+    
+    setEditandoLoading(true);
+    setEditError(null);
+    
+    try {
+      const id = editandoEmp.id || editandoEmp._id;
+      const response = await fetch(`http://localhost:8080/api/emprendimientos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: editForm.nombre,
+          descripcion: editForm.descripcion,
+          categoriaId: editForm.categoriaId,
+          telefono: editForm.telefono,
+          imagenes: editForm.imagenes,
+          usuarioId: editandoEmp.usuarioId,
+          estado: editandoEmp.estado,
+          productos: editandoEmp.productos || []
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al actualizar");
+      }
+      
+      const actualizado = await response.json();
+      
+      // Actualizar la lista local
+      setEmprendimientos(prev => prev.map(e => {
+        if ((e.id || e._id) === id) {
+          return {
+            ...actualizado,
+            categoriaNombre: categorias.find(c => (c.id || c._id) === actualizado.categoriaId)?.nombre || "Sin categoría"
+          };
+        }
+        return e;
+      }));
+      
+      cerrarEditModal();
+      alert("Emprendimiento actualizado correctamente");
+      
+    } catch (err: any) {
+      setEditError(err.message || "Error al guardar los cambios");
+    } finally {
+      setEditandoLoading(false);
     }
   };
 
@@ -239,15 +359,26 @@ export default function MisEmprendimientosPage() {
           </div>
         ) : (
           <>
-            {/* Mensaje cuando no puede crear nuevo emprendimiento */}
-            {!puedeCrearNuevo() && (
+            {/* Mensaje cuando el emprendimiento está PENDIENTE */}
+            {emp?.estado === "pendiente" && (
               <div className={styles.warningCard}>
-                <span className={styles.warningIcon}>⚠️</span>
-                <p className={styles.warningText}>{mensajeNoPuedeCrear()}</p>
+                <span className={styles.warningIcon}>⏳</span>
+                <p className={styles.warningText}>Tienes un emprendimiento en revisión. Espera a que sea evaluado antes de crear otro.</p>
               </div>
             )}
 
-            {/* Selector de emprendimientos - más compacto cuando hay varios */}
+            {/* Mensaje cuando el emprendimiento está SUSPENDIDO */}
+            {emp?.estado === "suspendido" && (
+              <div className={`${styles.warningCard} ${styles.warningCardSuspendido}`}>
+                <span className={styles.warningIcon}>🔒</span>
+                <p className={styles.warningText}>Tu emprendimiento ha sido suspendido por el administrador. No puedes editarlo ni gestionar productos hasta que sea reactivado.</p>
+                <Link href="/contacto" className={styles.btnLinkWarning}>
+        
+                </Link>
+              </div>
+            )}
+
+            {/* Selector de emprendimientos */}
             {emprendimientos.length > 1 && (
               <div className={styles.selectorWrap}>
                 <p className={styles.selectorLabel}>Mis emprendimientos ({emprendimientos.length})</p>
@@ -316,19 +447,28 @@ export default function MisEmprendimientosPage() {
                     )}
                   </div>
 
-                  {/* Acciones */}
+                  {/* Acciones - DESHABILITADAS si está suspendido */}
                   <div className={styles.actionsCard}>
                     <p className={styles.actionsLabel}>ACCIONES RÁPIDAS</p>
                     <div className={styles.actionsList}>
-                      <Link
-                        href={`/inicioemprendedor/editarEmprendimiento/${emp.id || emp._id}`}
-                        className={styles.btnEditar}
+                      <button
+                        onClick={abrirEditModal}
+                        className={`${styles.btnEditar} ${emp?.estado === "suspendido" ? styles.btnDisabled : ""}`}
+                        disabled={emp?.estado === "suspendido"}
+                        title={emp?.estado === "suspendido" ? "No puedes editar un emprendimiento suspendido" : ""}
                       >
                         Editar emprendimiento
-                      </Link>
+                      </button>
                       <Link
-                        href={`/inicioemprendedor/misproductos?emprendimientoId=${emp.id || emp._id}`}
-                        className={styles.btnProductos}
+                        href={emp?.estado === "suspendido" ? "#" : `/inicioemprendedor/misproductos?emprendimientoId=${emp.id || emp._id}`}
+                        className={`${styles.btnProductos} ${emp?.estado === "suspendido" ? styles.btnDisabled : ""}`}
+                        onClick={(e) => {
+                          if (emp?.estado === "suspendido") {
+                            e.preventDefault();
+                            alert("No puedes gestionar productos de un emprendimiento suspendido");
+                          }
+                        }}
+                        style={emp?.estado === "suspendido" ? { pointerEvents: "none", opacity: 0.6 } : {}}
                       >
                         Gestionar productos
                       </Link>
@@ -404,6 +544,137 @@ export default function MisEmprendimientosPage() {
           </>
         )}
       </div>
+
+      {/* ── MODAL DE EDICIÓN ── */}
+      {editModalOpen && editandoEmp && (
+        <div className={styles.overlay} onClick={cerrarEditModal}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Editar emprendimiento</h2>
+              <button className={styles.modalClose} onClick={cerrarEditModal}>✕</button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              {editError && (
+                <div className={styles.formErrorBanner}>
+                  {editError}
+                </div>
+              )}
+              
+              {/* Nombre */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Nombre del emprendimiento *</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={editForm.nombre}
+                  onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
+                  placeholder="Ej: Mi Emprendimiento"
+                />
+              </div>
+              
+              {/* Descripción */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Descripción</label>
+                <textarea
+                  className={styles.formTextarea}
+                  rows={4}
+                  value={editForm.descripcion}
+                  onChange={(e) => setEditForm({ ...editForm, descripcion: e.target.value })}
+                  placeholder="Describe tu emprendimiento..."
+                />
+              </div>
+              
+              {/* Categoría */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Categoría</label>
+                <select
+                  className={styles.formSelect}
+                  value={editForm.categoriaId}
+                  onChange={(e) => setEditForm({ ...editForm, categoriaId: e.target.value })}
+                >
+                  <option value="">Selecciona una categoría</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id || cat._id} value={cat.id || cat._id}>
+                      {cat.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Teléfono */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Teléfono de contacto</label>
+                <input
+                  type="tel"
+                  className={styles.formInput}
+                  value={editForm.telefono}
+                  onChange={(e) => setEditForm({ ...editForm, telefono: e.target.value })}
+                  placeholder="Ej: 3123456789"
+                />
+              </div>
+              
+              {/* Imágenes */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Imágenes del emprendimiento</label>
+                
+                {/* Lista de imágenes existentes */}
+                {editForm.imagenes.length > 0 && (
+                  <div className={styles.imagenesLista}>
+                    {editForm.imagenes.map((img, idx) => (
+                      <div key={idx} className={styles.imagenItem}>
+                        <img src={img} alt={`Imagen ${idx + 1}`} className={styles.imagenPreview} />
+                        <button
+                          type="button"
+                          className={styles.imagenEliminar}
+                          onClick={() => eliminarImagen(idx)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Input para agregar nueva imagen */}
+                <div className={styles.agregarImagenRow}>
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    placeholder="URL de la imagen"
+                    value={nuevaImagen}
+                    onChange={(e) => setNuevaImagen(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className={styles.btnAgregarImagen}
+                    onClick={agregarImagen}
+                  >
+                    Agregar
+                  </button>
+                </div>
+                <p className={styles.formHelper}>
+                  Usa postimages.org para subir tus imágenes y pega la URL aquí.
+                </p>
+              </div>
+            </div>
+            
+            <div className={styles.modalFooter}>
+              <button className={styles.btnCancelar} onClick={cerrarEditModal}>
+                Cancelar
+              </button>
+              <button
+                className={styles.btnGuardar}
+                onClick={guardarEdicion}
+                disabled={editandoLoading}
+              >
+                {editandoLoading ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }

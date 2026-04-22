@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioemprendedor/misproductos.module.css";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface Producto {
   id?: string;
@@ -14,15 +14,23 @@ interface Producto {
   imagen?: string;
   emprendimientoId?: string;
   emprendimientoNombre?: string;
+  emprendimientoEstado?: string;
+  createdAt?: string;
 }
 
 interface Emprendimiento {
   id?: string;
   _id?: string;
   nombre: string;
-  estado: string;
+  descripcion: string;
+  categoriaId?: string;
+  categoriaNombre?: string;
   usuarioId?: string;
+  estado: string;
+  telefono?: string;
+  imagenes?: string[];
   productos?: Producto[];
+  createdAt?: string;
 }
 
 interface Usuario {
@@ -30,6 +38,7 @@ interface Usuario {
   _id?: string;
   nombre: string;
   apellido: string;
+  correo: string;
   tipoUsuario: string;
 }
 
@@ -40,22 +49,24 @@ const FORM_VACIO = { nombre: "", precio: "", stock: "", imagen: "", emprendimien
 
 export default function ProductosPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const emprendimientoIdParam = searchParams.get("emprendimientoId");
 
-  const [usuario,          setUsuario]          = useState<Usuario | null>(null);
-  const [emprendimientos,  setEmprendimientos]  = useState<Emprendimiento[]>([]);
-  const [productos,        setProductos]        = useState<Producto[]>([]);
-  const [loading,          setLoading]          = useState(true);
-  const [error,            setError]            = useState<string | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [emprendimientos, setEmprendimientos] = useState<Emprendimiento[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [emprendimientoActivo, setEmprendimientoActivo] = useState<Emprendimiento | null>(null);
 
-  const [vista,    setVista]    = useState<Vista>("grid");
+  const [vista, setVista] = useState<Vista>("grid");
   const [busqueda, setBusqueda] = useState("");
 
-  const [modal,          setModal]          = useState<ModalTipo>(null);
+  const [modal, setModal] = useState<ModalTipo>(null);
   const [productoActivo, setProductoActivo] = useState<Producto | null>(null);
-  const [form,           setForm]           = useState(FORM_VACIO);
-  const [guardando,      setGuardando]      = useState(false);
-  const [formError,      setFormError]      = useState<string | null>(null);
+  const [form, setForm] = useState(FORM_VACIO);
+  const [guardando, setGuardando] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Función para recargar datos
   const recargarDatos = async () => {
@@ -79,6 +90,7 @@ export default function ProductosPage() {
             ...p,
             emprendimientoNombre: emp.nombre,
             emprendimientoId: eid,
+            emprendimientoEstado: emp.estado,
             _id: p._id || p.id || `${eid}_${p.nombre}_${Date.now()}_${index}`
           }));
           todosProductos = [...todosProductos, ...productosEmp];
@@ -119,6 +131,7 @@ export default function ProductosPage() {
             ...p,
             emprendimientoNombre: emp.nombre,
             emprendimientoId: eid,
+            emprendimientoEstado: emp.estado,
             _id: p._id || p.id || `${eid}_${p.nombre}_${Date.now()}_${index}`
           }));
           todosProductos = [...todosProductos, ...productosEmp];
@@ -136,11 +149,22 @@ export default function ProductosPage() {
     cargar();
   }, []);
 
-  const productosFiltrados = productos.filter(p =>
-    !busqueda || p.nombre.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  // Filtrar productos
+  const productosFiltrados = productos.filter(p => {
+    if (busqueda && !p.nombre.toLowerCase().includes(busqueda.toLowerCase())) return false;
+    if (emprendimientoIdParam && emprendimientoIdParam !== "null") {
+      return p.emprendimientoId === emprendimientoIdParam;
+    }
+    return true;
+  });
 
-  const puedeGestionarProductos = () => {
+  // Verificar si un producto puede ser editado (solo si su emprendimiento está activo)
+  const productoEsEditable = (producto: Producto) => {
+    return producto.emprendimientoEstado === "activo";
+  };
+
+  const puedeCrearNuevoProducto = () => {
+    // Solo puede crear si tiene un emprendimiento activo
     return emprendimientoActivo !== null;
   };
 
@@ -150,6 +174,7 @@ export default function ProductosPage() {
     }
     const tienePendiente = emprendimientos.some(e => e.estado === "pendiente");
     const tieneRechazado = emprendimientos.some(e => e.estado === "rechazado");
+    const tieneSuspendido = emprendimientos.some(e => e.estado === "suspendido");
     
     if (tienePendiente && !emprendimientoActivo) {
       return "Tienes emprendimientos en revisión. Espera a que sean aprobados para gestionar productos.";
@@ -157,11 +182,14 @@ export default function ProductosPage() {
     if (tieneRechazado && !emprendimientoActivo) {
       return "Tus emprendimientos fueron rechazados. Crea uno nuevo para gestionar productos.";
     }
+    if (tieneSuspendido && !emprendimientoActivo) {
+      return "Tus emprendimientos están suspendidos. Contacta al administrador para reactivarlos.";
+    }
     return "Necesitas tener al menos un emprendimiento activo para gestionar productos.";
   };
 
   function abrirCrear() {
-    if (!puedeGestionarProductos()) {
+    if (!puedeCrearNuevoProducto()) {
       alert(mensajeNoPuedeGestionar());
       return;
     }
@@ -178,8 +206,11 @@ export default function ProductosPage() {
   }
 
   function abrirEditar(p: Producto) {
-    if (!puedeGestionarProductos()) {
-      alert(mensajeNoPuedeGestionar());
+    if (!productoEsEditable(p)) {
+      alert("No puedes editar productos de un emprendimiento que está " + 
+        (p.emprendimientoEstado === "suspendido" ? "suspendido" : 
+         p.emprendimientoEstado === "pendiente" ? "en revisión" : 
+         p.emprendimientoEstado === "rechazado" ? "rechazado" : "inactivo"));
       return;
     }
     setForm({
@@ -195,8 +226,11 @@ export default function ProductosPage() {
   }
 
   function abrirEliminar(p: Producto) {
-    if (!puedeGestionarProductos()) {
-      alert(mensajeNoPuedeGestionar());
+    if (!productoEsEditable(p)) {
+      alert("No puedes eliminar productos de un emprendimiento que está " + 
+        (p.emprendimientoEstado === "suspendido" ? "suspendido" : 
+         p.emprendimientoEstado === "pendiente" ? "en revisión" : 
+         p.emprendimientoEstado === "rechazado" ? "rechazado" : "inactivo"));
       return;
     }
     setProductoActivo(p);
@@ -220,20 +254,18 @@ export default function ProductosPage() {
     return true;
   }
 
-  // ── Crear producto (guardar en el emprendimiento) ──
+  // ── Crear producto ──
   async function crearProducto() {
     if (!validar()) return;
     setGuardando(true);
     setFormError(null);
     
     try {
-      // Buscar el emprendimiento al que pertenece el producto
       const emprendimiento = emprendimientos.find(e => (e.id || e._id) === form.emprendimientoId);
       if (!emprendimiento) {
         throw new Error("No se encontró el emprendimiento");
       }
       
-      // Crear el nuevo producto
       const nuevoProducto: Producto = {
         nombre: form.nombre.trim(),
         precio: Number(form.precio),
@@ -241,11 +273,9 @@ export default function ProductosPage() {
         imagen: form.imagen.trim(),
       };
       
-      // Obtener los productos actuales del emprendimiento
       const productosActuales = emprendimiento.productos || [];
       const productosActualizados = [...productosActuales, nuevoProducto];
       
-      // Actualizar el emprendimiento con el nuevo producto
       const res = await fetch(`http://localhost:8080/api/emprendimientos/${form.emprendimientoId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -257,14 +287,8 @@ export default function ProductosPage() {
       
       if (!res.ok) throw new Error("No se pudo guardar el producto");
       
-      // Recargar datos
       await recargarDatos();
-      router.push("/inicioemprendedor?refresh=true");
-
-      
-      // 🔥 DISPARAR EVENTO PARA ACTUALIZAR LA PÁGINA PRINCIPAL
       localStorage.setItem("productosActualizados", Date.now().toString());
-
       
       cerrarModal();
       
@@ -311,10 +335,7 @@ export default function ProductosPage() {
       
       if (!res.ok) throw new Error("No se pudo actualizar el producto");
       
-      // Recargar datos
       await recargarDatos();
-      
-      // 🔥 DISPARAR EVENTO PARA ACTUALIZAR LA PÁGINA PRINCIPAL
       localStorage.setItem("productosActualizados", Date.now().toString());
       
       cerrarModal();
@@ -353,10 +374,7 @@ export default function ProductosPage() {
       
       if (!res.ok) throw new Error("No se pudo eliminar el producto");
       
-      // Recargar datos
       await recargarDatos();
-      
-      // 🔥 DISPARAR EVENTO PARA ACTUALIZAR LA PÁGINA PRINCIPAL
       localStorage.setItem("productosActualizados", Date.now().toString());
       
       cerrarModal();
@@ -400,7 +418,7 @@ export default function ProductosPage() {
           </p>
           <div className={styles.heroActions}>
             <Link href="/inicioemprendedor" className={styles.btnSecondary}>← Panel principal</Link>
-            {puedeGestionarProductos() && (
+            {puedeCrearNuevoProducto() && (
               <button className={styles.btnPrimaryHero} onClick={abrirCrear}>+ Nuevo producto</button>
             )}
           </div>
@@ -413,18 +431,18 @@ export default function ProductosPage() {
 
       <section className={styles.statsBar}>
         <div className={styles.statItem}>
-          <span className={styles.statValue}>{productos.length}</span>
+          <span className={styles.statValue}>{productosFiltrados.length}</span>
           <span className={styles.statLabel}>TOTAL PRODUCTOS</span>
         </div>
         <div className={styles.statItem}>
           <span className={styles.statValue}>
-            {productos.reduce((acc, p) => acc + p.stock, 0)}
+            {productosFiltrados.reduce((acc, p) => acc + p.stock, 0)}
           </span>
           <span className={styles.statLabel}>UNIDADES EN STOCK</span>
         </div>
         <div className={styles.statItem}>
           <span className={styles.statValue}>
-            {productos.filter(p => p.stock === 0).length}
+            {productosFiltrados.filter(p => p.stock === 0).length}
           </span>
           <span className={styles.statLabel}>SIN STOCK</span>
         </div>
@@ -432,7 +450,15 @@ export default function ProductosPage() {
 
       <div className={styles.body}>
 
-        {puedeGestionarProductos() && (
+        {/* Mostrar mensaje si no puede crear productos */}
+        {!puedeCrearNuevoProducto() && emprendimientos.length > 0 && (
+          <div className={styles.warningCard}>
+            <span className={styles.warningIcon}>⚠️</span>
+            <p className={styles.warningText}>{mensajeNoPuedeGestionar()}</p>
+          </div>
+        )}
+
+        {puedeCrearNuevoProducto() && (
           <div className={styles.actionBar}>
             <input
               className={styles.searchInput}
@@ -463,19 +489,7 @@ export default function ProductosPage() {
           </div>
         )}
 
-        {!puedeGestionarProductos() && (
-          <div className={styles.warningCard}>
-            <span className={styles.warningIcon}>⚠️</span>
-            <p className={styles.warningText}>{mensajeNoPuedeGestionar()}</p>
-            {emprendimientos.length === 0 && (
-              <Link href="/inicioemprendedor/misemprendimientos" className={styles.btnLinkWarning}>
-                Crear emprendimiento
-              </Link>
-            )}
-          </div>
-        )}
-
-        {puedeGestionarProductos() && productosFiltrados.length === 0 && (
+        {productosFiltrados.length === 0 && (
           <div className={styles.emptyCard}>
             {busqueda ? (
               <>
@@ -485,29 +499,48 @@ export default function ProductosPage() {
               </>
             ) : (
               <>
-                <p className={styles.emptyTitle}>Aún no tienes productos</p>
-                <p className={styles.emptyDesc}>Agrega tu primer producto y empieza a vender en la plataforma.</p>
-                <button className={styles.btnPrimarySmall} onClick={abrirCrear}>+ Agregar primer producto</button>
+                <p className={styles.emptyTitle}>No hay productos</p>
+                <p className={styles.emptyDesc}>
+                  {puedeCrearNuevoProducto() 
+                    ? "Agrega tu primer producto y empieza a vender en la plataforma." 
+                    : "Necesitas tener un emprendimiento activo para agregar productos."}
+                </p>
+                {puedeCrearNuevoProducto() && (
+                  <button className={styles.btnPrimarySmall} onClick={abrirCrear}>+ Agregar primer producto</button>
+                )}
               </>
             )}
           </div>
         )}
 
-        {puedeGestionarProductos() && productosFiltrados.length > 0 && vista === "grid" && (
+        {productosFiltrados.length > 0 && vista === "grid" && (
           <div className={styles.productosGrid}>
             {productosFiltrados.map((p, idx) => {
               const pid = p.id || p._id || `temp_${p.nombre}_${idx}`;
+              const esEditable = productoEsEditable(p);
+              const estadoEmp = p.emprendimientoEstado;
+              
               return (
-                <div key={pid} className={styles.productoCard}>
+                <div key={pid} className={`${styles.productoCard} ${!esEditable ? styles.productoCardSuspendido : ""}`}>
                   {p.imagen
                     ? <img src={p.imagen} alt={p.nombre} className={styles.productoCardImg} />
                     : <div className={styles.productoCardPlaceholder}>{p.nombre[0]?.toUpperCase()}</div>
                   }
                   <div className={styles.productoCardBody}>
                     <p className={styles.productoCardNombre}>{p.nombre}</p>
-                    {p.emprendimientoNombre && (
-                      <p className={styles.productoCardEmprendimiento}>{p.emprendimientoNombre}</p>
-                    )}
+                    <div className={styles.productoCardEmprendimiento}>
+                      <span className={styles.emprendimientoLabel}>Emprendimiento:</span>
+                      <span className={`${styles.emprendimientoNombre} ${estadoEmp === "suspendido" ? styles.emprendimientoSuspendido : ""}`}>
+                        {p.emprendimientoNombre}
+                      </span>
+                      {estadoEmp !== "activo" && (
+                        <span className={`${styles.estadoEmpBadge} ${styles[`estadoEmp_${estadoEmp}`]}`}>
+                          {estadoEmp === "suspendido" ? "Suspendido" : 
+                           estadoEmp === "pendiente" ? "En revisión" : 
+                           estadoEmp === "rechazado" ? "Rechazado" : estadoEmp}
+                        </span>
+                      )}
+                    </div>
                     <div className={styles.productoCardBottom}>
                       <span className={styles.productoCardPrecio}>${p.precio.toLocaleString("es-CO")}</span>
                       <span className={`${styles.productoCardStock} ${p.stock === 0 ? styles.stockAgotado : p.stock <= 3 ? styles.stockBajo : ""}`}>
@@ -516,8 +549,22 @@ export default function ProductosPage() {
                     </div>
                   </div>
                   <div className={styles.productoCardAcciones}>
-                    <button className={styles.btnEditar} onClick={() => abrirEditar(p)}>Editar</button>
-                    <button className={styles.btnEliminar} onClick={() => abrirEliminar(p)}>Eliminar</button>
+                    <button 
+                      className={`${styles.btnEditar} ${!esEditable ? styles.btnDisabled : ""}`}
+                      onClick={() => abrirEditar(p)}
+                      disabled={!esEditable}
+                      title={!esEditable ? `No puedes editar productos de un emprendimiento ${estadoEmp}` : ""}
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      className={`${styles.btnEliminar} ${!esEditable ? styles.btnDisabled : ""}`}
+                      onClick={() => abrirEliminar(p)}
+                      disabled={!esEditable}
+                      title={!esEditable ? `No puedes eliminar productos de un emprendimiento ${estadoEmp}` : ""}
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 </div>
               );
@@ -525,12 +572,15 @@ export default function ProductosPage() {
           </div>
         )}
 
-        {puedeGestionarProductos() && productosFiltrados.length > 0 && vista === "lista" && (
+        {productosFiltrados.length > 0 && vista === "lista" && (
           <div className={styles.productosLista}>
             {productosFiltrados.map((p, idx) => {
               const pid = p.id || p._id || `temp_${p.nombre}_${idx}`;
+              const esEditable = productoEsEditable(p);
+              const estadoEmp = p.emprendimientoEstado;
+              
               return (
-                <div key={pid} className={styles.productoListaRow}>
+                <div key={pid} className={`${styles.productoListaRow} ${!esEditable ? styles.productoListaRowSuspendido : ""}`}>
                   <div className={styles.productoListaImg}>
                     {p.imagen
                       ? <img src={p.imagen} alt={p.nombre} />
@@ -539,17 +589,39 @@ export default function ProductosPage() {
                   </div>
                   <div className={styles.productoListaInfo}>
                     <p className={styles.productoListaNombre}>{p.nombre}</p>
-                    {p.emprendimientoNombre && (
-                      <p className={styles.productoListaEmprendimiento}>{p.emprendimientoNombre}</p>
-                    )}
+                    <div className={styles.productoListaEmprendimiento}>
+                      <span className={styles.emprendimientoLabel}>Emprendimiento:</span>
+                      <span className={`${styles.emprendimientoNombre} ${estadoEmp === "suspendido" ? styles.emprendimientoSuspendido : ""}`}>
+                        {p.emprendimientoNombre}
+                      </span>
+                      {estadoEmp !== "activo" && (
+                        <span className={`${styles.estadoEmpBadge} ${styles[`estadoEmp_${estadoEmp}`]}`}>
+                          {estadoEmp === "suspendido" ? "Suspendido" : 
+                           estadoEmp === "pendiente" ? "En revisión" : 
+                           estadoEmp === "rechazado" ? "Rechazado" : estadoEmp}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <span className={styles.productoListaPrecio}>${p.precio.toLocaleString("es-CO")}</span>
                   <span className={`${styles.productoListaStock} ${p.stock === 0 ? styles.stockAgotado : p.stock <= 3 ? styles.stockBajo : ""}`}>
                     {p.stock === 0 ? "Agotado" : `${p.stock} en stock`}
                   </span>
                   <div className={styles.productoListaAcciones}>
-                    <button className={styles.btnEditar} onClick={() => abrirEditar(p)}>Editar</button>
-                    <button className={styles.btnEliminar} onClick={() => abrirEliminar(p)}>Eliminar</button>
+                    <button 
+                      className={`${styles.btnEditar} ${!esEditable ? styles.btnDisabled : ""}`}
+                      onClick={() => abrirEditar(p)}
+                      disabled={!esEditable}
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      className={`${styles.btnEliminar} ${!esEditable ? styles.btnDisabled : ""}`}
+                      onClick={() => abrirEliminar(p)}
+                      disabled={!esEditable}
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 </div>
               );

@@ -53,15 +53,15 @@ export default function LoginPage() {
       // 👈 REDIRECCIÓN SEGÚN TIPO DE USUARIO
       const tipoUsuario = data.tipoUsuario?.toLowerCase();
       
-      if (tipoUsuario === "emprendedor") {
-        router.push("/inicioemprendedor");
-      } else if (tipoUsuario === "estudiante" || tipoUsuario === "administrativo") {
-        // Tanto estudiantes como administrativos van a la misma interfaz
-        router.push("/inicioestudiante");
-      } else if (tipoUsuario === "admin") {
+      if (tipoUsuario === "admin") {
         router.push("/inicioadmin");
-      }
-      else {
+      } else if (tipoUsuario === "emprendedor") {
+        router.push("/inicioemprendedor");
+      } else if (tipoUsuario === "estudiante") {
+        router.push("/inicioestudiante");
+      } else if (tipoUsuario === "administrativo") {
+        router.push("/inicioAdministrativo");
+      } else {
         console.warn("Tipo de usuario no reconocido:", tipoUsuario);
         router.push("/");
       }
