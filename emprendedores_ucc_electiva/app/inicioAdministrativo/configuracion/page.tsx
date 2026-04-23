@@ -35,10 +35,15 @@ export default function ConfiguracionAdministrativoPage() {
     setEditNombre(nombre);
     setEmail(usuario.correo || "");
     setUsuarioId(id);
-    setCargo(usuario.cargo || "");
-    setEditCargo(usuario.cargo || "");
-    setDependencia(usuario.dependencia || "");
-    setEditDependencia(usuario.dependencia || "");
+    
+    // 🔥 Cargar cargo y dependencia desde localStorage
+    const cargoLocal = localStorage.getItem(`cargo_${id}`);
+    const dependenciaLocal = localStorage.getItem(`dependencia_${id}`);
+    
+    setCargo(cargoLocal || usuario.cargo || "");
+    setEditCargo(cargoLocal || usuario.cargo || "");
+    setDependencia(dependenciaLocal || usuario.dependencia || "");
+    setEditDependencia(dependenciaLocal || usuario.dependencia || "");
     setTelefono(usuario.telefono || "");
     setEditTelefono(usuario.telefono || "");
   }, []);
@@ -71,8 +76,6 @@ export default function ConfiguracionAdministrativoPage() {
         nombre: editNombre,
         apellido: usuarioActual.apellido,
         telefono: editTelefono,
-        cargo: editCargo,
-        dependencia: editDependencia,
         tipoUsuario: usuarioActual.tipoUsuario
       };
       
@@ -87,14 +90,15 @@ export default function ConfiguracionAdministrativoPage() {
         throw new Error(errorData.message || "Error al actualizar perfil");
       }
       
-      const usuarioGuardado = await resUpdate.json();
+      // 🔥 GUARDAR CARGO Y DEPENDENCIA EN localStorage
+      localStorage.setItem(`cargo_${usuarioId}`, editCargo);
+      localStorage.setItem(`dependencia_${usuarioId}`, editDependencia);
       
+      // Actualizar sessionStorage
       sessionStorage.setItem("nombreUsuario", editNombre);
       const usuarioStorage = JSON.parse(sessionStorage.getItem("usuario") || "{}");
       usuarioStorage.nombre = editNombre;
       usuarioStorage.telefono = editTelefono;
-      usuarioStorage.cargo = editCargo;
-      usuarioStorage.dependencia = editDependencia;
       sessionStorage.setItem("usuario", JSON.stringify(usuarioStorage));
       
       setNombreUsuario(editNombre);
@@ -202,7 +206,7 @@ export default function ConfiguracionAdministrativoPage() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-        <Link href="/inicioadministrativo" className={styles.back}>← Volver al inicio</Link>
+        <Link href="/inicioAdministrativo" className={styles.back}>← Volver al inicio</Link>
         <h1 className={styles.title}>Configuración</h1>
 
         <div className={styles.content}>

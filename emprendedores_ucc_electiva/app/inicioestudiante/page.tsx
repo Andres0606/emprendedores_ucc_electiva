@@ -96,16 +96,20 @@ export default function InicioEstudiantePage() {
   const [pedidoCreado, setPedidoCreado] = useState(false);
 
   // Función para cerrar sesión
-  const handleCerrarSesion = () => {
-    if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
-      sessionStorage.clear();
-      localStorage.removeItem("categoriasInteres");
-      if (usuarioId) {
-        localStorage.removeItem(`carrito_${usuarioId}`);
-      }
-      router.push("/");
-    }
-  };
+const handleCerrarSesion = () => {
+  if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+    // 🔥 SOLO limpiar sessionStorage (datos de sesión)
+    sessionStorage.clear();
+    
+    // ❌ NO borrar localStorage
+    // localStorage.removeItem("categoriasInteres");
+    // if (usuarioId) {
+    //   localStorage.removeItem(`carrito_${usuarioId}`);
+    // }
+    
+    router.push("/");
+  }
+};
 
   // Funciones del carrito con ID de usuario
   const leerCarrito = () => {
@@ -249,9 +253,11 @@ export default function InicioEstudiantePage() {
           <div class="factura">
             <div class="header"><h1>EmprendedoresUCC</h1><p>Universidad Cooperativa de Colombia</p><p>Villavicencio, Meta</p></div>
             <div class="info"><div><p><strong>Factura N°:</strong> ${numFactura}</p><p><strong>Fecha:</strong> ${fechaFactura}</p></div><div><p><strong>Cliente:</strong> ${nombreUsuario}</p></div></div>
-            <table><thead><tr><th>Producto</th><th>Emprendimiento</th><th class="text-center">Cant.</th><th class="text-right">Precio u.</th><th class="text-right">Total</th></tr></thead>
+            </table><thead><tr><th>Producto</th><th>Emprendimiento</th><th class="text-center">Cant.</th><th class="text-right">Precio u.</th><th class="text-right">Total</th></tr></thead>
             <tbody>${itemsCarrito.map(item => `<tr><td>${item.nombre}</td><td>${item.emprendimientoNombre}</td><td class="text-center">${item.cantidad}</td><td class="text-right">${fmt(item.precio)}</td><td class="text-right">${fmt(item.precio * item.cantidad)}</td></tr>`).join('')}</tbody></table>
-            <div class="totales"><table><tr><td>Subtotal</td><td class="text-right">${fmt(subtotal)}</td></tr><tr><td>Descuento</td><td class="text-right">$0</td></tr><tr class="total-final"><td><strong>TOTAL A PAGAR</strong></td><td class="text-right"><strong>${fmt(subtotal)}</strong></td></tr></table></div>
+            <div class="totales"><table><td>Subtotal</td><td class="text-right">${fmt(subtotal)}</td></tr>
+            <tr><td>Descuento</td><td class="text-right">$0</td></tr>
+            <tr class="total-final"><td><strong>TOTAL A PAGAR</strong></td><td class="text-right"><strong>${fmt(subtotal)}</strong></td></tr></table></div>
             <div class="aviso">⚠️ Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.</div>
             <div class="footer"><p>Gracias por apoyar los emprendimientos estudiantiles</p><p>EmprendedoresUCC · Universidad Cooperativa de Colombia · Villavicencio</p></div>
           </div>
@@ -475,6 +481,43 @@ export default function InicioEstudiantePage() {
     
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  // 🔥 CARGAR CARRITO - VERSIÓN CORREGIDA PARA ESTUDIANTE
+  useEffect(() => {
+    const cargarCarrito = () => {
+      const uid = sessionStorage.getItem("usuarioId");
+      if (uid) {
+        const carrito = localStorage.getItem(`carrito_${uid}`);
+        if (carrito) {
+          const items = JSON.parse(carrito);
+          setItemsCarrito(items);
+          console.log("🛒 Carrito cargado:", items.length, "productos");
+        } else {
+          setItemsCarrito([]);
+        }
+      }
+    };
+    
+    cargarCarrito();
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith("carrito_")) {
+        cargarCarrito();
+      }
+    };
+    
+    const handleFocus = () => {
+      cargarCarrito();
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleFocus);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
   const esEstudiante = tipoUsuario === "estudiante";

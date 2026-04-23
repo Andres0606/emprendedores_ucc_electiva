@@ -74,6 +74,7 @@ export default function HomePage() {
   const [usuarios, setUsuarios] = useState<Map<string, Usuario>>(new Map());
   const [categorias, setCategorias] = useState<Map<string, Categoria>>(new Map());
   const [categoriesList, setCategoriesList] = useState<Categoria[]>(CATEGORIAS_POR_DEFECTO);
+  const [todosLosActivos, setTodosLosActivos] = useState<Emprendimiento[]>([]);
   
   // Estadísticas reales
   const [stats, setStats] = useState([
@@ -194,6 +195,16 @@ export default function HomePage() {
     return map;
   };
 
+  // Función auxiliar para extraer semestre de la carrera
+  const extraerSemestre = (carrera: string): string => {
+    if (!carrera) return "Estudiante";
+    const match = carrera.match(/(\d+)(?:er|do|to|°)?\s*semestre/i);
+    if (match) {
+      return `${match[1]}° semestre`;
+    }
+    return "Estudiante";
+  };
+
   useEffect(() => {
     const cargarDatos = async () => {
       try {
@@ -213,8 +224,9 @@ export default function HomePage() {
         const emprendimientos: Emprendimiento[] = await respuesta.json();
         console.log("📦 Emprendimientos recibidos:", emprendimientos.length);
         
-        // Filtrar solo los activos para mostrar
+        // Filtrar solo los activos
         const activos = emprendimientos.filter(emp => emp.estado === "activo");
+        setTodosLosActivos(activos);  // 🔥 Guardar todos los activos para el contador de categorías
         
         // Obtener información de los usuarios
         const usuariosMap = new Map<string, Usuario>();
@@ -229,7 +241,7 @@ export default function HomePage() {
         
         setUsuarios(usuariosMap);
         
-        // Transformar emprendimientos para mostrar
+        // Transformar emprendimientos para mostrar (solo los primeros 4)
         const venturesDisplay = activos.slice(0, 4).map(emp => {
           const usuario = usuariosMap.get(emp.usuarioId);
           const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido}` : "Estudiante UCC";
@@ -294,16 +306,6 @@ export default function HomePage() {
     
     cargarDatos();
   }, []);
-
-  // Función auxiliar para extraer semestre de la carrera
-  const extraerSemestre = (carrera: string): string => {
-    if (!carrera) return "Estudiante";
-    const match = carrera.match(/(\d+)(?:er|do|to|°)?\s*semestre/i);
-    if (match) {
-      return `${match[1]}° semestre`;
-    }
-    return "Estudiante";
-  };
 
   if (loading) {
     return (
@@ -420,7 +422,7 @@ export default function HomePage() {
             <div className={styles.aboutRight}>
               <div className={styles.aboutGrid}>
                 <div className={`${styles.aboutBox} ${styles.aboutBoxBlue}`}>
-                  <span className={styles.aboutBoxNum}>2020</span>
+                  <span className={styles.aboutBoxNum}>2026</span>
                   <span className={styles.aboutBoxLbl}>Año de fundación</span>
                 </div>
                 <div className={`${styles.aboutBox} ${styles.aboutBoxGreen}`}>
@@ -473,7 +475,8 @@ export default function HomePage() {
             </div>
             <div className={styles.categoriesGrid}>
               {categoriesList.map((cat) => {
-                const count = featuredVentures.filter(v => v.categoryId === cat._id).length;
+                // 🔥 Usar todos los emprendimientos activos para contar
+                const count = todosLosActivos.filter(emp => emp.categoriaId?.toString() === cat._id).length;
                 return (
                   <Link
                     key={cat._id}

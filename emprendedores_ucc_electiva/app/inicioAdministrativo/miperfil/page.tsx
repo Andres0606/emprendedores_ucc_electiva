@@ -4,6 +4,17 @@ import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioAdministrativo/miperfil.module.css";
 import Link from "next/link";
 
+// Categorías
+const CATEGORIAS = [
+  { id: 1, label: "Gastronomía" },
+  { id: 2, label: "Moda y Diseño" },
+  { id: 3, label: "Salud y Bienestar" },
+  { id: 4, label: "Arte y Cultura" },
+  { id: 5, label: "Servicios" },
+  { id: 6, label: "Comida" },
+  { id: 7, label: "Tecnología" },
+];
+
 export default function MiPerfilAdministrativoPage() {
   const [tipoUsuario, setTipoUsuario] = useState("administrativo");
   const [nombreUsuario, setNombreUsuario] = useState("");
@@ -12,18 +23,19 @@ export default function MiPerfilAdministrativoPage() {
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [compras, setCompras] = useState<any[]>([]);
+  const [selectedCats, setSelectedCats] = useState<Set<number>>(new Set());
+  const [editingCats, setEditingCats] = useState(false);
 
   useEffect(() => {
     const cargarDatosUsuario = async () => {
       try {
         const tipo = sessionStorage.getItem("tipoUsuario") || "administrativo";
-        const nombre = sessionStorage.getItem("nombreUsuario") || "Usuario";
         const usuarioId = sessionStorage.getItem("usuarioId");
         const usuarioGuardado = sessionStorage.getItem("usuario");
 
-        let nombreCompleto = nombre;
-        let cargoData = "";
-        let dependenciaData = "";
+        // Cargar nombre desde sessionStorage
+        let nombreCompleto = "Usuario";
         let emailData = "";
         let telefonoData = "";
 
@@ -32,12 +44,9 @@ export default function MiPerfilAdministrativoPage() {
             const usuario = JSON.parse(usuarioGuardado);
             if (usuario.nombre && usuario.apellido) {
               nombreCompleto = `${usuario.nombre} ${usuario.apellido}`;
-              sessionStorage.setItem("nombreUsuario", nombreCompleto);
             } else if (usuario.nombre) {
               nombreCompleto = usuario.nombre;
             }
-            cargoData = usuario.cargo || "Cargo no especificado";
-            dependenciaData = usuario.dependencia || "Dependencia no especificada";
             emailData = usuario.correo || "";
             telefonoData = usuario.telefono || "";
           } catch (e) {
@@ -45,21 +54,15 @@ export default function MiPerfilAdministrativoPage() {
           }
         }
 
-        // Si no tenemos los datos completos, consultar al backend
-        if (usuarioId && (!cargoData || cargoData === "Cargo no especificado")) {
-          try {
-            const res = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
-            if (res.ok) {
-              const data = await res.json();
-              cargoData = data.cargo || data.puesto || "Cargo no especificado";
-              dependenciaData = data.dependencia || data.area || "Dependencia no especificada";
-              emailData = data.correo || emailData;
-              telefonoData = data.telefono || telefonoData;
-            }
-          } catch (error) {
-            console.error("Error al obtener datos del backend:", error);
-          }
-        }
+        // 🔥 Cargar cargo y dependencia DIRECTAMENTE desde localStorage
+        const cargoLocal = localStorage.getItem(`cargo_${usuarioId}`);
+        const dependenciaLocal = localStorage.getItem(`dependencia_${usuarioId}`);
+        
+        const cargoData = cargoLocal || "Cargo no especificado";
+        const dependenciaData = dependenciaLocal || "Dependencia no especificada";
+
+        console.log("📌 Cargo desde localStorage:", cargoData);
+        console.log("📌 Dependencia desde localStorage:", dependenciaData);
 
         setTipoUsuario(tipo.toLowerCase());
         setNombreUsuario(nombreCompleto);
@@ -68,6 +71,16 @@ export default function MiPerfilAdministrativoPage() {
         setEmail(emailData);
         setTelefono(telefonoData);
 
+        // Cargar categorías guardadas
+        const catsGuardadas = localStorage.getItem("categoriasInteres_admin");
+        if (catsGuardadas && catsGuardadas !== "[]") {
+          setSelectedCats(new Set(JSON.parse(catsGuardadas)));
+        } else {
+          setSelectedCats(new Set());
+        }
+
+        await cargarCompras(usuarioId);
+
       } catch (error) {
         console.error("Error al cargar datos del usuario:", error);
       } finally {
@@ -75,16 +88,33 @@ export default function MiPerfilAdministrativoPage() {
       }
     };
 
+    const cargarCompras = async (usuarioId: string | null) => {
+      if (!usuarioId) return;
+      try {
+        setCompras([]);
+      } catch (error) {
+        console.error("Error al cargar compras:", error);
+        setCompras([]);
+      }
+    };
+
     cargarDatosUsuario();
   }, []);
+
+  // Guardar categorías
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem("categoriasInteres_admin", JSON.stringify(Array.from(selectedCats)));
+    }
+  }, [selectedCats, isLoading]);
+
+  const esAdministrativo = tipoUsuario === "administrativo";
 
   if (isLoading) {
     return (
       <main className={styles.main}>
         <div className={styles.container}>
-          <div style={{ textAlign: "center", padding: "4rem" }}>
-            <div>Cargando perfil...</div>
-          </div>
+          <div style={{ textAlign: "center", padding: "4rem" }}>Cargando perfil...</div>
         </div>
       </main>
     );
@@ -93,12 +123,10 @@ export default function MiPerfilAdministrativoPage() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-
-        <Link href="/inicioadministrativo" className={styles.back}>
+        <Link href="/inicioAdministrativo" className={styles.back}>
           ← Volver al inicio
         </Link>
 
-        {/* Header */}
         <div className={styles.profileHeader}>
           <div className={styles.avatarWrap}>
             <div className={styles.avatar}>
@@ -108,24 +136,23 @@ export default function MiPerfilAdministrativoPage() {
 
           <div className={styles.profileInfo}>
             <h1 className={styles.profileName}>{nombreUsuario}</h1>
-            <span className={styles.profileBadge}>Administrativo UCC</span>
-            {cargo && cargo !== "Cargo no especificado" && (
+            <span className={styles.profileBadge}>
+              {esAdministrativo ? "Administrativo UCC" : "Usuario"}
+            </span>
+            {esAdministrativo && cargo && cargo !== "Cargo no especificado" && (
               <p className={styles.profileCargo}>{cargo}</p>
             )}
-            {dependencia && dependencia !== "Dependencia no especificada" && (
+            {esAdministrativo && dependencia && dependencia !== "Dependencia no especificada" && (
               <p className={styles.profileDependencia}>{dependencia}</p>
             )}
           </div>
 
-          <Link href="/inicioadministrativo/configuracion" className={styles.configBtn}>
+          <Link href="/inicioAdministrativo/configuracion" className={styles.configBtn}>
             Configuración
           </Link>
         </div>
 
-        {/* Grid */}
         <div className={styles.profileGrid}>
-
-          {/* Información laboral */}
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>Información laboral</h2>
             <ul className={styles.dataList}>
@@ -148,57 +175,91 @@ export default function MiPerfilAdministrativoPage() {
             </ul>
           </section>
 
-          {/* Estadísticas de la plataforma */}
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Estadísticas UCC Emprende</h2>
-            <ul className={styles.dataList}>
-              <li>
-                <span className={styles.dataKey}>Emprendimientos activos</span>
-                <span className={styles.dataVal}>---</span>
-              </li>
-              <li>
-                <span className={styles.dataKey}>Estudiantes emprendedores</span>
-                <span className={styles.dataVal}>---</span>
-              </li>
-              <li>
-                <span className={styles.dataKey}>Productos publicados</span>
-                <span className={styles.dataVal}>---</span>
-              </li>
-              <li>
-                <span className={styles.dataKey}>Eventos realizados</span>
-                <span className={styles.dataVal}>---</span>
-              </li>
-            </ul>
+            <h2 className={styles.cardTitle}>Mis compras</h2>
+            {compras && compras.length > 0 ? (
+              <div className={styles.comprasList}>
+                {compras.map((compra, index) => (
+                  <div key={index} className={styles.compraItem}>
+                    <div className={styles.compraInfo}>
+                      <p className={styles.compraNombre}>{compra.productoNombre || "Producto"}</p>
+                      <p className={styles.compraDetalle}>
+                        {compra.emprendimientoNombre} • {compra.cantidad} unidades
+                      </p>
+                      <p className={styles.compraFecha}>
+                        {compra.fecha ? new Date(compra.fecha).toLocaleDateString('es-CO') : "Fecha no disponible"}
+                      </p>
+                    </div>
+                    <div className={styles.compraTotal}>
+                      ${compra.total?.toLocaleString() || "0"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.noDataText}>Aún no has realizado compras</p>
+            )}
           </section>
 
-          {/* Funciones del rol */}
           <section className={`${styles.card} ${styles.cardFull}`}>
-            <h2 className={styles.cardTitle}>Funciones como administrativo</h2>
-            <div className={styles.funcionesList}>
-              <div className={styles.funcionItem}>
-                <span className={styles.funcionIcon}>👁️</span>
-                <div>
-                  <p className={styles.funcionTitle}>Visibilidad general</p>
-                  <p className={styles.funcionDesc}>Acceso a todos los emprendimientos registrados en la plataforma.</p>
-                </div>
-              </div>
-              <div className={styles.funcionItem}>
-                <span className={styles.funcionIcon}>📊</span>
-                <div>
-                  <p className={styles.funcionTitle}>Estadísticas</p>
-                  <p className={styles.funcionDesc}>Visualización de métricas y crecimiento de la comunidad emprendedora.</p>
-                </div>
-              </div>
-              <div className={styles.funcionItem}>
-                <span className={styles.funcionIcon}>🎓</span>
-                <div>
-                  <p className={styles.funcionTitle}>Apoyo institucional</p>
-                  <p className={styles.funcionDesc}>Promoción y difusión de los emprendimientos UCC.</p>
-                </div>
-              </div>
+            <div className={styles.catHeader}>
+              <h2 className={styles.cardTitle}>Categorías de interés</h2>
+              <button
+                className={`${styles.catEditBtn} ${editingCats ? styles.catEditBtnActive : ""}`}
+                onClick={() => setEditingCats(!editingCats)}
+              >
+                {editingCats ? "✓ Listo" : "Editar"}
+              </button>
+            </div>
+
+            <div className={styles.selectedCats}>
+              {selectedCats.size === 0 ? (
+                <span className={styles.noSelected}>
+                  {editingCats 
+                    ? "Haz clic en las categorías de abajo para seleccionar tus intereses" 
+                    : "No has seleccionado categorías de interés. Haz clic en 'Editar' para personalizar."}
+                </span>
+              ) : (
+                Array.from(selectedCats).map((id) => {
+                  const cat = CATEGORIAS.find((c) => c.id === id)!;
+                  return (
+                    <span key={id} className={styles.catChipSelected}>
+                      {cat.label}
+                      {editingCats && (
+                        <span
+                          className={styles.catChipX}
+                          onClick={() => {
+                            const next = new Set(selectedCats);
+                            next.delete(id);
+                            setSelectedCats(next);
+                          }}
+                        >✕</span>
+                      )}
+                    </span>
+                  );
+                })
+              )}
+            </div>
+
+            <hr className={styles.catDivider} />
+            
+            <p className={styles.catAllLabel}>Todas las categorías</p>
+            <div className={styles.allCats}>
+              {CATEGORIAS.map((cat) => (
+                <span
+                  key={cat.id}
+                  className={`${styles.catChipOpt} ${selectedCats.has(cat.id) ? styles.catChipOptDisabled : ""}`}
+                  onClick={() => {
+                    if (!selectedCats.has(cat.id)) {
+                      setSelectedCats(new Set([...selectedCats, cat.id]));
+                    }
+                  }}
+                >
+                  {cat.label}
+                </span>
+              ))}
             </div>
           </section>
-
         </div>
       </div>
     </main>

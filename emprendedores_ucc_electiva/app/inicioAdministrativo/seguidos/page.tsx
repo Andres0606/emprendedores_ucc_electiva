@@ -24,7 +24,7 @@ interface Emprendimiento {
 }
 
 interface Categoria {
-  _id: string;
+  id: string;
   nombre: string;
   descripcion: string;
 }
@@ -32,12 +32,9 @@ interface Categoria {
 export default function SeguidosAdministrativoPage() {
   const [seguidos, setSeguidos] = useState<Emprendimiento[]>([]);
   const [search, setSearch] = useState("");
-  const [tipoUsuario, setTipoUsuario] = useState("administrativo");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [categoriasMap, setCategoriasMap] = useState<Map<string, string>>(new Map());
 
-  // Obtener categorías para mapear nombres
   const obtenerCategorias = async (): Promise<Map<string, string>> => {
     try {
       const res = await fetch("http://localhost:8080/api/categorias");
@@ -46,7 +43,9 @@ export default function SeguidosAdministrativoPage() {
       const data: Categoria[] = await res.json();
       const map = new Map<string, string>();
       data.forEach(cat => {
-        map.set(cat._id, cat.nombre);
+        // 🔥 USAR cat.id (el backend devuelve "id")
+        map.set(cat.id, cat.nombre);
+        console.log(`✅ Categoría mapeada: ${cat.id} -> ${cat.nombre}`);
       });
       return map;
     } catch (error) {
@@ -55,7 +54,6 @@ export default function SeguidosAdministrativoPage() {
     }
   };
 
-  // Obtener los emprendimientos que sigue el usuario
   const obtenerSeguidos = async (usuarioId: string): Promise<Emprendimiento[]> => {
     try {
       const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
@@ -74,7 +72,6 @@ export default function SeguidosAdministrativoPage() {
     }
   };
 
-  // Dejar de seguir un emprendimiento
   const handleDejarSeguir = async (emprendimientoId: string) => {
     try {
       const usuarioId = sessionStorage.getItem("usuarioId");
@@ -85,17 +82,11 @@ export default function SeguidosAdministrativoPage() {
 
       const res = await fetch(`http://localhost:8080/api/seguimientos/dejar-de-seguir`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          usuarioId,
-          emprendimientoId
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuarioId, emprendimientoId })
       });
 
       if (res.ok) {
-        // Eliminar de la lista local
         setSeguidos(prev => prev.filter(s => (s.id || s._id) !== emprendimientoId));
         alert("Dejaste de seguir este emprendimiento");
       } else {
@@ -114,10 +105,7 @@ export default function SeguidosAdministrativoPage() {
       setError(null);
       
       try {
-        const tipo = sessionStorage.getItem("tipoUsuario") || "administrativo";
         const usuarioId = sessionStorage.getItem("usuarioId");
-        
-        setTipoUsuario(tipo.toLowerCase());
         
         if (!usuarioId) {
           setError("No se encontró información de usuario");
@@ -127,18 +115,22 @@ export default function SeguidosAdministrativoPage() {
         
         console.log("🔍 Cargando seguidos para usuario:", usuarioId);
         
-        // Obtener categorías
-        const categorias = await obtenerCategorias();
-        setCategoriasMap(categorias);
+        const [categorias, seguidosData] = await Promise.all([
+          obtenerCategorias(),
+          obtenerSeguidos(usuarioId)
+        ]);
         
-        // Obtener emprendimientos seguidos
-        const seguidosData = await obtenerSeguidos(usuarioId);
+        console.log("📚 Mapa de categorías:", Array.from(categorias.entries()));
         
-        // Agregar nombre de categoría a cada emprendimiento
-        const seguidosConCategoria = seguidosData.map(emp => ({
-          ...emp,
-          categoriaNombre: categorias.get(emp.categoriaId) || "Sin categoría"
-        }));
+        const seguidosConCategoria = seguidosData.map(emp => {
+          const catId = emp.categoriaId;
+          const categoriaNombre = categorias.get(catId);
+          console.log(`🔍 "${emp.nombre}" - categoriaId: ${catId} -> ${categoriaNombre || "NO ENCONTRADA"}`);
+          return {
+            ...emp,
+            categoriaNombre: categoriaNombre || "Sin categoría"
+          };
+        });
         
         setSeguidos(seguidosConCategoria);
         console.log("✅ Seguidos cargados:", seguidosConCategoria.length);
@@ -162,9 +154,7 @@ export default function SeguidosAdministrativoPage() {
     return (
       <main className={styles.main}>
         <div className={styles.container}>
-          <div style={{ textAlign: "center", padding: "4rem" }}>
-            <div>Cargando emprendimientos seguidos...</div>
-          </div>
+          <div style={{ textAlign: "center", padding: "4rem" }}>Cargando emprendimientos seguidos...</div>
         </div>
       </main>
     );
@@ -174,20 +164,12 @@ export default function SeguidosAdministrativoPage() {
     return (
       <main className={styles.main}>
         <div className={styles.container}>
-          <Link href="/inicioadministrativo" className={styles.back}>← Volver al inicio</Link>
+          <Link href="/inicioAdministrativo" className={styles.back}>← Volver al inicio</Link>
           <div style={{ textAlign: "center", padding: "4rem", color: "#dc2626" }}>
             <p>❌ {error}</p>
             <button 
               onClick={() => window.location.reload()}
-              style={{
-                marginTop: "1rem",
-                padding: "0.5rem 1rem",
-                backgroundColor: "#009FE3",
-                color: "white",
-                border: "none",
-                borderRadius: "0.5rem",
-                cursor: "pointer"
-              }}
+              style={{ marginTop: "1rem", padding: "0.5rem 1rem", backgroundColor: "#009FE3", color: "white", border: "none", borderRadius: "0.5rem", cursor: "pointer" }}
             >
               Reintentar
             </button>
@@ -200,19 +182,14 @@ export default function SeguidosAdministrativoPage() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-
-        <Link href="/inicioadministrativo" className={styles.back}>← Volver al inicio</Link>
+        <Link href="/inicioAdministrativo" className={styles.back}>← Volver al inicio</Link>
 
         <div className={styles.header}>
           <div>
             <h1 className={styles.title}>Emprendimientos seguidos</h1>
-            <p className={styles.subtitle}>
-              Emprendimientos que estás siguiendo — {seguidos.length} en total
-            </p>
+            <p className={styles.subtitle}>Emprendimientos que estás siguiendo — {seguidos.length} en total</p>
           </div>
-          <Link href="/emprendimientos" className={styles.btnExplore}>
-            + Explorar más
-          </Link>
+          <Link href="/emprendimientos" className={styles.btnExplore}>+ Explorar más</Link>
         </div>
 
         <div className={styles.searchWrap}>
@@ -239,9 +216,7 @@ export default function SeguidosAdministrativoPage() {
               const emprendimientoId = s.id || s._id || "";
               return (
                 <li key={emprendimientoId} className={styles.item}>
-                  <div className={styles.itemAvatar}>
-                    {s.nombre.charAt(0)}
-                  </div>
+                  <div className={styles.itemAvatar}>{s.nombre.charAt(0)}</div>
                   <div className={styles.itemInfo}>
                     <p className={styles.itemName}>{s.nombre}</p>
                     <p className={styles.itemMeta}>
@@ -251,22 +226,14 @@ export default function SeguidosAdministrativoPage() {
                     </p>
                   </div>
                   <div className={styles.itemActions}>
-                    <Link href={`/emprendimientos/${emprendimientoId}`} className={styles.btnView}>
-                      Ver
-                    </Link>
-                    <button
-                      className={styles.btnDejar}
-                      onClick={() => handleDejarSeguir(emprendimientoId)}
-                    >
-                      Dejar de seguir
-                    </button>
+                    <Link href={`/emprendimientos/${emprendimientoId}`} className={styles.btnView}>Ver</Link>
+                    <button className={styles.btnDejar} onClick={() => handleDejarSeguir(emprendimientoId)}>Dejar de seguir</button>
                   </div>
                 </li>
               );
             })}
           </ul>
         )}
-
       </div>
     </main>
   );

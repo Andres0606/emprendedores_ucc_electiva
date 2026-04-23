@@ -16,6 +16,7 @@
   padding: 0 24px;
 }
 
+/* ── Back ── */
 .back {
   display: inline-flex;
   align-items: center;
@@ -29,7 +30,7 @@
 }
 .back:hover { color: #009FE3; }
 
-/* Profile Header */
+/* ── Profile Header ── */
 .profileHeader {
   display: flex;
   align-items: center;
@@ -43,7 +44,10 @@
   flex-wrap: wrap;
 }
 
-.avatarWrap { position: relative; flex-shrink: 0; }
+.avatarWrap { 
+  position: relative; 
+  flex-shrink: 0; 
+}
 
 .avatar {
   width: 78px;
@@ -86,7 +90,13 @@
   width: fit-content;
 }
 
-.profileCargo, .profileDependencia {
+.profileCargo {
+  font-size: 0.83rem;
+  color: #78909c;
+  margin: 0;
+}
+
+.profileDependencia {
   font-size: 0.83rem;
   color: #78909c;
   margin: 0;
@@ -108,7 +118,7 @@
   border-color: #009FE3;
 }
 
-/* Grid */
+/* ── Grid ── */
 .profileGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -123,7 +133,9 @@
   box-shadow: 0 2px 12px rgba(0,159,227,0.06);
 }
 
-.cardFull { grid-column: 1 / -1; }
+.cardFull { 
+  grid-column: 1 / -1; 
+}
 
 .cardTitle {
   font-size: 0.72rem;
@@ -134,7 +146,7 @@
   margin: 0 0 14px;
 }
 
-/* Data list */
+/* ── Data list ── */
 .dataList {
   list-style: none;
   margin: 0;
@@ -164,44 +176,196 @@
   color: #0d1b2a;
 }
 
-/* Funciones list */
-.funcionesList {
+/* ── Compras ── */
+.comprasList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
-.funcionItem {
+.compraItem {
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  padding: 12px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
   background: #f8fafc;
   border-radius: 10px;
-  transition: background 0.2s;
-}
-.funcionItem:hover { background: #e6f6fd; }
-
-.funcionIcon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
 }
 
-.funcionTitle {
-  font-size: 0.88rem;
+.compraInfo {
+  flex: 1;
+}
+
+.compraNombre {
+  font-size: 0.9rem;
   font-weight: 700;
   color: #0d1b2a;
   margin: 0 0 4px;
 }
 
-.funcionDesc {
-  font-size: 0.78rem;
+.compraDetalle {
+  font-size: 0.75rem;
   color: #64748b;
-  margin: 0;
-  line-height: 1.4;
+  margin: 0 0 4px;
 }
 
-/* Responsive */
+.compraFecha {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.compraTotal {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #009FE3;
+  flex-shrink: 0;
+}
+
+.noDataText {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px;
+  margin: 0;
+}
+
+/* ── Categorías de interés ── */
+.catHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.catHeader .cardTitle {
+  margin-bottom: 0;
+}
+
+.catEditBtn {
+  background: none;
+  border: 1.5px solid #009FE3;
+  color: #009FE3;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+}
+.catEditBtn:hover,
+.catEditBtnActive {
+  background: #009FE3;
+  color: #fff;
+}
+
+.selectedCats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 44px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.noSelected {
+  color: #b0bec5;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.catChipSelected {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  background: #009FE3;
+  color: #fff;
+  border: 1.5px solid #009FE3;
+  animation: catPopIn 0.18s ease;
+}
+
+@keyframes catPopIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.catChipX {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 19px;
+  height: 19px;
+  background: #ff4d4f;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 2px solid #fff;
+  font-weight: 900;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+  transition: transform 0.15s;
+}
+.catChipX:hover { transform: scale(1.25); }
+
+.catDivider {
+  border: none;
+  border-top: 1px solid #e0e7ef;
+  margin-bottom: 18px;
+}
+
+.catAllLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #78909c;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 12px;
+}
+
+.allCats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.catChipOpt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #e0e7ef;
+  background: #f5f7fa;
+  color: #37474f;
+  transition: all 0.18s;
+  user-select: none;
+}
+.catChipOpt:hover {
+  border-color: #009FE3;
+  color: #009FE3;
+  background: #e6f6fd;
+  transform: translateY(-1px);
+}
+.catChipOptDisabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Responsive ── */
 @media (max-width: 680px) {
   .profileGrid { grid-template-columns: 1fr; }
   .profileHeader { flex-direction: column; align-items: flex-start; }

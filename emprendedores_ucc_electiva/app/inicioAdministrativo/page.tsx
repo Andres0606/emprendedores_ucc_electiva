@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import styles from "../css/inicioadministrativo/inicioadministrativo.module.css";
+import styles from "../css/inicioAdministrativo/inicioadministrativo.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -62,9 +62,9 @@ interface ItemCarrito {
 }
 
 const quickLinks = [
-  { href: "/inicioadministrativo/miperfil", label: "Mi Perfil" },
-  { href: "/inicioadministrativo/seguidos", label: "Seguidos" },
-  { href: "/inicioadministrativo/configuracion", label: "Configuración" },
+  { href: "/inicioAdministrativo/miperfil", label: "Mi Perfil" },
+  { href: "/inicioAdministrativo/seguidos", label: "Seguidos" },
+  { href: "/inicioAdministrativo/configuracion", label: "Configuración" },
 ];
 
 const fmt = (precio: number) => `$${precio.toLocaleString()}`;
@@ -82,7 +82,6 @@ export default function InicioAdministrativoPage() {
   const [proximosEventos, setProximosEventos] = useState<Evento[]>([]);
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [loadingActividades, setLoadingActividades] = useState(true);
-  const [forceRender, setForceRender] = useState(0);
 
   // Carrito
   const [itemsCarrito, setItemsCarrito] = useState<ItemCarrito[]>([]);
@@ -97,36 +96,39 @@ export default function InicioAdministrativoPage() {
   const handleCerrarSesion = () => {
     if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
       sessionStorage.clear();
-      localStorage.removeItem("categoriasInteres");
-      if (usuarioId) {
-        localStorage.removeItem(`carrito_${usuarioId}`);
-      }
       router.push("/");
     }
   };
 
-  const leerCarrito = () => {
+  // 🔥 FUNCIÓN PARA CARGAR EL CARRITO (simplificada)
+  const cargarCarrito = () => {
     const uid = sessionStorage.getItem("usuarioId");
-    if (!uid) {
-      setItemsCarrito([]);
-      return;
+    if (uid) {
+      const carrito = localStorage.getItem(`carrito_${uid}`);
+      if (carrito) {
+        const items = JSON.parse(carrito);
+        setItemsCarrito(items);
+        console.log("🛒 Carrito cargado:", items.length, "productos");
+      } else {
+        setItemsCarrito([]);
+      }
     }
-    const data = JSON.parse(localStorage.getItem(`carrito_${uid}`) || '[]');
-    setItemsCarrito(data);
   };
 
+  // 🔥 FUNCIÓN PARA GUARDAR EL CARRITO
   const guardarCarrito = (items: ItemCarrito[]) => {
     const uid = sessionStorage.getItem("usuarioId");
-    if (!uid) return;
-    localStorage.setItem(`carrito_${uid}`, JSON.stringify(items));
-    setItemsCarrito(items);
+    if (uid) {
+      localStorage.setItem(`carrito_${uid}`, JSON.stringify(items));
+      setItemsCarrito(items);
+    }
   };
 
   const totalItems = itemsCarrito.reduce((acc, i) => acc + i.cantidad, 0);
   const subtotal = itemsCarrito.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
 
   const abrirCarrito = () => {
-    leerCarrito();
+    cargarCarrito();
     setVistaFactura(false);
     setCarritoAnimando(true);
     setTimeout(() => setCarritoAnimando(false), 600);
@@ -248,7 +250,9 @@ export default function InicioAdministrativoPage() {
             <div class="info"><div><p><strong>Factura N°:</strong> ${numFactura}</p><p><strong>Fecha:</strong> ${fechaFactura}</p></div><div><p><strong>Cliente:</strong> ${nombreUsuario}</p></div></div>
             <table><thead><tr><th>Producto</th><th>Emprendimiento</th><th class="text-center">Cant.</th><th class="text-right">Precio u.</th><th class="text-right">Total</th></tr></thead>
             <tbody>${itemsCarrito.map(item => `<tr><td>${item.nombre}</td><td>${item.emprendimientoNombre}</td><td class="text-center">${item.cantidad}</td><td class="text-right">${fmt(item.precio)}</td><td class="text-right">${fmt(item.precio * item.cantidad)}</td></tr>`).join('')}</tbody></table>
-            <div class="totales"><tr><td>Subtotal</td><td class="text-right">${fmt(subtotal)}</td></tr><tr><td>Descuento</td><td class="text-right">$0</td><tr><tr class="total-final"><td><strong>TOTAL A PAGAR</strong></td><td class="text-right"><strong>${fmt(subtotal)}</strong></td></tr></tr></div>
+            <div class="totales"><tr><td>Subtotal</td><td class="text-right">${fmt(subtotal)}</td></tr>
+            <tr><td>Descuento</td><td class="text-right">$0</td></tr>
+            <tr class="total-final"><td><strong>TOTAL A PAGAR</strong></td><td class="text-right"><strong>${fmt(subtotal)}</strong></td><tr></tr></div>
             <div class="aviso">⚠️ Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.</div>
             <div class="footer"><p>Gracias por apoyar los emprendimientos estudiantiles</p><p>EmprendedoresUCC · Universidad Cooperativa de Colombia · Villavicencio</p></div>
           </div>
@@ -260,10 +264,11 @@ export default function InicioAdministrativoPage() {
     }
   };
 
+  // 🔥 CARGAR USUARIO ID AL INICIO
   useEffect(() => {
     const uid = sessionStorage.getItem("usuarioId");
     setUsuarioId(uid);
-    leerCarrito();
+    cargarCarrito();
   }, []);
 
   useEffect(() => {
@@ -353,7 +358,7 @@ export default function InicioAdministrativoPage() {
         }
       }
       
-      const categoriasGuardadas = localStorage.getItem("categoriasInteres");
+      const categoriasGuardadas = localStorage.getItem("categoriasInteres_admin");
       if (categoriasGuardadas) {
         const categorias = JSON.parse(categoriasGuardadas);
         if (categorias.length > 0) {
@@ -382,100 +387,112 @@ export default function InicioAdministrativoPage() {
     }
   };
 
-  // 🔥 FUNCIÓN PRINCIPAL PARA CARGAR SEGUIDOS
-  const cargarSeguidos = async (uid: string) => {
-    try {
-      console.log("🔍 Cargando seguidos para:", uid);
-      
-      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${uid}/emprendimientos`);
-      
-      if (!res.ok) {
-        console.log("❌ Error en la petición");
-        return;
-      }
-      
-      const data = await res.json();
-      console.log("📊 Datos recibidos:", data);
-      console.log("🔢 Cantidad:", data.length);
-      
-      // 🔥 ACTUALIZAR EL ESTADO
-      setTotalSeguidos(data.length);
-      
-      // 🔥 FORZAR RE-RENDER
-      setForceRender(prev => prev + 1);
-      
-      if (data.length === 0) {
-        setUltimoEmprendimiento(null);
-        return;
-      }
-      
-      const ultimo = data[data.length - 1];
-      
-      try {
-        const resCat = await fetch(`http://localhost:8080/api/categorias/${ultimo.categoriaId}`);
-        if (resCat.ok) {
-          const cat = await resCat.json();
-          ultimo.categoriaNombre = cat.nombre;
-        }
-      } catch (e) {
-        ultimo.categoriaNombre = "Sin categoría";
-      }
-      
-      setUltimoEmprendimiento(ultimo);
-      
-    } catch (error) {
-      console.error("❌ Error:", error);
-    }
-  };
-
-  // 🔥 CARGA INICIAL
+  // CARGA INICIAL DE DATOS
   useEffect(() => {
-    const init = async () => {
-      console.log("🚀 Iniciando carga...");
+    const cargarDatos = async () => {
+      console.log("🚀 INICIANDO CARGA DE DATOS");
       
-      const uid = sessionStorage.getItem("usuarioId");
-      const nombre = sessionStorage.getItem("nombreUsuario") || "Usuario";
-      const usuarioGuardado = sessionStorage.getItem("usuario");
+      const usuarioIdStorage = sessionStorage.getItem("usuarioId");
+      console.log("📌 Usuario ID:", usuarioIdStorage);
       
-      let nombreCompleto = nombre;
-      if (usuarioGuardado) {
+      // Obtener nombre del backend
+      let nombreCompleto = "Usuario";
+      if (usuarioIdStorage) {
         try {
-          const usuario = JSON.parse(usuarioGuardado);
-          if (usuario.nombre && usuario.apellido) {
-            nombreCompleto = `${usuario.nombre} ${usuario.apellido}`;
-          } else if (usuario.nombre) {
-            nombreCompleto = usuario.nombre;
+          const resUser = await fetch(`http://localhost:8080/api/usuarios/${usuarioIdStorage}`);
+          if (resUser.ok) {
+            const userData = await resUser.json();
+            if (userData.nombre && userData.apellido) {
+              nombreCompleto = `${userData.nombre} ${userData.apellido}`;
+            } else if (userData.nombre) {
+              nombreCompleto = userData.nombre;
+            }
+            sessionStorage.setItem("nombreUsuario", nombreCompleto);
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error("Error cargando usuario:", e);
+        }
       }
       
       setNombreUsuario(nombreCompleto);
       obtenerProximosEventos();
       
-      if (uid) {
-        await cargarSeguidos(uid);
-        await obtenerActividad(uid);
+      if (usuarioIdStorage) {
+        try {
+          const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioIdStorage}/emprendimientos`);
+          if (res.ok) {
+            const emprendimientos = await res.json();
+            console.log("📦 Seguidos obtenidos:", emprendimientos.length);
+            setTotalSeguidos(emprendimientos.length);
+            
+            if (emprendimientos.length > 0) {
+              const ultimo = emprendimientos[emprendimientos.length - 1];
+              try {
+                const resCat = await fetch(`http://localhost:8080/api/categorias/${ultimo.categoriaId}`);
+                if (resCat.ok) {
+                  const categoria = await resCat.json();
+                  ultimo.categoriaNombre = categoria.nombre;
+                }
+              } catch (e) {
+                ultimo.categoriaNombre = "Sin categoría";
+              }
+              setUltimoEmprendimiento(ultimo);
+            }
+            
+            await obtenerActividad(usuarioIdStorage);
+          }
+        } catch (error) {
+          console.error("Error cargando seguidos:", error);
+        }
+      } else {
+        setLoadingActividades(false);
       }
       
       setLoadingUltimo(false);
-      console.log("✅ Carga completada");
     };
     
-    init();
+    cargarDatos();
   }, []);
 
-  // 🔥 EFECTO PARA VER CUANDO CAMBIA totalSeguidos
+  // ESCUCHAR CAMBIOS EN localStorage (carrito)
   useEffect(() => {
-    console.log("🔄 totalSeguidos CAMBIÓ a:", totalSeguidos);
-  }, [totalSeguidos]);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith("carrito_")) {
+        cargarCarrito();
+      }
+      obtenerProximosEventos();
+      const usuarioIdStorage = sessionStorage.getItem("usuarioId");
+      if (usuarioIdStorage) {
+        const actualizarSeguidos = async () => {
+          const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioIdStorage}/emprendimientos`);
+          if (res.ok) {
+            const emprendimientos = await res.json();
+            setTotalSeguidos(emprendimientos.length);
+          }
+          await obtenerActividad(usuarioIdStorage);
+        };
+        actualizarSeguidos();
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
-  // ESCUCHAR FOCO DE LA PÁGINA
+  // RECARGAR CUANDO LA PÁGINA RECIBE FOCO
   useEffect(() => {
-    const handleFocus = () => {
-      const uid = sessionStorage.getItem("usuarioId");
-      if (uid) {
-        console.log("📌 Recargando por foco...");
-        cargarSeguidos(uid);
+    const handleFocus = async () => {
+      const usuarioIdStorage = sessionStorage.getItem("usuarioId");
+      if (usuarioIdStorage) {
+        console.log("📌 Página enfocada, recargando...");
+        cargarCarrito();
+        const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioIdStorage}/emprendimientos`);
+        if (res.ok) {
+          const emprendimientos = await res.json();
+          setTotalSeguidos(emprendimientos.length);
+        }
+        await obtenerActividad(usuarioIdStorage);
+        obtenerProximosEventos();
       }
     };
     
@@ -650,8 +667,6 @@ export default function InicioAdministrativoPage() {
           </div>
         </section>
 
-
-        {/* 🔥 STATS - Usando totalSeguidos directamente */}
         <section className={styles.statsBar}>
           <div className={styles.statItem}>
             <span className={styles.statValue}>{totalSeguidos}</span>
