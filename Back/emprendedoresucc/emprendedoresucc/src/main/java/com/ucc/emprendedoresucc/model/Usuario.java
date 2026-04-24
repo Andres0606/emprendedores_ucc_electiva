@@ -17,6 +17,9 @@ public class Usuario {
     private String carrera;
     private String password;
 
+        // 🔥 NUEVO CAMPO: estado del usuario
+    private String estado = "activo"; // valores: "activo", "inactivo"
+
     public Usuario() {}
 
     public String getId() {
@@ -82,4 +85,8 @@ public class Usuario {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    // 🔥 NUEVO GETTER Y SETTER para estado
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 }

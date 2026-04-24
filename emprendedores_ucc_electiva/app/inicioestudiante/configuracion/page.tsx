@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioestudiante/configuracion.module.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function ConfiguracionPage() {
+  const router = useRouter();
   const [tipoUsuario, setTipoUsuario] = useState("estudiante");
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [email, setEmail] = useState("");
@@ -14,13 +16,18 @@ export default function ConfiguracionPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [usuarioId, setUsuarioId] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [editNombre, setEditNombre] = useState("");
   const [editTelefono, setEditTelefono] = useState("");
+  
+  // Estado para el modal de eliminación
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
@@ -46,7 +53,6 @@ export default function ConfiguracionPage() {
     setError("");
     setSuccess("");
     
-    // Validaciones
     if (!editNombre.trim()) {
       setError("El nombre no puede estar vacío");
       return;
@@ -60,14 +66,12 @@ export default function ConfiguracionPage() {
     setIsLoading(true);
     
     try {
-      // Obtener datos actuales del usuario
       const resGet = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
       if (!resGet.ok) {
         throw new Error("Error al obtener datos del usuario");
       }
       const usuarioActual = await resGet.json();
       
-      // Actualizar datos
       const usuarioActualizado = {
         ...usuarioActual,
         nombre: editNombre,
@@ -90,9 +94,6 @@ export default function ConfiguracionPage() {
         throw new Error(errorData.message || "Error al actualizar perfil");
       }
       
-      const usuarioGuardado = await resUpdate.json();
-      
-      // Actualizar sessionStorage
       sessionStorage.setItem("nombreUsuario", editNombre);
       const usuarioStorage = JSON.parse(sessionStorage.getItem("usuario") || "{}");
       usuarioStorage.nombre = editNombre;
@@ -113,7 +114,6 @@ export default function ConfiguracionPage() {
     }
   };
 
-  // Validar contraseña segura
   const validarPasswordSegura = (password: string): { valido: boolean; mensaje: string } => {
     if (password.length < 8) {
       return { valido: false, mensaje: "La contraseña debe tener al menos 8 caracteres" };
@@ -128,7 +128,7 @@ export default function ConfiguracionPage() {
       return { valido: false, mensaje: "La contraseña debe contener al menos un número" };
     }
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      return { valido: false, mensaje: "La contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?\":{}|<>)" };
+      return { valido: false, mensaje: "La contraseña debe contener al menos un carácter especial" };
     }
     return { valido: true, mensaje: "" };
   };
@@ -137,7 +137,6 @@ export default function ConfiguracionPage() {
     setError("");
     setSuccess("");
     
-    // Validaciones
     if (!currentPassword) {
       setError("Debes ingresar tu contraseña actual");
       return;
@@ -148,7 +147,6 @@ export default function ConfiguracionPage() {
       return;
     }
     
-    // Validar contraseña segura
     const validacion = validarPasswordSegura(newPassword);
     if (!validacion.valido) {
       setError(validacion.mensaje);
@@ -163,7 +161,6 @@ export default function ConfiguracionPage() {
     setIsLoading(true);
     
     try {
-      // Primero verificar que la contraseña actual es correcta
       const loginRes = await fetch("http://localhost:8080/api/usuarios/login", {
         method: "POST",
         headers: {
@@ -181,7 +178,6 @@ export default function ConfiguracionPage() {
         return;
       }
       
-      // Actualizar la contraseña
       const updateRes = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}/cambiar-password`, {
         method: "PATCH",
         headers: {
@@ -199,7 +195,6 @@ export default function ConfiguracionPage() {
         return;
       }
       
-      // Limpiar campos
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -214,12 +209,89 @@ export default function ConfiguracionPage() {
     }
   };
 
+  // 🔥 NUEVA FUNCIÓN: Abrir modal para eliminar cuenta
+  const openDeleteModal = () => {
+    setDeletePassword("");
+    setDeleteError("");
+    setShowDeleteModal(true);
+  };
+
+  // 🔥 NUEVA FUNCIÓN: Confirmar eliminación con contraseña
+  const confirmDeleteAccount = async () => {
+    if (!deletePassword) {
+      setDeleteError("Ingresa tu contraseña para confirmar");
+      return;
+    }
+    
+    setIsDeleting(true);
+    setDeleteError("");
+    
+    try {
+      // Verificar que la contraseña sea correcta
+      const loginRes = await fetch("http://localhost:8080/api/usuarios/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          correo: email,
+          password: deletePassword
+        })
+      });
+      
+      if (!loginRes.ok) {
+        setDeleteError("Contraseña incorrecta");
+        setIsDeleting(false);
+        return;
+      }
+      
+      // 1. Obtener todos los emprendimientos del usuario
+      const resEmprendimientos = await fetch(`http://localhost:8080/api/emprendimientos/usuario/${usuarioId}`);
+      
+      if (resEmprendimientos.ok) {
+        const emprendimientos = await resEmprendimientos.json();
+        
+        // 2. Eliminar cada emprendimiento
+        for (const emp of emprendimientos) {
+          const empId = emp.id || emp._id;
+          if (empId) {
+            await fetch(`http://localhost:8080/api/emprendimientos/${empId}`, {
+              method: "DELETE",
+            });
+          }
+        }
+      }
+      
+      // 3. Eliminar al usuario
+      const resDeleteUser = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`, {
+        method: "DELETE",
+      });
+      
+      if (!resDeleteUser.ok) {
+        const errorData = await resDeleteUser.json();
+        throw new Error(errorData.message || "Error al eliminar el usuario");
+      }
+      
+      // 4. Limpiar sessionStorage
+      sessionStorage.clear();
+      
+      // 5. Cerrar modal y redirigir
+      setShowDeleteModal(false);
+      alert("✅ Tu cuenta ha sido eliminada correctamente.");
+      router.push("/");
+      
+    } catch (error: any) {
+      console.error("Error al eliminar cuenta:", error);
+      setDeleteError(error.message || "Ocurrió un error al eliminar la cuenta");
+      setIsDeleting(false);
+    }
+  };
+
   const esEstudiante = tipoUsuario === "estudiante";
 
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-
         <Link href="/inicioestudiante" className={styles.back}>← Volver al inicio</Link>
         <h1 className={styles.title}>Configuración</h1>
 
@@ -227,7 +299,7 @@ export default function ConfiguracionPage() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Datos de la cuenta</h2>
 
-            {/* Nombre - Editable */}
+            {/* Nombre */}
             <div className={styles.formGroup}>
               <label className={styles.label}>Nombre completo</label>
               {editMode ? (
@@ -248,7 +320,7 @@ export default function ConfiguracionPage() {
               )}
             </div>
 
-            {/* Correo - Solo lectura */}
+            {/* Correo */}
             <div className={styles.formGroup}>
               <label className={styles.label}>Correo institucional</label>
               <input
@@ -261,7 +333,7 @@ export default function ConfiguracionPage() {
               <small className={styles.helperText}>El correo no se puede modificar</small>
             </div>
 
-            {/* Teléfono - Editable */}
+            {/* Teléfono */}
             <div className={styles.formGroup}>
               <label className={styles.label}>Teléfono</label>
               {editMode ? (
@@ -290,7 +362,7 @@ export default function ConfiguracionPage() {
               <small className={styles.helperText}>10 dígitos, solo números</small>
             </div>
 
-            {/* Carrera para estudiantes - Solo lectura */}
+            {/* Carrera */}
             {esEstudiante && (
               <div className={styles.formGroup}>
                 <label className={styles.label}>Carrera</label>
@@ -367,7 +439,6 @@ export default function ConfiguracionPage() {
                 </small>
               </div>
 
-              {/* Requisitos de contraseña en tiempo real */}
               {newPassword && (
                 <div className={styles.passwordReqs}>
                   <small className={newPassword.length >= 8 ? styles.reqMet : styles.reqUnmet}>
@@ -428,27 +499,89 @@ export default function ConfiguracionPage() {
               </div>
             )}
 
-            {/* Zona de peligro - Eliminar cuenta */}
+            {/* Zona de peligro con modal moderno */}
             <div className={styles.danger}>
               <h3 className={styles.dangerTitle}>Zona de peligro</h3>
               <p className={styles.dangerDesc}>
-                Eliminar tu cuenta es irreversible. Perderás todos tus datos y emprendimientos.
+                Eliminar tu cuenta es irreversible. Perderás todos tus datos, emprendimientos y productos asociados.
               </p>
               <button 
                 className={styles.btnDanger}
-                onClick={() => {
-                  if (confirm("¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.")) {
-                    alert("Función en desarrollo");
-                  }
-                }}
+                onClick={openDeleteModal}
               >
                 Eliminar cuenta
               </button>
             </div>
           </section>
         </div>
-
       </div>
+
+      {/* Modal de confirmación moderno */}
+      {showDeleteModal && (
+        <div className={styles.modalOverlay} onClick={() => !isDeleting && setShowDeleteModal(false)}>
+          <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalIcon}>⚠️</div>
+              <h3 className={styles.modalTitle}>Eliminar cuenta</h3>
+            </div>
+            
+            <div className={styles.modalBody}>
+              <p className={styles.modalMessage}>
+                Esta acción <strong>no se puede deshacer</strong>. Se eliminarán permanentemente:
+              </p>
+              <div className={styles.modalWarning}>
+                <span>📦</span> Tus emprendimientos y productos
+              </div>
+              <div className={styles.modalWarning}>
+                <span>👤</span> Tu perfil y todos tus datos
+              </div>
+              
+              <label className={styles.modalLabel}>
+                Ingresa tu contraseña para confirmar
+              </label>
+              <input
+                type="password"
+                className={`${styles.modalInput} ${deleteError ? styles.modalInputError : ""}`}
+                placeholder="••••••••"
+                value={deletePassword}
+                onChange={(e) => {
+                  setDeletePassword(e.target.value);
+                  setDeleteError("");
+                }}
+                autoFocus
+                disabled={isDeleting}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isDeleting) {
+                    confirmDeleteAccount();
+                  }
+                }}
+              />
+              {deleteError && (
+                <div className={styles.modalErrorText}>
+                  <span>❌</span> {deleteError}
+                </div>
+              )}
+            </div>
+            
+            <div className={styles.modalFooter}>
+              <button 
+                className={styles.modalBtnCancel} 
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button 
+                className={styles.modalBtnDanger} 
+                onClick={confirmDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Eliminando..." : "Sí, eliminar cuenta"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -197,3 +197,33 @@
 @media (max-width: 900px) {
   .main { padding: 24px 16px 60px; }
 }
+
+/* ── Estilos para eliminar ── */
+.btnEliminar {
+  background: #fce4ec;
+  border-color: #f8bbd0;
+  color: #b71c1c;
+}
+.btnEliminar:hover {
+  background: #b71c1c;
+  color: #fff;
+  border-color: #b71c1c;
+}
+.btnEliminarDisabled {
+  background: #f5f7fa;
+  border-color: #e0e7ef;
+  color: #b0bec5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.countBadgeWith {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+.countBadgeEmpty {
+  background: #f5f7fa;
+  color: #78909c;
+}
+.tdAcciones {
+  min-width: 140px;
+}

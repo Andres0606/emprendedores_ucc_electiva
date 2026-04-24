@@ -1,6 +1,8 @@
 package com.ucc.emprendedoresucc.controller;
 
 import com.ucc.emprendedoresucc.model.Categoria;
+import com.ucc.emprendedoresucc.model.Emprendimiento;
+import com.ucc.emprendedoresucc.repository.EmprendimientoRepository;
 import com.ucc.emprendedoresucc.service.CategoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -8,7 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/categorias")
@@ -17,6 +21,9 @@ public class CategoriaController {
 
     @Autowired
     private CategoriaService categoriaService;
+    
+    @Autowired
+    private EmprendimientoRepository emprendimientoRepository; // 🔥 NUEVO
 
     // Crear una nueva categoría
     @PostMapping
@@ -34,27 +41,18 @@ public class CategoriaController {
 
     // Obtener todas las categorías
     @GetMapping
-public ResponseEntity<?> obtenerTodas() {
-    try {
-        List<Categoria> categorias = categoriaService.obtenerTodas();
-        
-        // Si está vacío, puedes devolver array vacío
-        if (categorias.isEmpty()) {
-            return ResponseEntity.ok(new ArrayList<>());
+    public ResponseEntity<?> obtenerTodas() {
+        try {
+            List<Categoria> categorias = categoriaService.obtenerTodas();
+            if (categorias.isEmpty()) {
+                return ResponseEntity.ok(new ArrayList<>());
+            }
+            return ResponseEntity.ok(categorias);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al obtener las categorías");
         }
-        
-        // Log para depuración
-        System.out.println("Categorías encontradas: " + categorias.size());
-        categorias.forEach(cat -> {
-            System.out.println("Categoría: ID=" + cat.getId() + ", Nombre=" + cat.getNombre());
-        });
-        
-        return ResponseEntity.ok(categorias);
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(500).body("Error al obtener las categorías");
     }
-}
 
     // Obtener categoría por ID
     @GetMapping("/{id}")
@@ -96,14 +94,27 @@ public ResponseEntity<?> obtenerTodas() {
         }
     }
 
-    // Eliminar categoría
+    // 🔥 ELIMINAR CATEGORÍA - Con verificación de emprendimientos activos
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarCategoria(@PathVariable String id) {
         try {
+            // Verificar si hay emprendimientos ACTIVOS con esta categoría
+            List<Emprendimiento> emprendimientos = emprendimientoRepository.findByCategoriaIdAndEstado(id, "activo");
+            
+            if (!emprendimientos.isEmpty()) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "No se puede eliminar la categoría");
+                error.put("message", "La categoría tiene " + emprendimientos.size() + " emprendimiento(s) activo(s) asociado(s)");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
             categoriaService.eliminarCategoria(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return ResponseEntity.noContent().build();
+            
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>("Error al eliminar la categoría", HttpStatus.INTERNAL_SERVER_ERROR);

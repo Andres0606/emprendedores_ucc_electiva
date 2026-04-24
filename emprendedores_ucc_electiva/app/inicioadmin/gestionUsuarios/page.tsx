@@ -165,9 +165,7 @@ export default function GestionUsuariosPage() {
           <h1 className={styles.pageTitle}>Gestión de usuarios</h1>
           <p className={styles.pageSubtitle}>{usuarios.length} usuarios registrados en la plataforma</p>
         </div>
-        <button className={styles.btnExport} onClick={() => alert("Exportar — conectar con backend")}>
-          Exportar lista
-        </button>
+
       </div>
 
       {/* Pills tipo */}
@@ -277,7 +275,6 @@ export default function GestionUsuariosPage() {
                             Activar
                           </button>
                         )}
-                        <button className={`${styles.btnAccion} ${styles.btnEliminar}`} onClick={() => eliminar(id)}>Eliminar</button>
                       </div>
                     </td>
                   </tr>

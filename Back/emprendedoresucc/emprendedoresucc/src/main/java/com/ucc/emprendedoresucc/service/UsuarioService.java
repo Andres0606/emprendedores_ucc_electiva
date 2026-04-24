@@ -100,7 +100,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    // LOGIN
+    // LOGIN - Verifica que el usuario esté activo
     public Usuario login(String correo, String password) {
         Usuario usuario = usuarioRepository.findByCorreo(correo);
         if (usuario == null) {
@@ -108,6 +108,10 @@ public class UsuarioService {
         }
         if (!usuario.getPassword().equals(password)) {
             throw new RuntimeException("Contraseña incorrecta");
+        }
+        // 🔥 VERIFICAR QUE EL USUARIO ESTÉ ACTIVO
+        if (!"activo".equals(usuario.getEstado())) {
+            throw new RuntimeException("Tu cuenta está inactiva. Contacta al administrador.");
         }
         return usuario;
     }
@@ -177,6 +181,21 @@ public class UsuarioService {
                         throw new RuntimeException("La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial");
                     }
                     usuario.setPassword(nuevaPassword);
+                    return usuarioRepository.save(usuario);
+                })
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+    }
+
+
+    // Cambiar estado del usuario (activo/inactivo)
+    public Usuario cambiarEstado(String id, String nuevoEstado) {
+        if (!"activo".equals(nuevoEstado) && !"inactivo".equals(nuevoEstado)) {
+            throw new RuntimeException("Estado inválido. Debe ser 'activo' o 'inactivo'");
+        }
+        
+        return usuarioRepository.findById(id)
+                .map(usuario -> {
+                    usuario.setEstado(nuevoEstado);
                     return usuarioRepository.save(usuario);
                 })
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));

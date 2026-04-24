@@ -200,9 +200,6 @@ export default function GestionEmprendimientosPage() {
           <p className={styles.pageSubtitle}>{emprendimientos.length} emprendimientos registrados en la plataforma</p>
         </div>
         <div className={styles.pageHeaderRight}>
-          <button className={styles.btnExport} onClick={() => alert("Exportar a Excel/PDF — conectar con backend")}>
-            Exportar lista
-          </button>
         </div>
       </div>
 

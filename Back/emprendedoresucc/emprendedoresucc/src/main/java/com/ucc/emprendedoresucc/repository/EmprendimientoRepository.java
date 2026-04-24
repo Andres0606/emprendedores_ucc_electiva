@@ -16,4 +16,7 @@ public interface EmprendimientoRepository extends MongoRepository<Emprendimiento
     
     // Método para buscar todos los emprendimientos con un teléfono específico
     List<Emprendimiento> findAllByTelefono(String telefono);
+
+    List<Emprendimiento> findByCategoriaIdAndEstado(String categoriaId, String estado);
+
 }

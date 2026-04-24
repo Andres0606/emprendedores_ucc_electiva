@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioAdministrativo/configuracion.module.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function ConfiguracionAdministrativoPage() {
+  const router = useRouter();
   const [tipoUsuario, setTipoUsuario] = useState("administrativo");
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [email, setEmail] = useState("");
@@ -23,6 +25,12 @@ export default function ConfiguracionAdministrativoPage() {
   const [editCargo, setEditCargo] = useState("");
   const [editDependencia, setEditDependencia] = useState("");
   const [editTelefono, setEditTelefono] = useState("");
+  
+  // Estado para el modal de eliminación
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const tipo = sessionStorage.getItem("tipoUsuario") || "administrativo";
@@ -36,7 +44,6 @@ export default function ConfiguracionAdministrativoPage() {
     setEmail(usuario.correo || "");
     setUsuarioId(id);
     
-    // 🔥 Cargar cargo y dependencia desde localStorage
     const cargoLocal = localStorage.getItem(`cargo_${id}`);
     const dependenciaLocal = localStorage.getItem(`dependencia_${id}`);
     
@@ -71,10 +78,14 @@ export default function ConfiguracionAdministrativoPage() {
       }
       const usuarioActual = await resGet.json();
       
+      const partesNombre = editNombre.trim().split(/\s+/);
+      const nuevoNombre = partesNombre[0] || "";
+      const nuevoApellido = partesNombre.slice(1).join(" ") || usuarioActual.apellido || "";
+      
       const usuarioActualizado = {
         ...usuarioActual,
-        nombre: editNombre,
-        apellido: usuarioActual.apellido,
+        nombre: nuevoNombre,
+        apellido: nuevoApellido,
         telefono: editTelefono,
         tipoUsuario: usuarioActual.tipoUsuario
       };
@@ -90,18 +101,19 @@ export default function ConfiguracionAdministrativoPage() {
         throw new Error(errorData.message || "Error al actualizar perfil");
       }
       
-      // 🔥 GUARDAR CARGO Y DEPENDENCIA EN localStorage
       localStorage.setItem(`cargo_${usuarioId}`, editCargo);
       localStorage.setItem(`dependencia_${usuarioId}`, editDependencia);
       
-      // Actualizar sessionStorage
-      sessionStorage.setItem("nombreUsuario", editNombre);
+      const nombreCompleto = `${nuevoNombre} ${nuevoApellido}`;
+      sessionStorage.setItem("nombreUsuario", nombreCompleto);
+      
       const usuarioStorage = JSON.parse(sessionStorage.getItem("usuario") || "{}");
-      usuarioStorage.nombre = editNombre;
+      usuarioStorage.nombre = nuevoNombre;
+      usuarioStorage.apellido = nuevoApellido;
       usuarioStorage.telefono = editTelefono;
       sessionStorage.setItem("usuario", JSON.stringify(usuarioStorage));
       
-      setNombreUsuario(editNombre);
+      setNombreUsuario(nombreCompleto);
       setCargo(editCargo);
       setDependencia(editDependencia);
       setTelefono(editTelefono);
@@ -203,6 +215,66 @@ export default function ConfiguracionAdministrativoPage() {
     }
   };
 
+  // Abrir modal para eliminar cuenta
+  const openDeleteModal = () => {
+    setDeletePassword("");
+    setDeleteError("");
+    setShowDeleteModal(true);
+  };
+
+  // Confirmar eliminación con contraseña
+  const confirmDeleteAccount = async () => {
+    if (!deletePassword) {
+      setDeleteError("Ingresa tu contraseña para confirmar");
+      return;
+    }
+    
+    setIsDeleting(true);
+    setDeleteError("");
+    
+    try {
+      // Verificar que la contraseña sea correcta
+      const loginRes = await fetch("http://localhost:8080/api/usuarios/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correo: email, password: deletePassword })
+      });
+      
+      if (!loginRes.ok) {
+        setDeleteError("Contraseña incorrecta");
+        setIsDeleting(false);
+        return;
+      }
+      
+      // Eliminar al usuario
+      const resDeleteUser = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`, {
+        method: "DELETE",
+      });
+      
+      if (!resDeleteUser.ok) {
+        const errorData = await resDeleteUser.json();
+        throw new Error(errorData.message || "Error al eliminar el usuario");
+      }
+      
+      // Limpiar localStorage
+      localStorage.removeItem(`cargo_${usuarioId}`);
+      localStorage.removeItem(`dependencia_${usuarioId}`);
+      
+      // Limpiar sessionStorage
+      sessionStorage.clear();
+      
+      // Cerrar modal y redirigir
+      setShowDeleteModal(false);
+      alert("✅ Tu cuenta ha sido eliminada correctamente.");
+      router.push("/");
+      
+    } catch (error: any) {
+      console.error("Error al eliminar cuenta:", error);
+      setDeleteError(error.message || "Ocurrió un error al eliminar la cuenta");
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <main className={styles.main}>
       <div className={styles.container}>
@@ -216,7 +288,13 @@ export default function ConfiguracionAdministrativoPage() {
             <div className={styles.formGroup}>
               <label className={styles.label}>Nombre completo</label>
               {editMode ? (
-                <input className={styles.input} type="text" value={editNombre} onChange={(e) => setEditNombre(e.target.value)} />
+                <input 
+                  className={styles.input} 
+                  type="text" 
+                  value={editNombre} 
+                  onChange={(e) => setEditNombre(e.target.value)} 
+                  placeholder="Ej: Francy Patiño"
+                />
               ) : (
                 <input className={`${styles.input} ${styles.readonly}`} type="text" value={nombreUsuario} readOnly disabled />
               )}
@@ -343,14 +421,84 @@ export default function ConfiguracionAdministrativoPage() {
               </div>
             )}
 
+            {/* Zona de peligro con modal */}
             <div className={styles.danger}>
               <h3 className={styles.dangerTitle}>Zona de peligro</h3>
               <p className={styles.dangerDesc}>Eliminar tu cuenta es irreversible. Perderás todo tu acceso a la plataforma.</p>
-              <button className={styles.btnDanger} onClick={() => alert("Función en desarrollo")}>Eliminar cuenta</button>
+              <button className={styles.btnDanger} onClick={openDeleteModal}>
+                Eliminar cuenta
+              </button>
             </div>
           </section>
         </div>
       </div>
+
+      {/* Modal de confirmación */}
+      {showDeleteModal && (
+        <div className={styles.modalOverlay} onClick={() => !isDeleting && setShowDeleteModal(false)}>
+          <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalIcon}>⚠️</div>
+              <h3 className={styles.modalTitle}>Eliminar cuenta</h3>
+            </div>
+            
+            <div className={styles.modalBody}>
+            <p className={styles.modalMessage}>
+              Esta acción <strong>no se puede deshacer</strong>. Se eliminarán permanentemente:
+            </p>
+            <div className={styles.modalWarning}>
+              <span>👤</span> Tu perfil de usuario
+            </div>
+            <div className={styles.modalWarning}>
+              <span>🔐</span> Todo tu acceso a la plataforma
+            </div>
+              
+              <label className={styles.modalLabel}>
+                Ingresa tu contraseña para confirmar
+              </label>
+              <input
+                type="password"
+                className={`${styles.modalInput} ${deleteError ? styles.modalInputError : ""}`}
+                placeholder="••••••••"
+                value={deletePassword}
+                onChange={(e) => {
+                  setDeletePassword(e.target.value);
+                  setDeleteError("");
+                }}
+                autoFocus
+                disabled={isDeleting}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isDeleting) {
+                    confirmDeleteAccount();
+                  }
+                }}
+              />
+              {deleteError && (
+                <div className={styles.modalErrorText}>
+                  <span>❌</span> {deleteError}
+                </div>
+              )}
+            </div>
+            
+            <div className={styles.modalFooter}>
+              <button 
+                className={styles.modalBtnCancel} 
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button 
+                className={styles.modalBtnDanger} 
+                onClick={confirmDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Eliminando..." : "Sí, eliminar cuenta"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

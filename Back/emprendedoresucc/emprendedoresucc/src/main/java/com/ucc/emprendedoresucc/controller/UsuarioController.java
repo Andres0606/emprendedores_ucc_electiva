@@ -190,4 +190,38 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
+
+    // Cambiar estado del usuario (activo/inactivo)
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<?> cambiarEstado(
+            @PathVariable String id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String nuevoEstado = request.get("estado");
+            if (nuevoEstado == null || nuevoEstado.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "El estado es requerido");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            Usuario usuarioActualizado = usuarioService.cambiarEstado(id, nuevoEstado);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Estado actualizado correctamente");
+            response.put("usuario", usuarioActualizado);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al cambiar estado");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 }

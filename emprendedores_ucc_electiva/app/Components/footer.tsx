@@ -4,9 +4,7 @@ import styles from "../css/Footer.module.css";
 const quickLinks = [
   { label: "Inicio", href: "/" },
   { label: "Emprendimientos", href: "/emprendimientos" },
-  { label: "Productos", href: "/productos" },
-  { label: "Publicar mi emprendimiento", href: "/emprendimientos/nuevo" },
-  { label: "Contacto", href: "/contacto" },
+  { label: "Publicar mi emprendimiento", href: "/miemprendimiento" },
 ];
 
 const categories = [

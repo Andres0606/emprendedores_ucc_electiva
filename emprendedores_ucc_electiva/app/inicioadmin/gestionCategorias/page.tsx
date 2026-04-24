@@ -10,7 +10,6 @@ interface Categoria {
   _id?: string;
   nombre: string;
   descripcion: string;
-  activa?: boolean;
   totalEmprendimientos?: number;
 }
 
@@ -23,12 +22,11 @@ export default function GestionCategoriasPage() {
   const [emprendimientos, setEmprendimientos] = useState<any[]>([]);
 
   const [busqueda, setBusqueda]     = useState("");
-  const [filtroActiva, setFiltroActiva] = useState<"todos" | "activa" | "inactiva">("todos");
 
   const [modalNueva, setModalNueva]         = useState(false);
   const [editarId, setEditarId]             = useState<string | null>(null);
-  const [confirmarDesactivarId, setConfirmarDesactivarId] = useState<string | null>(null);
-  const [confirmarActivarId, setConfirmarActivarId] = useState<string | null>(null);
+  const [confirmarEliminarId, setConfirmarEliminarId] = useState<string | null>(null);
+  const [categoriaAEliminar, setCategoriaAEliminar] = useState<{ id: string; nombre: string } | null>(null);
 
   const [form, setForm] = useState({ nombre: "", descripcion: "" });
 
@@ -46,10 +44,9 @@ export default function GestionCategoriasPage() {
       const res = await fetch("http://localhost:8080/api/emprendimientos");
       if (res.ok) {
         const data = await res.json();
-        // 🔥 SOLO EMPRENDIMIENTOS ACTIVOS
+        // Solo emprendimientos ACTIVOS
         const activos = data.filter((emp: any) => emp.estado === "activo");
         setEmprendimientos(activos);
-        console.log("📊 Emprendimientos activos:", activos.length);
       }
     } catch (error) {
       console.error("Error al cargar emprendimientos:", error);
@@ -66,11 +63,9 @@ export default function GestionCategoriasPage() {
       // Calcular total de emprendimientos ACTIVOS por categoría
       const categoriasConConteo = data.map(cat => {
         const id = cat.id || cat._id;
-        // 🔥 FILTRO: solo emprendimientos ACTIVOS
         const total = emprendimientos.filter(emp => emp.categoriaId === id && emp.estado === "activo").length;
         return {
           ...cat,
-          activa: cat.activa !== false,
           totalEmprendimientos: total
         };
       });
@@ -129,20 +124,28 @@ export default function GestionCategoriasPage() {
     } catch { alert("Error de conexión."); }
   }
 
-  async function toggleActiva(id: string, activa: boolean) {
+  async function eliminarCategoria(id: string) {
     try {
-      const res = await fetch(`http://localhost:8080/api/categorias/${id}/estado`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activa: !activa }),
+      const res = await fetch(`http://localhost:8080/api/categorias/${id}`, {
+        method: "DELETE",
       });
       if (res.ok) {
         await cargarCategorias();
-        setConfirmarDesactivarId(null);
-        setConfirmarActivarId(null);
+        setConfirmarEliminarId(null);
+        setCategoriaAEliminar(null);
+        alert("✅ Categoría eliminada correctamente");
+      } else {
+        const error = await res.json();
+        alert(error.message || "Error al eliminar la categoría");
       }
-      else alert("Error al cambiar el estado.");
-    } catch { alert("Error de conexión."); }
+    } catch {
+      alert("Error de conexión.");
+    }
+  }
+
+  function confirmarEliminar(id: string, nombre: string) {
+    setCategoriaAEliminar({ id, nombre });
+    setConfirmarEliminarId(id);
   }
 
   function abrirEditar(cat: Categoria) {
@@ -157,16 +160,11 @@ export default function GestionCategoriasPage() {
 
   const filtradas = useMemo(() => {
     return categorias.filter(c => {
-      if (filtroActiva === "activa"   && !c.activa)  return false;
-      if (filtroActiva === "inactiva" &&  c.activa)  return false;
       const q = busqueda.toLowerCase();
       if (q && !c.nombre.toLowerCase().includes(q) && !(c.descripcion || "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [categorias, filtroActiva, busqueda]);
-
-  const catDesactivar = categorias.find(c => (c.id || c._id) === confirmarDesactivarId);
-  const catActivar = categorias.find(c => (c.id || c._id) === confirmarActivarId);
+  }, [categorias, busqueda]);
 
   if (loading) return <main className={styles.main}><div className={styles.centered}><div className={styles.spinner} /><p>Cargando categorías...</p></div></main>;
   if (error)   return <main className={styles.main}><div className={styles.centered}><p className={styles.errorMsg}>{error}</p><button className={styles.btnPrimary} onClick={cargarCategorias}>Reintentar</button></div></main>;
@@ -182,22 +180,6 @@ export default function GestionCategoriasPage() {
           <p className={styles.pageSubtitle}>{categorias.length} categorías registradas en la plataforma</p>
         </div>
         <button className={styles.btnPrimary} onClick={abrirNueva}>+ Nueva categoría</button>
-      </div>
-
-      {/* Pills */}
-      <div className={styles.estadoPills}>
-        {(["todos","activa","inactiva"] as const).map(f => (
-          <button
-            key={f}
-            className={`${styles.pill} ${filtroActiva === f ? styles.pillActive : ""} ${f !== "todos" ? styles[`pill_${f}`] : ""}`}
-            onClick={() => setFiltroActiva(f)}
-          >
-            {f === "todos" ? "Todas" : f === "activa" ? "Activas" : "Inactivas"}
-            <span className={styles.pillCount}>
-              {f === "todos" ? categorias.length : f === "activa" ? categorias.filter(c => c.activa).length : categorias.filter(c => !c.activa).length}
-            </span>
-          </button>
-        ))}
       </div>
 
       {/* Filtro búsqueda */}
@@ -224,8 +206,7 @@ export default function GestionCategoriasPage() {
               <tr>
                 <th>Categoría</th>
                 <th>Descripción</th>
-                <th>Emprendimientos</th>
-                <th>Estado</th>
+                <th>Emprendimientos activos</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -249,31 +230,27 @@ export default function GestionCategoriasPage() {
                       )}
                     </td>
                     <td className={styles.tdCount}>
-                      <span className={styles.countBadge}>{cat.totalEmprendimientos ?? 0}</span>
-                    </td>
-                    <td>
-                      <span className={`${styles.estadoBadge} ${cat.activa ? styles.estadoActivo : styles.estadoInactivo}`}>
-                        {cat.activa ? "Activa" : "Inactiva"}
+                      <span className={`${styles.countBadge} ${tieneEmprendimientos ? styles.countBadgeWith : styles.countBadgeEmpty}`}>
+                        {cat.totalEmprendimientos ?? 0}
                       </span>
                     </td>
-                    <td>
+                    <td className={styles.tdAcciones}>
                       <div className={styles.acciones}>
                         <button className={styles.btnAccion} onClick={() => abrirEditar(cat)}>Editar</button>
-                        {cat.activa ? (
+                        {tieneEmprendimientos ? (
                           <button 
-                            className={`${styles.btnAccion} ${styles.btnDesactivar}`} 
-                            onClick={() => setConfirmarDesactivarId(id)}
-                            disabled={tieneEmprendimientos}
-                            title={tieneEmprendimientos ? "No se puede desactivar porque tiene emprendimientos asociados" : ""}
+                            className={`${styles.btnAccion} ${styles.btnEliminarDisabled}`} 
+                            disabled
+                            title={`No se puede eliminar porque tiene ${cat.totalEmprendimientos} emprendimiento(s) activo(s) asociado(s)`}
                           >
-                            Desactivar
+                             Eliminar
                           </button>
                         ) : (
                           <button 
-                            className={`${styles.btnAccion} ${styles.btnActivar}`} 
-                            onClick={() => setConfirmarActivarId(id)}
+                            className={`${styles.btnAccion} ${styles.btnEliminar}`} 
+                            onClick={() => confirmarEliminar(id, cat.nombre)}
                           >
-                            Activar
+                            Eliminar
                           </button>
                         )}
                       </div>
@@ -338,54 +315,26 @@ export default function GestionCategoriasPage() {
         </div>
       )}
 
-      {/* Modal: Confirmar desactivar */}
-      {confirmarDesactivarId && catDesactivar && (
-        <div className={styles.overlay} onClick={() => setConfirmarDesactivarId(null)}>
+      {/* Modal: Confirmar eliminar */}
+      {confirmarEliminarId && categoriaAEliminar && (
+        <div className={styles.overlay} onClick={() => setConfirmarEliminarId(null)}>
           <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Desactivar categoría</h2>
-              <button className={styles.modalClose} onClick={() => setConfirmarDesactivarId(null)}>✕</button>
+              <h2 className={styles.modalTitle}>Eliminar categoría</h2>
+              <button className={styles.modalClose} onClick={() => setConfirmarEliminarId(null)}>✕</button>
             </div>
             <div className={styles.modalBody}>
               <p className={styles.alertaTexto}>
-                ¿Estás seguro de que deseas desactivar la categoría <strong>"{catDesactivar.nombre}"</strong>?
+                ¿Estás seguro de que deseas eliminar la categoría <strong>"{categoriaAEliminar.nombre}"</strong>?
               </p>
               <p className={styles.alertaSubTexto}>
-                {catDesactivar.totalEmprendimientos && catDesactivar.totalEmprendimientos > 0 
-                  ? `Esta categoría tiene ${catDesactivar.totalEmprendimientos} emprendimiento(s) asociado(s). Al desactivarla, estos emprendimientos seguirán teniendo la categoría, pero no aparecerá para nuevas selecciones.`
-                  : "Las categorías inactivas no aparecerán en los listados de nuevos emprendimientos."}
+                Esta acción <strong>no se puede deshacer</strong>. La categoría se eliminará permanentemente.
               </p>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnCancelar} onClick={() => setConfirmarDesactivarId(null)}>Cancelar</button>
-              <button className={`${styles.btnAccion} ${styles.btnDesactivar}`} style={{ padding: "9px 20px" }} onClick={() => toggleActiva(confirmarDesactivarId, true)}>
-                Confirmar desactivación
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Confirmar activar */}
-      {confirmarActivarId && catActivar && (
-        <div className={styles.overlay} onClick={() => setConfirmarActivarId(null)}>
-          <div className={`${styles.modal} ${styles.modalSm}`} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Activar categoría</h2>
-              <button className={styles.modalClose} onClick={() => setConfirmarActivarId(null)}>✕</button>
-            </div>
-            <div className={styles.modalBody}>
-              <p className={styles.alertaTexto}>
-                ¿Estás seguro de que deseas activar la categoría <strong>"{catActivar.nombre}"</strong>?
-              </p>
-              <p className={styles.alertaSubTexto}>
-                Al activarla, volverá a aparecer en los listados para que los emprendedores puedan seleccionarla.
-              </p>
-            </div>
-            <div className={styles.modalFooter}>
-              <button className={styles.btnCancelar} onClick={() => setConfirmarActivarId(null)}>Cancelar</button>
-              <button className={`${styles.btnAccion} ${styles.btnActivar}`} style={{ padding: "9px 20px" }} onClick={() => toggleActiva(confirmarActivarId, false)}>
-                Confirmar activación
+              <button className={styles.btnCancelar} onClick={() => setConfirmarEliminarId(null)}>Cancelar</button>
+              <button className={styles.btnEliminar} onClick={() => eliminarCategoria(confirmarEliminarId)}>
+                Sí, eliminar categoría
               </button>
             </div>
           </div>

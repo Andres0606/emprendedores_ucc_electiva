@@ -37,6 +37,7 @@ interface Usuario {
   apellido: string;
   carrera: string;
   telefono?: string;
+  tipoUsuario?: string;
 }
 
 // Categorías por defecto en caso de que el backend no responda
@@ -80,7 +81,7 @@ export default function HomePage() {
   const [stats, setStats] = useState([
     { value: "0", label: "Emprendimientos activos" },
     { value: "0", label: "Productos publicados" },
-    { value: "8", label: "Facultades participantes" },
+    { value: "0", label: "Facultades participantes" },
   ]);
 
   // Función para formatear número de WhatsApp
@@ -103,7 +104,16 @@ export default function HomePage() {
     try {
       const respuesta = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
       if (!respuesta.ok) return null;
-      return await respuesta.json();
+      const data = await respuesta.json();
+      return {
+        id: data.id || data._id,
+        _id: data._id || data.id,
+        nombre: data.nombre || "",
+        apellido: data.apellido || "",
+        carrera: data.carrera || "",
+        telefono: data.telefono || "",
+        tipoUsuario: data.tipoUsuario || ""
+      };
     } catch (error) {
       console.error("Error al obtener usuario:", error);
       return null;
@@ -226,7 +236,7 @@ export default function HomePage() {
         
         // Filtrar solo los activos
         const activos = emprendimientos.filter(emp => emp.estado === "activo");
-        setTodosLosActivos(activos);  // 🔥 Guardar todos los activos para el contador de categorías
+        setTodosLosActivos(activos);
         
         // Obtener información de los usuarios
         const usuariosMap = new Map<string, Usuario>();
@@ -253,7 +263,6 @@ export default function HomePage() {
           // Buscar la categoría (primero en el mapa de la BD, si no en las de defecto)
           let categoria = categoriasMap.get(categoriaIdString);
           if (!categoria) {
-            // Buscar en las categorías por defecto
             categoria = CATEGORIAS_POR_DEFECTO.find(c => c._id === categoriaIdString);
           }
           
@@ -286,15 +295,55 @@ export default function HomePage() {
         console.log("🎯 Emprendimientos procesados:", venturesDisplay.length);
         setFeaturedVentures(venturesDisplay);
         
-        // Calcular estadísticas
+        // 🔥 CALCULAR ESTADÍSTICAS REALES
         const totalActivos = emprendimientos.filter(emp => emp.estado === "activo").length;
-        const totalProductos = emprendimientos.reduce((sum, emp) => sum + (emp.productos?.length || 0), 0);
+        
+        // Calcular total de productos SOLO de emprendimientos ACTIVOS
+        const totalProductos = emprendimientos
+          .filter(emp => emp.estado === "activo")
+          .reduce((sum, emp) => {
+            const productosCount = Array.isArray(emp.productos) ? emp.productos.length : 0;
+            return sum + productosCount;
+          }, 0);
+        
+        // 🔥 CALCULAR FACULTADES CORRECTAMENTE
+        // Obtener todas las carreras únicas de los usuarios (solo estudiantes)
+        // 🔥 CALCULAR FACULTADES DE TODOS LOS USUARIOS (estudiantes y emprendedores)
+        let facultadesUnicas = new Set<string>();
+
+        try {
+          const resUsuarios = await fetch("http://localhost:8080/api/usuarios");
+          if (resUsuarios.ok) {
+            const todosUsuarios = await resUsuarios.json();
+            for (const usuario of todosUsuarios) {
+              // Incluir estudiantes Y emprendedores con carrera definida
+              if ((usuario.tipoUsuario === "estudiante" || usuario.tipoUsuario === "emprendedor") 
+                  && usuario.carrera && usuario.carrera.trim() !== "") {
+                facultadesUnicas.add(usuario.carrera);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error al obtener usuarios para facultades:", error);
+          // Fallback
+          for (const usuario of usuariosMap.values()) {
+            if (usuario && usuario.carrera && usuario.carrera.trim() !== "") {
+              facultadesUnicas.add(usuario.carrera);
+            }
+          }
+        }
+
+        const totalFacultades = facultadesUnicas.size;
+        
+        console.log("📚 Facultades encontradas:", Array.from(facultadesUnicas));
         
         setStats([
           { value: totalActivos.toString(), label: "Emprendimientos activos" },
           { value: totalProductos.toString(), label: "Productos publicados" },
-          { value: "8", label: "Facultades participantes" },
+          { value: totalFacultades.toString(), label: "Facultades participantes" },
         ]);
+        
+        console.log("📊 Estadísticas calculadas:", { totalActivos, totalProductos, totalFacultades });
         
       } catch (error) {
         console.error("❌ Error al cargar datos:", error);
@@ -430,8 +479,8 @@ export default function HomePage() {
                   <span className={styles.aboutBoxLbl}>Estudiantes UCC</span>
                 </div>
                 <div className={`${styles.aboutBox} ${styles.aboutBoxDark}`}>
-                  <span className={styles.aboutBoxNum}>8</span>
-                  <span className={styles.aboutBoxLbl}>Facultades activas</span>
+                  <span className={styles.aboutBoxNum}>{stats[2]?.value || "0"}</span>
+                  <span className={styles.aboutBoxLbl}>{stats[2]?.label || "Facultades activas"}</span>
                 </div>
                 <div className={`${styles.aboutBox} ${styles.aboutBoxLight}`}>
                   <span className={styles.aboutBoxNum}>Villavicencio</span>
@@ -473,23 +522,28 @@ export default function HomePage() {
               <span className={styles.sectionTag}>Explora por categoría</span>
               <h2 className={styles.sectionTitle}>¿Qué estás buscando?</h2>
             </div>
-            <div className={styles.categoriesGrid}>
-              {categoriesList.map((cat) => {
-                // 🔥 Usar todos los emprendimientos activos para contar
-                const count = todosLosActivos.filter(emp => emp.categoriaId?.toString() === cat._id).length;
-                return (
-                  <Link
-                    key={cat._id}
-                    href={`/emprendimientos?categoria=${encodeURIComponent(cat.nombre)}`}
-                    className={styles.categoryCard}
-                  >
-                    <span className={styles.categoryIcon}>{obtenerEmojiPorCategoria(cat.nombre)}</span>
-                    <span className={styles.categoryLabel}>{cat.nombre}</span>
-                    <span className={styles.categoryCount}>{count} proyectos</span>
-                  </Link>
-                );
-              })}
-            </div>
+<div className={styles.categoriesGrid}>
+  {categoriesList.map((cat) => {
+    const count = todosLosActivos.filter(emp => emp.categoriaId?.toString() === cat._id).length;
+    
+    return (
+      <Link
+        key={cat._id}
+        href={`/emprendimientos?categoria=${encodeURIComponent(cat.nombre)}`}
+        className={styles.categoryCard}
+        data-empty={count === 0 ? "true" : "false"}
+      >
+        {/* Nombre de la categoría */}
+        <span className={styles.categoryLabel}>{cat.nombre}</span>
+        
+        {/* Contador de proyectos */}
+        <span className={styles.categoryCount}>
+          {count} {count === 1 ? 'proyecto' : 'proyectos'}
+        </span>
+      </Link>
+    );
+  })}
+</div>
           </div>
         </section>
 
