@@ -117,6 +117,10 @@ export default function DetalleEmprendimientoPage() {
   const [creandoPedido, setCreandoPedido] = useState(false);
   const [pedidoConfirmado, setPedidoConfirmado] = useState(false); // Nuevo estado
 
+    // Modal WhatsApp
+  const [mostrarModalWhatsApp, setMostrarModalWhatsApp] = useState(false);
+  const [productosAgrupados, setProductosAgrupados] = useState<Record<string, any>>({});
+
   // Carrito - selector por producto
   const [estadoCarrito, setEstadoCarrito] = useState<Record<number, ProductoCarritoState>>({});
   const [flyingParticles, setFlyingParticles] = useState<FlyingParticle[]>([]);
@@ -162,30 +166,46 @@ export default function DetalleEmprendimientoPage() {
     }
   };
 
-  const cargarCarritoDesdeBackend = async (usuarioId: string) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/carrito/${usuarioId}`);
-      if (response.ok) {
-        const carritoBackend = await response.json();
-        if (carritoBackend && carritoBackend.productos && carritoBackend.productos.length > 0) {
-          const itemsCarritoFrontend = carritoBackend.productos.map((p: any) => ({
-            nombre: p.nombreProducto,
-            precio: p.precio,
-            imagen: p.imagen || "",
-            cantidad: p.cantidad,
-            stock: 999,
-            emprendimientoId: p.emprendimientoId,
-            emprendimientoNombre: ""
-          }));
-          
-          localStorage.setItem('carrito', JSON.stringify(itemsCarritoFrontend));
-          setItemsCarrito(itemsCarritoFrontend);
-        }
-      }
-    } catch (error) {
-      console.error('Error al cargar carrito desde backend:', error);
+const cargarCarritoDesdeBackend = async (usuarioId: string) => {
+  try {
+    // ✅ Primero respetamos el carrito local del usuario
+    const carritoLocal = localStorage.getItem(`carrito_${usuarioId}`);
+
+    if (carritoLocal !== null) {
+      const items = JSON.parse(carritoLocal);
+      setItemsCarrito(items);
+      return;
     }
-  };
+
+    // ✅ Solo si no existe carrito local, se intenta cargar desde backend
+    const response = await fetch(`http://localhost:8080/api/carrito/${usuarioId}`);
+
+    if (response.ok) {
+      const carritoBackend = await response.json();
+
+      if (carritoBackend && carritoBackend.productos && carritoBackend.productos.length > 0) {
+        const itemsCarritoFrontend = carritoBackend.productos.map((p: any) => ({
+          nombre: p.nombreProducto,
+          precio: p.precio,
+          imagen: p.imagen || "",
+          cantidad: p.cantidad,
+          stock: 999,
+          emprendimientoId: p.emprendimientoId,
+          emprendimientoNombre: p.emprendimientoNombre || ""
+        }));
+
+        // ✅ Aquí estaba el error: antes decía 'carrito'
+        localStorage.setItem(`carrito_${usuarioId}`, JSON.stringify(itemsCarritoFrontend));
+        setItemsCarrito(itemsCarritoFrontend);
+      } else {
+        localStorage.setItem(`carrito_${usuarioId}`, "[]");
+        setItemsCarrito([]);
+      }
+    }
+  } catch (error) {
+    console.error("Error al cargar carrito desde backend:", error);
+  }
+};
 
   // 🔥 FUNCIÓN CORREGIDA: Primero muestra la factura, luego crea el pedido
   const mostrarFactura = () => {
@@ -205,12 +225,6 @@ export default function DetalleEmprendimientoPage() {
  // Confirmar pedido (ajustado a la estructura de MongoDB)
 // Confirmar pedido (ajustado a tu estructura de backend con DTOs)
 const confirmarPedido = async () => {
-  if (!usuarioActual?.id) {
-    alert("Debes iniciar sesión para realizar un pedido");
-    router.push('/autenticacion/login');
-    return false;
-  }
-  
   if (itemsCarrito.length === 0) {
     alert("No hay productos en el carrito");
     return false;
@@ -219,91 +233,247 @@ const confirmarPedido = async () => {
   setCreandoPedido(true);
   
   try {
-    const fechaActualStr = new Date().toISOString().split('T')[0];
-    const fechaExpiracion = new Date();
-    fechaExpiracion.setDate(fechaExpiracion.getDate() + 30);
-    const fechaExpiracionStr = fechaExpiracion.toISOString().split('T')[0];
+    const agrupado: Record<string, any> = {};
     
-    // Agrupar productos por emprendimiento
-    const productosPorEmprendimiento = itemsCarrito.reduce((acc, item) => {
-      if (!acc[item.emprendimientoId]) {
-        acc[item.emprendimientoId] = {
-          emprendimientoId: item.emprendimientoId,
+    for (const item of itemsCarrito) {
+      if (!agrupado[item.emprendimientoId]) {
+        let telefono = "";
+        
+        try {
+          // 🔥 Obtener el emprendimiento completo
+          const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${item.emprendimientoId}`);
+          if (resEmp.ok) {
+            const emprendimiento = await resEmp.json();
+            
+            // 🔥 PRIORIDAD 1: Teléfono del emprendimiento
+            if (emprendimiento.telefono && emprendimiento.telefono !== "") {
+              telefono = emprendimiento.telefono;
+            } 
+            // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
+            else if (emprendimiento.usuarioId) {
+              const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+              if (resUser.ok) {
+                const usuario = await resUser.json();
+                telefono = usuario.telefono || "";
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error al obtener teléfono:", error);
+        }
+        
+        agrupado[item.emprendimientoId] = {
+          id: item.emprendimientoId,
+          nombre: item.emprendimientoNombre,
           productos: [],
-          total: 0
+          total: 0,
+          telefono: telefono,
         };
       }
-      acc[item.emprendimientoId].productos.push({
-        productoId: item.nombre, // El nombre del producto como identificador
-        cantidad: item.cantidad
+      
+      const subtotal = item.precio * item.cantidad;
+      agrupado[item.emprendimientoId].productos.push({
+        nombre: item.nombre,
+        cantidad: item.cantidad,
+        precio: item.precio,
+        subtotal: subtotal,
       });
-      acc[item.emprendimientoId].total += item.precio * item.cantidad;
-      return acc;
-    }, {} as Record<string, any>);
-    
-    // Crear un pedido por cada emprendimiento
-    for (const empId of Object.keys(productosPorEmprendimiento)) {
-      const grupo = productosPorEmprendimiento[empId];
-      
-      // Estructura que espera tu backend (PedidoRequestDTO)
-      const pedidoData = {
-        clienteId: usuarioActual.id,
-        emprendimientoId: empId,
-        productos: grupo.productos.map((p: any) => ({
-          productoId: p.productoId,
-          cantidad: p.cantidad
-        })),
-        total: grupo.total,
-        estado: "pendiente",
-        fechaPedido: fechaActualStr,
-        fechaExpiracion: fechaExpiracionStr
-      };
-      
-      console.log("Enviando pedido al backend:", pedidoData);
-      
-      const response = await fetch('http://localhost:8080/api/pedidos', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(pedidoData)
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`Error al crear el pedido: ${response.status} - ${errorText}`);
-      }
-      
-      const pedidoCreado = await response.json();
-      console.log("Pedido creado exitosamente:", pedidoCreado);
+      agrupado[item.emprendimientoId].total += subtotal;
     }
+
+    console.log("📦 Productos agrupados:", agrupado);
     
-    // Vaciar carrito después de crear los pedidos
-    guardarCarrito([]);
+    setProductosAgrupados(agrupado);
+    setMostrarModalWhatsApp(true);
     
-    if (usuarioActual?.id) {
-      try {
-        await fetch(`http://localhost:8080/api/carrito/${usuarioActual.id}/vaciar`, {
-          method: 'DELETE'
-        });
-      } catch (error) {
-        console.log("Error al vaciar carrito en backend:", error);
-      }
-    }
-    
-    setPedidoConfirmado(true);
-    alert(`✅ ¡Pedido realizado exitosamente! El emprendedor se pondrá en contacto contigo para coordinar el pago y la entrega.`);
     return true;
     
   } catch (error) {
-    console.error('Error al crear pedido:', error);
-    alert(`❌ Error al realizar el pedido: ${error instanceof Error ? error.message : "Error desconocido"}. Por favor intenta nuevamente.`);
+    console.error('Error al preparar pedido:', error);
+    alert('Error al preparar el pedido');
     return false;
   } finally {
     setCreandoPedido(false);
   }
 };
+
+
+const enviarWhatsApp = (emprendimientoId: string, nombreEmp: string, productos: any[], total: number, telefono: string) => {
+  console.log("📞 Teléfono recibido:", telefono, "para:", nombreEmp);
+  
+  if (!telefono || telefono === "") {
+    alert(`No hay número de teléfono disponible para ${nombreEmp}. El emprendedor debe actualizar su perfil.`);
+    return;
+  }
+  
+  const nombreCliente = sessionStorage.getItem("nombreUsuario") || "Cliente";
+  const telefonoCliente = sessionStorage.getItem("telefono") || "No especificado";
+  
+  const listaProductos = productos.map(p => 
+    `• ${p.nombre} x${p.cantidad} → $${p.precio.toLocaleString()} c/u = $${p.subtotal.toLocaleString()}`
+  ).join('\n');
+  
+  const mensaje = `NUEVO PEDIDO - EmprendedoresUCC
+
+Cliente: ${nombreCliente}
+Telefono: ${telefonoCliente}
+
+PRODUCTOS:
+${listaProductos}
+
+─────────────────
+TOTAL A PAGAR: $${total.toLocaleString()}
+
+El cliente esta interesado en coordinar pago y entrega.
+
+Contacta al cliente directamente para acordar los detalles.
+
+Gracias por apoyar los emprendimientos UCC`;
+  
+  let numeroLimpio = telefono.replace(/\D/g, '');
+  if (!numeroLimpio.startsWith('57')) {
+    numeroLimpio = '57' + numeroLimpio;
+  }
+  
+  const url = `https://wa.me/${numeroLimpio}?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
+};
+
+
+// 🔥 FINALIZAR PEDIDO PARA UN EMPRENDIMIENTO ESPECÍFICO
+const finalizarPedidoPorEmpresa = async (emp: any) => {
+  const uid = sessionStorage.getItem("usuarioId");
+  
+  // Obtener datos del comprador
+  const usuarioStr = sessionStorage.getItem("usuario");
+  let compradorData = null;
+  try {
+    if (usuarioStr) {
+      const usuario = JSON.parse(usuarioStr);
+      compradorData = {
+        id: usuario.id || usuario._id || uid,
+        nombre: usuario.nombre || "",
+        apellido: usuario.apellido || "",
+        tipoUsuario: sessionStorage.getItem("tipoUsuario") || "estudiante",
+        telefono: usuario.telefono || "",
+        correo: usuario.correo || ""
+      };
+    }
+  } catch (error) {
+    console.error("Error al obtener datos del comprador:", error);
+  }
+  
+  // Obtener datos del vendedor
+  let vendedorData = {
+    id: "",
+    nombre: "",
+    apellido: "",
+    telefono: "",
+    correo: ""
+  };
+  
+  try {
+    const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${emp.id}`);
+    if (resEmp.ok) {
+      const emprendimiento = await resEmp.json();
+      if (emprendimiento.usuarioId) {
+        const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+        if (resUser.ok) {
+          const usuario = await resUser.json();
+          vendedorData = {
+            id: usuario.id || usuario._id,
+            nombre: usuario.nombre || "",
+            apellido: usuario.apellido || "",
+            telefono: usuario.telefono || emp.telefono || "",
+            correo: usuario.correo || ""
+          };
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error al obtener vendedor:", error);
+    vendedorData.telefono = emp.telefono || "";
+  }
+  
+  // Crear objeto de transacción
+  const transaccionData = {
+    comprador: compradorData,
+    vendedor: vendedorData,
+    emprendimiento: {
+      id: emp.id,
+      nombre: emp.nombre
+    },
+    productos: emp.productos.map((prod: any) => ({
+      nombre: prod.nombre,
+      cantidad: prod.cantidad,
+      precio: prod.precio,
+      subtotal: prod.subtotal
+    })),
+    total: emp.total,
+    metodoPago: "pendiente",
+    estado: "pendiente",
+    telefonoEmprendimiento: emp.telefono
+
+  };
+  
+  try {
+    const response = await fetch("http://localhost:8080/api/transacciones", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(transaccionData)
+    });
+    
+    if (response.ok) {
+      console.log(`✅ Transacción guardada para ${emp.nombre}`);
+      
+      // 🔥 ELIMINAR SOLO LOS PRODUCTOS DE ESTE EMPRENDIMIENTO DEL CARRITO
+      const nuevosItems = itemsCarrito.filter(item => item.emprendimientoId !== emp.id);
+      guardarCarrito(nuevosItems);
+      
+      // Actualizar productosAgrupados (remover este emprendimiento)
+      const nuevosAgrupados = { ...productosAgrupados };
+      delete nuevosAgrupados[emp.id];
+      setProductosAgrupados(nuevosAgrupados);
+      
+      // Disparar eventos
+      window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: nuevosItems } }));
+      window.dispatchEvent(new Event('storage'));
+      
+      // Si no quedan más emprendimientos, cerrar modal
+      if (Object.keys(nuevosAgrupados).length === 0) {
+        setMostrarModalWhatsApp(false);
+        setCarritoAbierto(false);
+        setVistaFactura(false);
+      }
+      
+      alert(`✅ Pedido de "${emp.nombre}" realizado exitosamente!`);
+    } else {
+      const error = await response.text();
+      alert(`Error al guardar el pedido de "${emp.nombre}": ${error}`);
+    }
+  } catch (error) {
+    console.error(`Error al guardar transacción para ${emp.nombre}:`, error);
+    alert(`Error al procesar el pedido de "${emp.nombre}"`);
+  }
+};
+
+// 🔥 FINALIZAR TODOS LOS PEDIDOS
+const finalizarTodosLosPedidos = async () => {
+  const uid = sessionStorage.getItem("usuarioId");
+  
+  // Guardar cada emprendimiento
+  for (const emp of Object.values(productosAgrupados)) {
+    await finalizarPedidoPorEmpresa(emp);
+  }
+  
+  // Cerrar modales
+  setMostrarModalWhatsApp(false);
+  setCarritoAbierto(false);
+  setVistaFactura(false);
+  
+  alert('🎉 ¡Todos los pedidos realizados exitosamente!');
+};
+
 
   // Cerrar factura y volver al carrito
   const cerrarFactura = () => {
@@ -370,24 +540,29 @@ const guardarCarrito = (items: ItemCarrito[]) => {
   }, [carritoAbierto]);
 
   // ── Acciones drawer ──
-  const cambiarCantidadDrawer = (idx: number, delta: number) => {
+const cambiarCantidadDrawer = (idx: number, delta: number) => {
   const c = [...itemsCarrito];
   const nuevo = c[idx].cantidad + delta;
   if (nuevo < 1 || nuevo > c[idx].stock) return;
   c[idx].cantidad = nuevo;
   guardarCarrito(c);
+  window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: c } }));
+  window.dispatchEvent(new Event('storage'));
 };
 
-  const eliminarItemDrawer = (idx: number) => {
+const eliminarItemDrawer = (idx: number) => {
   const c = itemsCarrito.filter((_, i) => i !== idx);
   guardarCarrito(c);
+  window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: c } }));
+  window.dispatchEvent(new Event('storage'));
 };
 
-  const vaciarCarrito = async () => {
+const vaciarCarrito = async () => {
   if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
     guardarCarrito([]);
     setVistaFactura(false);
-    
+    window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: [] } }));
+    window.dispatchEvent(new Event('storage'));
     if (usuarioActual?.id) {
       await sincronizarCarritoConBackend(usuarioActual.id, []);
     }
@@ -455,7 +630,16 @@ const confirmarAgregarAlCarrito = async (
   event: React.MouseEvent<HTMLButtonElement>
 ) => {
   const cantidad = estadoCarrito[idx]?.cantidad || 1;
-  const carritoActual = [...itemsCarrito];
+
+if (!usuarioActual?.id) {
+  alert("Debes iniciar sesión para agregar productos al carrito");
+  router.push("/autenticacion/login");
+  return;
+}
+
+const carritoKey = `carrito_${usuarioActual.id}`;
+const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey) || "[]");
+
   const empId = emprendimiento?.id || emprendimiento?._id;
   
   // 🔥 Validar que el ID del emprendimiento existe
@@ -484,7 +668,10 @@ const confirmarAgregarAlCarrito = async (
       emprendimientoNombre: emprendimiento?.nombre || "",
     });
   }
+
   guardarCarrito(carritoActual);
+  window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: carritoActual } }));
+  window.dispatchEvent(new Event('storage'));
   lanzarAnimacion(event.currentTarget, producto.imagen || "🛒");
   cancelarSeleccion(idx);
 };
@@ -737,7 +924,7 @@ const confirmarAgregarAlCarrito = async (
                       className={styles.facturaPrintBtn} 
                       onClick={() => window.print()}
                     >
-                      🖨️ Imprimir factura
+                       Imprimir factura
                     </button>
                     {!pedidoConfirmado && (
                       <button 
@@ -745,7 +932,7 @@ const confirmarAgregarAlCarrito = async (
                         onClick={confirmarPedido}
                         disabled={creandoPedido}
                       >
-                        {creandoPedido ? "⏳ Procesando..." : "✅ Confirmar pedido"}
+                        {creandoPedido ? "⏳ Procesando..." : " Confirmar pedido"}
                       </button>
                     )}
                     {pedidoConfirmado && (
@@ -994,6 +1181,79 @@ const confirmarAgregarAlCarrito = async (
           <Link href="/emprendimientos" className={styles.backToList}>← Ver todos los emprendimientos</Link>
         </div>
       </main>
+
+            {/* MODAL WHATSAPP - PRODUCTOS AGRUPADOS POR EMPRENDIMIENTO */}
+{/* MODAL WHATSAPP - PRODUCTOS AGRUPADOS POR EMPRENDIMIENTO */}
+{mostrarModalWhatsApp && (
+  <div className={styles.modalOverlay} onClick={() => setMostrarModalWhatsApp(false)}>
+    <div className={styles.modalWhatsApp} onClick={e => e.stopPropagation()}>
+      <div className={styles.modalHeader}>
+        <h3>📦 Confirma tu pedido</h3>
+        <button className={styles.modalClose} onClick={() => setMostrarModalWhatsApp(false)}>✕</button>
+      </div>
+      
+      <div className={styles.modalBody}>
+        <p className={styles.modalDesc}>
+          Tu pedido incluye productos de diferentes emprendedores. 
+          Contacta a cada uno por WhatsApp para coordinar pago y entrega, 
+          o finaliza el pedido directamente.
+        </p>
+        
+        {Object.values(productosAgrupados).map((emp: any) => (
+          <div key={emp.id} className={styles.empresaCard}>
+            <div className={styles.empresaHeader}>
+              <span className={styles.empresaIcon}>🏪</span>
+              <div>
+                <h4 className={styles.empresaNombre}>{emp.nombre}</h4>
+                <p className={styles.empresaTotal}>Total: ${emp.total.toLocaleString()}</p>
+              </div>
+            </div>
+            
+            <div className={styles.productosLista}>
+              {emp.productos.map((prod: any, idx: number) => (
+                <div key={idx} className={styles.productoItem}>
+                  <span>• {prod.nombre}</span>
+                  <span>x{prod.cantidad}</span>
+                  <span>${prod.subtotal.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className={styles.empresaButtons}>
+              <button 
+                className={styles.whatsappEmpresaBtn}
+                onClick={() => enviarWhatsApp(emp.id, emp.nombre, emp.productos, emp.total, emp.telefono)}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                Contactar por WhatsApp
+              </button>
+              
+              <button 
+                className={styles.finalizarEmpresaBtn}
+                onClick={() => finalizarPedidoPorEmpresa(emp)}
+              >
+                 Finalizar pedido
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className={styles.modalFooter}>
+        <button className={styles.btnCancelar} onClick={() => setMostrarModalWhatsApp(false)}>
+          Seguir comprando
+        </button>
+        {Object.keys(productosAgrupados).length > 1 && (
+          <button className={styles.btnFinalizarTodos} onClick={finalizarTodosLosPedidos}>
+             Finalizar todos
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
       <Footer />
     </>
   );

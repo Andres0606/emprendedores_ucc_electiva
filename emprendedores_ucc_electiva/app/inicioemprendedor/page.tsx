@@ -40,6 +40,7 @@ interface Usuario {
 }
 
 const quickLinks = [
+  { href: "/inicioemprendedor/pedidos",          label: "Pedidos recibidos",  mod: "blue"  },  
   { href: "/inicioemprendedor/misemprendimientos", label: "Mis emprendimientos", mod: "blue"  },
   { href: "/inicioemprendedor/misproductos",       label: "Productos",          mod: "green" },
   { href: "/inicioemprendedor/configuracion",      label: "Configuración",      mod: "red"   },
