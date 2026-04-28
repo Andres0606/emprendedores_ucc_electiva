@@ -1,4 +1,3 @@
-
 package com.ucc.emprendedoresucc.controller;
 
 import com.ucc.emprendedoresucc.model.Emprendimiento;
@@ -18,7 +17,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/seguimientos")
-@CrossOrigin(origins = "https://emprendedores-ucc-electiva-l1ak.vercel.app") // 👈 CAMBIA ESTA LÍNEA
+// @CrossOrigin ELIMINADO - La configuración CORS está en CorsConfig.java
 public class SeguimientoController {
     
     @Autowired
@@ -102,7 +101,7 @@ public class SeguimientoController {
     }
 
 
-    // 🔥 NUEVO ENDPOINT - Obtener todos los emprendimientos que sigue un usuario
+    // Obtener todos los emprendimientos que sigue un usuario
     @GetMapping("/usuario/{usuarioId}/emprendimientos")
     public ResponseEntity<?> obtenerEmprendimientosSeguidos(@PathVariable String usuarioId) {
         try {
@@ -204,5 +203,4 @@ public class SeguimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-
 }

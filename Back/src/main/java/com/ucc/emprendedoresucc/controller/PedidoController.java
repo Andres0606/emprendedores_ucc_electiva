@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "https://emprendedores-ucc-electiva-l1ak.vercel.app") // 👈 CAMBIA ESTA LÍNEA
+// @CrossOrigin ELIMINADO - La configuración CORS está en CorsConfig.java
 public class PedidoController {
 
     @Autowired
@@ -81,17 +81,17 @@ public class PedidoController {
                 .body("Error al actualizar el estado del pedido: " + e.getMessage());
         }
     }
-    @GetMapping("/ultimo-numero")
-public ResponseEntity<?> obtenerUltimoNumeroPedido() {
-    try {
-        Integer ultimoNumero = pedidoService.obtenerUltimoNumeroPedido();
-        Map<String, Integer> response = new HashMap<>();
-        response.put("ultimoNumero", ultimoNumero);
-        return ResponseEntity.ok(response);
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(500).body("Error al obtener último número");
-    }
-}
     
+    @GetMapping("/ultimo-numero")
+    public ResponseEntity<?> obtenerUltimoNumeroPedido() {
+        try {
+            Integer ultimoNumero = pedidoService.obtenerUltimoNumeroPedido();
+            Map<String, Integer> response = new HashMap<>();
+            response.put("ultimoNumero", ultimoNumero);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al obtener último número");
+        }
+    }
 }

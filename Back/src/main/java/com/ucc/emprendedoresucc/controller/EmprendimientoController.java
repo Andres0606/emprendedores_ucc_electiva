@@ -14,10 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/emprendimientos")
-@CrossOrigin(origins = {
-    "https://emprendedores-ucc-electiva-l1ak.vercel.app",
-    "http://localhost:3000"
-}, methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.OPTIONS})
+// @CrossOrigin ELIMINADO - La configuración CORS está en CorsConfig.java
 public class EmprendimientoController {
 
     @Autowired

@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/transacciones")
-@CrossOrigin(origins = "https://emprendedores-ucc-electiva-l1ak.vercel.app") // 👈 CAMBIA ESTA LÍNEA
+// @CrossOrigin ELIMINADO - La configuración CORS está en CorsConfig.java
 public class TransaccionController {
 
     @Autowired

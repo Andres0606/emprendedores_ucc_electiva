@@ -12,7 +12,11 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/carrito")
-@CrossOrigin(origins = "https://emprendedores-ucc-electiva-l1ak.vercel.app") // 👈 CAMBIA ESTA LÍNEA
+@CrossOrigin(origins = {
+    "https://emprendedores-ucc-electiva-l1ak.vercel.app",
+    "https://emprendedores-ucc-electiva-8x10hcyvl-andys-projects-1a6861a7.vercel.app",
+    "http://localhost:3000"
+})
 public class CarritoController {
 
     @Autowired
