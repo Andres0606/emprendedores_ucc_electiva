@@ -1,0 +1,13 @@
+# Exclude local build output – the Docker build produces its own
+build/
+.gradle/
+
+# IDE and OS noise
+.idea/
+*.iml
+.DS_Store
+*.class
+
+# Git history is not needed inside the image
+.git/
+.gitignore
