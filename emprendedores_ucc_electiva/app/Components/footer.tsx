@@ -126,8 +126,6 @@ export default function Footer() {
       <div className={styles.bottomBar}>
         <span>© {new Date().getFullYear()} EmprendedoresUCC — Universidad Cooperativa de Colombia</span>
         <span className={styles.bottomLinks}>
-          <Link href="/privacidad">Política de privacidad</Link>
-          <Link href="/terminos">Términos de uso</Link>
         </span>
       </div>
     </footer>
