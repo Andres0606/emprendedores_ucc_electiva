@@ -28,7 +28,13 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+// Disable the plain jar task so only the Spring Boot fat jar is produced
+jar {
+    enabled = false
+}
+
 bootJar {
+    enabled = true
     mainClass = 'com.ucc.emprendedoresucc.EmprendedoresuccApplication'
     archiveFileName = 'app.jar'
 }
