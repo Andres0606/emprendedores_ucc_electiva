@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioestudiante/miperfil.module.css";
 import Link from "next/link";
+import { API_URL } from "@/src/config/api";
 
 const CATEGORIAS = [
   { id: 1, label: "Gastronomía" },
@@ -52,7 +53,7 @@ export default function MiPerfilPage() {
         // Obtener carrera del usuario desde el backend
         if (usuarioId) {
           try {
-            const res = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+            const res = await fetch(`${API_URL}/api/usuarios/${usuarioId}`);
             if (res.ok) {
               const data = await res.json();
               const carreraBackend = data.carrera || data.facultad;
@@ -93,14 +94,14 @@ export default function MiPerfilPage() {
       if (!usuarioId) return;
       
       try {
-        // Si tienes endpoint de compras, descomenta esto
-        // const res = await fetch(`http://localhost:8080/api/compras/usuario/${usuarioId}`);
-        // if (res.ok) {
-        //   const data = await res.json();
-        //   setCompras(data);
-        // }
-        // Si no hay endpoint, dejar array vacío
-        setCompras([]);
+        // Cargar transacciones del usuario
+        const res = await fetch(`${API_URL}/api/transacciones?compradorId=${usuarioId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setCompras(data);
+        } else {
+          setCompras([]);
+        }
       } catch (error) {
         console.error("Error al cargar compras:", error);
         setCompras([]);
@@ -197,16 +198,16 @@ export default function MiPerfilPage() {
                 {compras.map((compra, index) => (
                   <div key={index} className={styles.compraItem}>
                     <div className={styles.compraInfo}>
-                      <p className={styles.compraNombre}>{compra.productoNombre || "Producto"}</p>
+                      <p className={styles.compraNombre}>{compra.productoNombre || compra.nombre || "Producto"}</p>
                       <p className={styles.compraDetalle}>
-                        {compra.emprendimientoNombre} • {compra.cantidad} unidades
+                        {compra.emprendimientoNombre || compra.vendedor?.nombre || "Emprendimiento"} • {compra.cantidad || 1} unidades
                       </p>
                       <p className={styles.compraFecha}>
                         {compra.fecha ? new Date(compra.fecha).toLocaleDateString('es-CO') : "Fecha no disponible"}
                       </p>
                     </div>
                     <div className={styles.compraTotal}>
-                      ${compra.total?.toLocaleString() || "0"}
+                      ${(compra.total || compra.monto || 0).toLocaleString()}
                     </div>
                   </div>
                 ))}

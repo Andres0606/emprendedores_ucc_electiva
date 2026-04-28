@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import styles from "../css/inicioestudiante/inicioestudiante.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/src/config/api";
 
 interface Emprendimiento {
   id?: string;
@@ -233,7 +234,7 @@ const confirmarPedido = async () => {
         
         try {
           // 🔥 PRIMERO: Obtener el emprendimiento completo
-          const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${item.emprendimientoId}`);
+          const resEmp = await fetch(`${API_URL}/api/emprendimientos/${item.emprendimientoId}`);
           if (resEmp.ok) {
             const emprendimiento = await resEmp.json();
             
@@ -244,7 +245,7 @@ const confirmarPedido = async () => {
             } 
             // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
             else if (emprendimiento.usuarioId) {
-              const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+              const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
               if (resUser.ok) {
                 const usuario = await resUser.json();
                 telefono = usuario.telefono || "";
@@ -366,24 +367,24 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${emp.id}`);
-    if (resEmp.ok) {
-      const emprendimiento = await resEmp.json();
-      if (emprendimiento.usuarioId) {
-        const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
-        if (resUser.ok) {
-          const usuario = await resUser.json();
-          vendedorData = {
-            id: usuario.id || usuario._id,
-            nombre: usuario.nombre || "",
-            apellido: usuario.apellido || "",
-            telefono: usuario.telefono || emp.telefono || "",
-            correo: usuario.correo || ""
-          };
-        }
+  const resEmp = await fetch(`${API_URL}/api/emprendimientos/${emp.id}`);
+  if (resEmp.ok) {
+    const emprendimiento = await resEmp.json();
+    if (emprendimiento.usuarioId) {
+      const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
+      if (resUser.ok) {
+        const usuario = await resUser.json();
+        vendedorData = {
+          id: usuario.id || usuario._id,
+          nombre: usuario.nombre || "",
+          apellido: usuario.apellido || "",
+          telefono: usuario.telefono || emp.telefono || "",
+          correo: usuario.correo || ""
+        };
       }
     }
-  } catch (error) {
+  }
+} catch (error) {
     console.error("Error al obtener vendedor:", error);
     vendedorData.telefono = emp.telefono || "";
   }
@@ -410,37 +411,37 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const response = await fetch("http://localhost:8080/api/transacciones", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(transaccionData)
-    });
+  const response = await fetch(`${API_URL}/api/transacciones`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(transaccionData)
+  });
+  
+  if (response.ok) {
+    console.log(`✅ Transacción guardada para ${emp.nombre}`);
     
-    if (response.ok) {
-      console.log(`✅ Transacción guardada para ${emp.nombre}`);
-      
-      // 🔥 ELIMINAR SOLO LOS PRODUCTOS DE ESTE EMPRENDIMIENTO DEL CARRITO
-      const nuevosItems = itemsCarrito.filter(item => item.emprendimientoId !== emp.id);
-      guardarCarrito(nuevosItems);
-      
-      // Actualizar productosAgrupados (remover este emprendimiento)
-      const nuevosAgrupados = { ...productosAgrupados };
-      delete nuevosAgrupados[emp.id];
-      setProductosAgrupados(nuevosAgrupados);
-      
-      // Si no quedan más emprendimientos, cerrar modal
-      if (Object.keys(nuevosAgrupados).length === 0) {
-        setMostrarModalWhatsApp(false);
-        setCarritoAbierto(false);
-        setVistaFactura(false);
-      }
-      
-      alert(`✅ Pedido de "${emp.nombre}" realizado exitosamente!`);
-    } else {
-      const error = await response.text();
-      alert(`Error al guardar el pedido de "${emp.nombre}": ${error}`);
+    // 🔥 ELIMINAR SOLO LOS PRODUCTOS DE ESTE EMPRENDIMIENTO DEL CARRITO
+    const nuevosItems = itemsCarrito.filter(item => item.emprendimientoId !== emp.id);
+    guardarCarrito(nuevosItems);
+    
+    // Actualizar productosAgrupados (remover este emprendimiento)
+    const nuevosAgrupados = { ...productosAgrupados };
+    delete nuevosAgrupados[emp.id];
+    setProductosAgrupados(nuevosAgrupados);
+    
+    // Si no quedan más emprendimientos, cerrar modal
+    if (Object.keys(nuevosAgrupados).length === 0) {
+      setMostrarModalWhatsApp(false);
+      setCarritoAbierto(false);
+      setVistaFactura(false);
     }
-  } catch (error) {
+    
+    alert(`✅ Pedido de "${emp.nombre}" realizado exitosamente!`);
+  } else {
+    const error = await response.text();
+    alert(`Error al guardar el pedido de "${emp.nombre}": ${error}`);
+  }
+}catch (error) {
     console.error(`Error al guardar transacción para ${emp.nombre}:`, error);
     alert(`Error al procesar el pedido de "${emp.nombre}"`);
   }
@@ -800,45 +801,45 @@ const finalizarTodosLosPedidos = async () => {
 
   const obtenerActividad = async (usuarioId: string) => {
     try {
-      const actividadesTemp: Actividad[] = [];
-      
-      const resSeguimientos = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}`);
-      if (resSeguimientos.ok) {
-        const seguimientos: SeguimientoConFecha[] = await resSeguimientos.json();
-        const seguimientosRecientes = seguimientos.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()).slice(0, 2);
-        
-        for (const seg of seguimientosRecientes) {
-          const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${seg.emprendimientoId}`);
-          if (resEmp.ok) {
-            const emp = await resEmp.json();
-            actividadesTemp.push({
-              id: `seg-${seg.id}`,
-              tipo: "seguimiento",
-              titulo: "Emprendimiento seguido",
-              descripcion: `Comenzaste a seguir "${emp.nombre}"`,
-              fecha: seg.fecha,
-              icono: "🔔"
-            });
-          }
-        }
+  const actividadesTemp: Actividad[] = [];
+  
+  const resSeguimientos = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}`);
+  if (resSeguimientos.ok) {
+    const seguimientos: SeguimientoConFecha[] = await resSeguimientos.json();
+    const seguimientosRecientes = seguimientos.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()).slice(0, 2);
+    
+    for (const seg of seguimientosRecientes) {
+      const resEmp = await fetch(`${API_URL}/api/emprendimientos/${seg.emprendimientoId}`);
+      if (resEmp.ok) {
+        const emp = await resEmp.json();
+        actividadesTemp.push({
+          id: `seg-${seg.id}`,
+          tipo: "seguimiento",
+          titulo: "Emprendimiento seguido",
+          descripcion: `Comenzaste a seguir "${emp.nombre}"`,
+          fecha: seg.fecha,
+          icono: "🔔"
+        });
       }
-      
-      const carritoGuardado = localStorage.getItem(`carrito_${usuarioId}`);
-      if (carritoGuardado) {
-        const carrito = JSON.parse(carritoGuardado);
-        if (carrito.length > 0) {
-          const ultimoProducto = carrito[carrito.length - 1];
-          actividadesTemp.push({
-            id: `carrito-${Date.now()}`,
-            tipo: "carrito",
-            titulo: "Producto agregado al carrito",
-            descripcion: `Agregaste "${ultimoProducto.nombre}" a tu carrito`,
-            fecha: new Date().toISOString(),
-            icono: "🛒"
-          });
-        }
-      }
-      
+    }
+  }
+  
+  const carritoGuardado = localStorage.getItem(`carrito_${usuarioId}`);
+  if (carritoGuardado) {
+    const carrito = JSON.parse(carritoGuardado);
+    if (carrito.length > 0) {
+      const ultimoProducto = carrito[carrito.length - 1];
+      actividadesTemp.push({
+        id: `carrito-${Date.now()}`,
+        tipo: "carrito",
+        titulo: "Producto agregado al carrito",
+        descripcion: `Agregaste "${ultimoProducto.nombre}" a tu carrito`,
+        fecha: new Date().toISOString(),
+        icono: "🛒"
+      });
+    }
+  }
+  
       const categoriasGuardadas = localStorage.getItem("categoriasInteres");
       if (categoriasGuardadas) {
         const categorias = JSON.parse(categoriasGuardadas);
@@ -870,7 +871,7 @@ const finalizarTodosLosPedidos = async () => {
 
   const obtenerUltimoSeguido = async (usuarioId: string) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
+      const res = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
       
       if (!res.ok) return null;
       
@@ -886,7 +887,7 @@ const finalizarTodosLosPedidos = async () => {
       const ultimoEmprendimiento = emprendimientos[emprendimientos.length - 1];
       
       try {
-        const resCat = await fetch(`http://localhost:8080/api/categorias/${ultimoEmprendimiento.categoriaId}`);
+        const resCat = await fetch(`${API_URL}/api/categorias/${ultimoEmprendimiento.categoriaId}`);
         let categoriaNombre = "Sin categoría";
         if (resCat.ok) {
           const categoria = await resCat.json();

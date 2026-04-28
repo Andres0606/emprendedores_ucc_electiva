@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "../../css/inicioAdmin/gestionUsuarios.module.css";
+import { API_URL } from "@/src/config/api";
 
 interface Usuario {
   id?: string;
@@ -61,7 +62,7 @@ export default function GestionUsuariosPage() {
   async function cargarUsuarios() {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8080/api/usuarios");
+      const res = await fetch(`${API_URL}/api/usuarios`);
       if (!res.ok) throw new Error();
       const data: Usuario[] = await res.json();
       
@@ -94,7 +95,7 @@ export default function GestionUsuariosPage() {
 
   async function cambiarEstado(id: string, estado: string) {
     try {
-      const res = await fetch(`http://localhost:8080/api/usuarios/${id}/estado`, {
+      const res = await fetch(`${API_URL}/api/usuarios/${id}/estado`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado }),
@@ -107,7 +108,7 @@ export default function GestionUsuariosPage() {
   async function eliminar(id: string) {
     if (!confirm("¿Eliminar este usuario? Esta acción no se puede deshacer.")) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/usuarios/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/api/usuarios/${id}`, { method: "DELETE" });
       if (res.ok) cargarUsuarios();
       else alert("Error al eliminar.");
     } catch { alert("Error de conexión."); }
@@ -116,7 +117,7 @@ export default function GestionUsuariosPage() {
   async function guardarEdicion() {
     if (!editarId) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/usuarios/${editarId}`, {
+      const res = await fetch(`${API_URL}/api/usuarios/${editarId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formEditar),
@@ -226,7 +227,7 @@ export default function GestionUsuariosPage() {
                 <th>Carrera</th>
                 <th>Estado</th>
                 <th>Acciones</th>
-               </tr>
+              </tr>
             </thead>
             <tbody>
               {filtrados.map(u => {

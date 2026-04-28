@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import styles from "../../css/inicioemprendedor/misproductos.module.css";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { API_URL } from "@/src/config/api";
 
 interface Producto {
   id?: string;
@@ -75,7 +76,7 @@ function ProductosContent() {
     if (!uid) return;
 
     try {
-      const resEmps = await fetch("http://localhost:8080/api/emprendimientos");
+      const resEmps = await fetch(`${API_URL}/api/emprendimientos`);
       if (resEmps.ok) {
         const emps: Emprendimiento[] = await resEmps.json();
         const misEmprendimientos = emps.filter(e => String(e.usuarioId) === String(uid));
@@ -114,7 +115,7 @@ function ProductosContent() {
       if (!uid) { setLoading(false); return; }
 
       try {
-        const resEmps = await fetch("http://localhost:8080/api/emprendimientos");
+        const resEmps = await fetch(`${API_URL}/api/emprendimientos`);
         if (!resEmps.ok) throw new Error("No se pudo cargar los emprendimientos.");
         const emps: Emprendimiento[] = await resEmps.json();
         
@@ -277,7 +278,7 @@ function ProductosContent() {
       const productosActuales = emprendimiento.productos || [];
       const productosActualizados = [...productosActuales, nuevoProducto];
       
-      const res = await fetch(`http://localhost:8080/api/emprendimientos/${form.emprendimientoId}`, {
+      const res = await fetch(`${API_URL}/api/emprendimientos/${form.emprendimientoId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -325,7 +326,7 @@ function ProductosContent() {
         return p;
       });
       
-      const res = await fetch(`http://localhost:8080/api/emprendimientos/${form.emprendimientoId}`, {
+      const res = await fetch(`${API_URL}/api/emprendimientos/${form.emprendimientoId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -364,7 +365,7 @@ function ProductosContent() {
         !(p.nombre === productoActivo.nombre && p.precio === productoActivo.precio)
       );
       
-      const res = await fetch(`http://localhost:8080/api/emprendimientos/${productoActivo.emprendimientoId}`, {
+      const res = await fetch(`${API_URL}/api/emprendimientos/${productoActivo.emprendimientoId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

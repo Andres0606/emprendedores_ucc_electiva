@@ -4,13 +4,14 @@ import React, { useState, useEffect } from "react";
 import styles from "../css/inicioemprendedor/inicioemprendedor.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/src/config/api";
 
 interface Producto {
   nombre: string;
   precio: number;
   stock: number;
   imagen: string;
-  createdAt?: string;  // 🔥 Añadido para ordenar por fecha
+  createdAt?: string;
 }
 
 interface Emprendimiento {
@@ -25,7 +26,7 @@ interface Emprendimiento {
   telefono?: string;
   imagenes?: string[];
   productos?: Producto[];
-  createdAt?: string;  // 🔥 Añadido para ordenar por fecha
+  createdAt?: string;
 }
 
 interface Usuario {
@@ -59,13 +60,11 @@ export default function InicioEmprendedorPage() {
 
   // 🔥 Función para obtener timestamp de forma confiable
   const getTimestamp = (item: any): number => {
-    // Prioridad: createdAt > id timestamp
     if (item.createdAt) {
       const timestamp = new Date(item.createdAt).getTime();
       if (!isNaN(timestamp)) return timestamp;
     }
     
-    // Fallback: extraer timestamp del ID de MongoDB
     const id = item.id || item._id;
     if (id && id.length > 8) {
       try {
@@ -108,26 +107,21 @@ export default function InicioEmprendedorPage() {
 
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8080/api/emprendimientos");
+      const res = await fetch(`${API_URL}/api/emprendimientos`);
       if (res.ok) {
         const emps: Emprendimiento[] = await res.json();
         const misEmprendimientos = emps.filter(e => String(e.usuarioId) === String(uid));
         
-        // 🔥 Ordenar emprendimientos por fecha (más reciente primero)
         const ordenados = ordenarPorFecha(misEmprendimientos);
         
         setEmprendimientos(ordenados);
         
-        // 🔥 Calcular total de productos
         const total = ordenados.reduce((sum, emp) => sum + (emp.productos?.length || 0), 0);
         setTotalProductos(total);
         
-        // 🔥 OBTENER EL ÚLTIMO EMPRENDIMIENTO (el más reciente)
         const ultimo = ordenados.length > 0 ? ordenados[0] : null;
         setUltimoEmprendimiento(ultimo);
         
-        // 🔥 OBTENER LOS ÚLTIMOS 2 PRODUCTOS DE TODOS LOS EMPRENDIMIENTOS
-        // Recolectar todos los productos con su fecha
         const todosLosProductos: (Producto & { emprendimientoNombre: string; fechaCreacion: number })[] = [];
         
         for (const emp of ordenados) {
@@ -142,17 +136,14 @@ export default function InicioEmprendedorPage() {
           }
         }
         
-        // 🔥 Ordenar todos los productos por fecha (más reciente primero)
         const productosOrdenados = todosLosProductos.sort((a, b) => b.fechaCreacion - a.fechaCreacion);
         
-        // 🔥 Tomar los últimos 2 productos
         setUltimosProductos(productosOrdenados.slice(0, 2));
         
-        // Cargar categorías para cada emprendimiento
         for (const emp of ordenados) {
           if (emp.categoriaId) {
             try {
-              const resCat = await fetch(`http://localhost:8080/api/categorias/${emp.categoriaId}`);
+              const resCat = await fetch(`${API_URL}/api/categorias/${emp.categoriaId}`);
               if (resCat.ok) {
                 const cat = await resCat.json();
                 emp.categoriaNombre = cat.nombre;
@@ -169,12 +160,10 @@ export default function InicioEmprendedorPage() {
     }
   };
 
-  // Cargar datos al inicio
   useEffect(() => {
     cargarDatos();
   }, []);
 
-  // 🔥 ESCUCHAR CAMBIOS EN localStorage (cuando se crean productos o emprendimientos)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "productosActualizados" || e.key === "emprendimientosActualizados") {
@@ -190,7 +179,6 @@ export default function InicioEmprendedorPage() {
     };
   }, []);
 
-  // También recargar cuando la página recibe foco
   useEffect(() => {
     const handleFocus = () => {
       console.log("📌 Página enfocada, recargando...");

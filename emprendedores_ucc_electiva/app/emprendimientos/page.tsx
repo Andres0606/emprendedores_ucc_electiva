@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "../Components/header";
 import Footer from "../Components/footer";
 import styles from "../css/emprendimientos/page.module.css";
+import { API_URL } from "@/src/config/api";
 
 interface Emprendimiento {
   id?: string;
@@ -139,11 +140,11 @@ export default function EmprendimientosPage() {
         total: items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0)
       };
       
-      const response = await fetch('http://localhost:8080/api/carrito', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(carritoData)
-      });
+    const response = await fetch(`${API_URL}/api/carrito`, {  // 👈 SOLO CAMBIAR ESTA LÍNEA
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(carritoData)
+    });
       
       if (!response.ok) {
         console.error('Error al sincronizar carrito con backend');
@@ -165,8 +166,8 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
     }
 
     // ✅ Solo si no existe carrito local, se intenta cargar desde backend
-    const response = await fetch(`http://localhost:8080/api/carrito/${usuarioId}`);
-
+    const response = await fetch(`${API_URL}/api/carrito/${usuarioId}`);
+    
     if (response.ok) {
       const carritoBackend = await response.json();
 
@@ -218,24 +219,24 @@ const confirmarPedido = async () => {
         let telefono = "";
         
         try {
-          // 🔥 Obtener el emprendimiento completo
-          const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${item.emprendimientoId}`);
-          if (resEmp.ok) {
-            const emprendimiento = await resEmp.json();
-            
-            // 🔥 PRIORIDAD 1: Teléfono del emprendimiento
-            if (emprendimiento.telefono && emprendimiento.telefono !== "") {
-              telefono = emprendimiento.telefono;
-            } 
-            // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
-            else if (emprendimiento.usuarioId) {
-              const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
-              if (resUser.ok) {
-                const usuario = await resUser.json();
-                telefono = usuario.telefono || "";
-              }
+        // 🔥 Obtener el emprendimiento completo
+        const resEmp = await fetch(`${API_URL}/api/emprendimientos/${item.emprendimientoId}`);
+        if (resEmp.ok) {
+          const emprendimiento = await resEmp.json();
+          
+          // 🔥 PRIORIDAD 1: Teléfono del emprendimiento
+          if (emprendimiento.telefono && emprendimiento.telefono !== "") {
+            telefono = emprendimiento.telefono;
+          } 
+          // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
+          else if (emprendimiento.usuarioId) {
+            const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
+            if (resUser.ok) {
+              const usuario = await resUser.json();
+              telefono = usuario.telefono || "";
             }
           }
+        }
         } catch (error) {
           console.error("Error al obtener teléfono:", error);
         }
@@ -349,24 +350,24 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
     correo: ""
   };
   
-  try {
-    const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${emp.id}`);
-    if (resEmp.ok) {
-      const emprendimiento = await resEmp.json();
-      if (emprendimiento.usuarioId) {
-        const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
-        if (resUser.ok) {
-          const usuario = await resUser.json();
-          vendedorData = {
-            id: usuario.id || usuario._id,
-            nombre: usuario.nombre || "",
-            apellido: usuario.apellido || "",
-            telefono: usuario.telefono || emp.telefono || "",
-            correo: usuario.correo || ""
-          };
-        }
+ try {
+  const resEmp = await fetch(`${API_URL}/api/emprendimientos/${emp.id}`);
+  if (resEmp.ok) {
+    const emprendimiento = await resEmp.json();
+    if (emprendimiento.usuarioId) {
+      const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
+      if (resUser.ok) {
+        const usuario = await resUser.json();
+        vendedorData = {
+          id: usuario.id || usuario._id,
+          nombre: usuario.nombre || "",
+          apellido: usuario.apellido || "",
+          telefono: usuario.telefono || emp.telefono || "",
+          correo: usuario.correo || ""
+        };
       }
     }
+  }
   } catch (error) {
     console.error("Error al obtener vendedor:", error);
     vendedorData.telefono = emp.telefono || "";
@@ -394,11 +395,11 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const response = await fetch("http://localhost:8080/api/transacciones", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(transaccionData)
-    });
+  const response = await fetch(`${API_URL}/api/transacciones`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(transaccionData)
+  });
     
     if (response.ok) {
       console.log(`✅ Transacción guardada para ${emp.nombre}`);
@@ -831,53 +832,53 @@ const imprimirFactura = () => {
 
   // ── Datos ──
   const obtenerUsuario = async (usuarioId: string): Promise<Usuario | null> => {
-    try {
-      const r = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
-      if (!r.ok) return null;
-      return await r.json();
-    } catch { return null; }
+  try {
+    const r = await fetch(`${API_URL}/api/usuarios/${usuarioId}`);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
   };
 
   const obtenerCategorias = async () => {
     try {
-      const r = await fetch("http://localhost:8080/api/categorias");
-      if (!r.ok) return;
-      const data: Categoria[] = await r.json();
-      const map = new Map<string, string>();
-      const arr: { id: string; nombre: string }[] = [];
-      data.forEach(cat => {
-        const id = cat.id || cat._id;
-        if (id) { map.set(id, cat.nombre); arr.push({ id, nombre: cat.nombre }); }
-      });
-      setCategorias(map);
-      setCategoriasList(arr);
-    } catch { /* silent */ }
+  const r = await fetch(`${API_URL}/api/categorias`);
+  if (!r.ok) return;
+  const data: Categoria[] = await r.json();
+  const map = new Map<string, string>();
+  const arr: { id: string; nombre: string }[] = [];
+  data.forEach(cat => {
+    const id = cat.id || cat._id;
+    if (id) { map.set(id, cat.nombre); arr.push({ id, nombre: cat.nombre }); }
+  });
+  setCategorias(map);
+  setCategoriasList(arr);
+  }catch { /* silent */ }
   };
 
-  useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        setLoading(true);
-        await obtenerCategorias();
-        const r = await fetch("http://localhost:8080/api/emprendimientos");
-        if (!r.ok) throw new Error(`Error ${r.status}`);
-        const data: Emprendimiento[] = await r.json();
-        const usuariosMap = new Map<string, Usuario>();
-        const ids = [...new Set(data.map(e => e.usuarioId))];
-        for (const uid of ids) {
-          const u = await obtenerUsuario(uid);
-          if (u) usuariosMap.set(uid, u);
-        }
-        setUsuarios(usuariosMap);
-        setEmprendimientos(data);
-      } catch {
-        setError("No se pudieron cargar los emprendimientos");
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const cargarDatos = async () => {
+    try {
+      setLoading(true);
+      await obtenerCategorias();
+      const r = await fetch(`${API_URL}/api/emprendimientos`);  // 👈 CAMBIADO: era "carrito", ahora es "emprendimientos" y corregido el template string
+      if (!r.ok) throw new Error(`Error ${r.status}`);
+      const data: Emprendimiento[] = await r.json();
+      const usuariosMap = new Map<string, Usuario>();
+      const ids = [...new Set(data.map(e => e.usuarioId))];
+      for (const uid of ids) {
+        const u = await obtenerUsuario(uid);
+        if (u) usuariosMap.set(uid, u);
       }
-    };
-    cargarDatos();
-  }, []);
+      setUsuarios(usuariosMap);
+      setEmprendimientos(data);
+    } catch {
+      setError("No se pudieron cargar los emprendimientos");
+    } finally {
+      setLoading(false);
+    }
+  };
+  cargarDatos();
+}, []);
 
     // 🔥 CARGAR CARRITO CON FOCUS - EMPRENDIMIENTOS
   useEffect(() => {

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioemprendedor/misemprendimientos.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/src/config/api";
 
 interface Producto {
   nombre: string;
@@ -91,13 +92,13 @@ export default function MisEmprendimientosPage() {
 
       try {
         // Cargar categorías
-        const resCat = await fetch("http://localhost:8080/api/categorias");
+        const resCat = await fetch(`${API_URL}/api/categorias`);
         if (resCat.ok) {
           const cats = await resCat.json();
           setCategorias(cats);
         }
 
-        const res = await fetch("http://localhost:8080/api/emprendimientos");
+        const res = await fetch(`${API_URL}/api/emprendimientos`);
         if (!res.ok) throw new Error("No se pudieron cargar los emprendimientos.");
         const data: Emprendimiento[] = await res.json();
 
@@ -143,7 +144,7 @@ export default function MisEmprendimientosPage() {
     if (!confirm("¿Estás seguro de que deseas eliminar este emprendimiento? Esta acción no se puede deshacer.")) return;
     
     try {
-      const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}`, {
+      const res = await fetch(`${API_URL}/api/emprendimientos/${id}`, {
         method: "DELETE",
       });
       
@@ -233,7 +234,7 @@ export default function MisEmprendimientosPage() {
     
     try {
       const id = editandoEmp.id || editandoEmp._id;
-      const response = await fetch(`http://localhost:8080/api/emprendimientos/${id}`, {
+      const response = await fetch(`${API_URL}/api/emprendimientos/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

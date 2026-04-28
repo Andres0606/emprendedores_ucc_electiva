@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/transacciones")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://emprendedores-ucc-electiva-l1ak.vercel.app") // 👈 CAMBIA ESTA LÍNEA
 public class TransaccionController {
 
     @Autowired

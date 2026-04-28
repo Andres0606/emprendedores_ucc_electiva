@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import styles from "../css/modulos/page.module.css";
 import Header from "./header";
 import Footer from "./footer";
+import { API_URL } from "@/src/config/api";
 
 interface Categoria {
   _id: string;
@@ -102,7 +103,7 @@ export default function HomePage() {
   // Función para obtener un usuario por ID
   const obtenerUsuario = async (usuarioId: string): Promise<Usuario | null> => {
     try {
-      const respuesta = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+      const respuesta = await fetch(`${API_URL}/api/usuarios/${usuarioId}`);
       if (!respuesta.ok) return null;
       const data = await respuesta.json();
       return {
@@ -123,9 +124,9 @@ export default function HomePage() {
   // Función para obtener todas las categorías (con fallback a categorías por defecto)
   const obtenerCategorias = async (): Promise<Map<string, Categoria>> => {
     try {
-      console.log("🔍 Obteniendo categorías desde: http://localhost:8080/api/categorias");
+      console.log(`🔍 Obteniendo categorías desde: ${API_URL}/api/categorias`);
       
-      const respuesta = await fetch("http://localhost:8080/api/categorias", {
+      const respuesta = await fetch(`${API_URL}/api/categorias`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -225,7 +226,7 @@ export default function HomePage() {
         setCategorias(categoriasMap);
         
         // Obtener todos los emprendimientos
-        const respuesta = await fetch("http://localhost:8080/api/emprendimientos");
+        const respuesta = await fetch(`${API_URL}/api/emprendimientos`);
         
         if (!respuesta.ok) {
           throw new Error(`Error ${respuesta.status}: ${respuesta.statusText}`);
@@ -307,12 +308,10 @@ export default function HomePage() {
           }, 0);
         
         // 🔥 CALCULAR FACULTADES CORRECTAMENTE
-        // Obtener todas las carreras únicas de los usuarios (solo estudiantes)
-        // 🔥 CALCULAR FACULTADES DE TODOS LOS USUARIOS (estudiantes y emprendedores)
         let facultadesUnicas = new Set<string>();
 
         try {
-          const resUsuarios = await fetch("http://localhost:8080/api/usuarios");
+          const resUsuarios = await fetch(`${API_URL}/api/usuarios`);
           if (resUsuarios.ok) {
             const todosUsuarios = await resUsuarios.json();
             for (const usuario of todosUsuarios) {
@@ -522,28 +521,25 @@ export default function HomePage() {
               <span className={styles.sectionTag}>Explora por categoría</span>
               <h2 className={styles.sectionTitle}>¿Qué estás buscando?</h2>
             </div>
-<div className={styles.categoriesGrid}>
-  {categoriesList.map((cat) => {
-    const count = todosLosActivos.filter(emp => emp.categoriaId?.toString() === cat._id).length;
-    
-    return (
-      <Link
-        key={cat._id}
-        href={`/emprendimientos?categoria=${encodeURIComponent(cat.nombre)}`}
-        className={styles.categoryCard}
-        data-empty={count === 0 ? "true" : "false"}
-      >
-        {/* Nombre de la categoría */}
-        <span className={styles.categoryLabel}>{cat.nombre}</span>
-        
-        {/* Contador de proyectos */}
-        <span className={styles.categoryCount}>
-          {count} {count === 1 ? 'proyecto' : 'proyectos'}
-        </span>
-      </Link>
-    );
-  })}
-</div>
+            <div className={styles.categoriesGrid}>
+              {categoriesList.map((cat) => {
+                const count = todosLosActivos.filter(emp => emp.categoriaId?.toString() === cat._id).length;
+                
+                return (
+                  <Link
+                    key={cat._id}
+                    href={`/emprendimientos?categoria=${encodeURIComponent(cat.nombre)}`}
+                    className={styles.categoryCard}
+                    data-empty={count === 0 ? "true" : "false"}
+                  >
+                    <span className={styles.categoryLabel}>{cat.nombre}</span>
+                    <span className={styles.categoryCount}>
+                      {count} {count === 1 ? 'proyecto' : 'proyectos'}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </section>
 

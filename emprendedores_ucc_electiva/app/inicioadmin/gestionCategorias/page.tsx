@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "../../css/inicioAdmin/gestionCategorias.module.css";
+import { API_URL } from "@/src/config/api";
 
 interface Categoria {
   id?: string;
@@ -41,14 +42,14 @@ export default function GestionCategoriasPage() {
 
   async function cargarEmprendimientos() {
     try {
-      const res = await fetch("http://localhost:8080/api/emprendimientos");
-      if (res.ok) {
-        const data = await res.json();
-        // Solo emprendimientos ACTIVOS
-        const activos = data.filter((emp: any) => emp.estado === "activo");
-        setEmprendimientos(activos);
-      }
-    } catch (error) {
+  const res = await fetch(`${API_URL}/api/emprendimientos`);
+  if (res.ok) {
+    const data = await res.json();
+    // Solo emprendimientos ACTIVOS
+    const activos = data.filter((emp: any) => emp.estado === "activo");
+    setEmprendimientos(activos);
+  }
+} catch (error) {
       console.error("Error al cargar emprendimientos:", error);
     }
   }
@@ -56,7 +57,7 @@ export default function GestionCategoriasPage() {
   async function cargarCategorias() {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8080/api/categorias");
+      const res = await fetch(`${API_URL}/api/categorias`);
       if (!res.ok) throw new Error();
       const data: Categoria[] = await res.json();
       
@@ -93,7 +94,7 @@ export default function GestionCategoriasPage() {
   async function crearCategoria() {
     if (!form.nombre.trim()) return;
     try {
-      const res = await fetch("http://localhost:8080/api/categorias", {
+      const res = await fetch(`${API_URL}/api/categorias`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre: form.nombre.trim(), descripcion: form.descripcion.trim() }),
@@ -108,36 +109,36 @@ export default function GestionCategoriasPage() {
   }
 
   async function editarCategoria() {
-    if (!editarId || !form.nombre.trim()) return;
-    try {
-      const res = await fetch(`http://localhost:8080/api/categorias/${editarId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: form.nombre.trim(), descripcion: form.descripcion.trim() }),
-      });
-      if (res.ok) { 
-        await cargarCategorias(); 
-        setEditarId(null); 
-        setForm({ nombre: "", descripcion: "" }); 
-      }
-      else alert("Error al guardar cambios.");
-    } catch { alert("Error de conexión."); }
-  }
+  if (!editarId || !form.nombre.trim()) return;
+  try {
+    const res = await fetch(`${API_URL}/api/categorias/${editarId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre: form.nombre.trim(), descripcion: form.descripcion.trim() }),
+    });
+    if (res.ok) { 
+      await cargarCategorias(); 
+      setEditarId(null); 
+      setForm({ nombre: "", descripcion: "" }); 
+    }
+    else alert("Error al guardar cambios.");
+  } catch { alert("Error de conexión."); }
+}
 
   async function eliminarCategoria(id: string) {
     try {
-      const res = await fetch(`http://localhost:8080/api/categorias/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        await cargarCategorias();
-        setConfirmarEliminarId(null);
-        setCategoriaAEliminar(null);
-        alert("✅ Categoría eliminada correctamente");
-      } else {
-        const error = await res.json();
-        alert(error.message || "Error al eliminar la categoría");
-      }
+    const res = await fetch(`${API_URL}/api/categorias/${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      await cargarCategorias();
+      setConfirmarEliminarId(null);
+      setCategoriaAEliminar(null);
+      alert("✅ Categoría eliminada correctamente");
+    } else {
+      const error = await res.json();
+      alert(error.message || "Error al eliminar la categoría");
+    }
     } catch {
       alert("Error de conexión.");
     }

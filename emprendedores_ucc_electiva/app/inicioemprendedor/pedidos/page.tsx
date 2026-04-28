@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioemprendedor/pedidos.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/src/config/api";
 
 /* ── Tipos ── */
 interface Producto {
@@ -14,7 +15,7 @@ interface Producto {
 
 interface Persona {
   id: string;
-  _id?: string;  // 🔥 Agregar _id como opcional
+  _id?: string;
   nombre: string;
   apellido: string;
   telefono?: string;
@@ -104,7 +105,7 @@ export default function PedidosEmprendedorPage() {
     console.log("🔍 Tipo de UID:", typeof uid);
 
     try {
-      const res = await fetch(`http://localhost:8080/api/transacciones/vendedor/${uid}`);
+      const res = await fetch(`${API_URL}/api/transacciones/vendedor/${uid}`);
       if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
       const data: Transaccion[] = await res.json();
       
@@ -141,7 +142,7 @@ export default function PedidosEmprendedorPage() {
   /* ── Cambiar estado rápido ── */
   const cambiarEstado = async (id: string, nuevoEstado: string) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/transacciones/${id}/estado`, {
+      const res = await fetch(`${API_URL}/api/transacciones/${id}/estado`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado: nuevoEstado }),
@@ -163,7 +164,7 @@ export default function PedidosEmprendedorPage() {
     try {
       // Actualizar estado
       if (estadoEdit !== detalle.estado) {
-        const r1 = await fetch(`http://localhost:8080/api/transacciones/${detalle.id}/estado`, {
+        const r1 = await fetch(`${API_URL}/api/transacciones/${detalle.id}/estado`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ estado: estadoEdit }),
@@ -173,7 +174,8 @@ export default function PedidosEmprendedorPage() {
 
       // Actualizar método de pago
       if (metodoEdit !== detalle.metodoPago) {
-        const r2 = await fetch(`http://localhost:8080/api/transacciones/${detalle.id}/metodo-pago`, {          method: "PATCH",
+        const r2 = await fetch(`${API_URL}/api/transacciones/${detalle.id}/metodo-pago`, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ metodoPago: metodoEdit }),
         });
@@ -210,7 +212,6 @@ export default function PedidosEmprendedorPage() {
   
   window.open(`https://wa.me/${telefono}?text=${msg}`, "_blank");
 };
-
 
   /* ── Filtrado ── */
   const pedidosFiltrados = filtro === "todos"
@@ -462,7 +463,7 @@ export default function PedidosEmprendedorPage() {
                 </div>
               </div>
 
-                            {/* Total */}
+              {/* Total */}
               <div className={styles.modalTotal}>
                 <span>Total a pagar</span>
                 <span className={styles.modalTotalMonto}>{fmt(detalle.total)}</span>
@@ -470,7 +471,7 @@ export default function PedidosEmprendedorPage() {
 
               <div className={styles.modalSep} />
 
-              {/* 🔥 Mensaje si está cancelado */}
+              {/* 🔥 Mensaje si está cancelado o entregado */}
               {(detalle.estado === "cancelado" || detalle.estado === "entregado") && (
                 <div className={styles.pedidoCanceladoMsg}>
                     {detalle.estado === "cancelado" 
@@ -479,7 +480,7 @@ export default function PedidosEmprendedorPage() {
                 </div>
                 )}
 
-              {/* 🔥 Mostrar solo si NO está cancelado */}
+              {/* 🔥 Mostrar solo si NO está cancelado ni entregado */}
               {detalle.estado !== "cancelado" &&  detalle.estado !== "entregado" && (
                 <>
                   {/* Cambiar estado */}

@@ -14,7 +14,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/emprendimientos")
-@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.OPTIONS})
+@CrossOrigin(origins = {
+    "https://emprendedores-ucc-electiva-l1ak.vercel.app",
+    "http://localhost:3000"
+}, methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.OPTIONS})
 public class EmprendimientoController {
 
     @Autowired
@@ -198,6 +201,4 @@ public class EmprendimientoController {
             return ResponseEntity.status(500).body("Error al eliminar");
         }
     }
-
-    
 }

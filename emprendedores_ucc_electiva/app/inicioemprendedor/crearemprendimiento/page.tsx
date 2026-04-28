@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioemprendedor/crearemprendimiento.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/src/config/api";
 
 interface Categoria {
   id?: string;
@@ -76,7 +77,7 @@ export default function CrearEmprendimientoPage() {
     const guardado = sessionStorage.getItem("usuario");
     if (!guardado) { router.push("/autenticacion/login"); return; }
 
-    fetch("http://localhost:8080/api/categorias")
+    fetch(`${API_URL}/api/categorias`)
       .then(r => r.ok ? r.json() : [])
       .then(data => setCategorias(data))
       .catch(() => {});
@@ -173,7 +174,7 @@ export default function CrearEmprendimientoPage() {
     setEnviando(true);
     setErrorGlobal(null);
     try {
-      const res = await fetch("http://localhost:8080/api/emprendimientos", {
+      const res = await fetch(`${API_URL}/api/emprendimientos`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(payload),

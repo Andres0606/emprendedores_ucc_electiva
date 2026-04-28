@@ -5,6 +5,7 @@ import Link from "next/link";
 import Header from "../../Components/header";
 import Footer from "../../Components/footer";
 import styles from "../../css/paginaEmprendimientos/detalle.module.css";
+import { API_URL } from "@/src/config/api";
 
 interface Emprendimiento {
   id?: string;
@@ -152,7 +153,7 @@ export default function DetalleEmprendimientoPage() {
         total: items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0)
       };
       
-      const response = await fetch('http://localhost:8080/api/carrito', {
+      const response = await fetch(`${API_URL}/api/carrito`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(carritoData)
@@ -178,7 +179,7 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
     }
 
     // ✅ Solo si no existe carrito local, se intenta cargar desde backend
-    const response = await fetch(`http://localhost:8080/api/carrito/${usuarioId}`);
+    const response = await fetch(`${API_URL}/api/carrito/${usuarioId}`);
 
     if (response.ok) {
       const carritoBackend = await response.json();
@@ -241,7 +242,7 @@ const confirmarPedido = async () => {
         
         try {
           // 🔥 Obtener el emprendimiento completo
-          const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${item.emprendimientoId}`);
+          const resEmp = await fetch(`${API_URL}/api/emprendimientos/${item.emprendimientoId}`);
           if (resEmp.ok) {
             const emprendimiento = await resEmp.json();
             
@@ -251,7 +252,7 @@ const confirmarPedido = async () => {
             } 
             // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
             else if (emprendimiento.usuarioId) {
-              const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+              const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
               if (resUser.ok) {
                 const usuario = await resUser.json();
                 telefono = usuario.telefono || "";
@@ -373,11 +374,11 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${emp.id}`);
+    const resEmp = await fetch(`${API_URL}/api/emprendimientos/${emp.id}`);
     if (resEmp.ok) {
       const emprendimiento = await resEmp.json();
       if (emprendimiento.usuarioId) {
-        const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+        const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
         if (resUser.ok) {
           const usuario = await resUser.json();
           vendedorData = {
@@ -417,7 +418,7 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const response = await fetch("http://localhost:8080/api/transacciones", {
+    const response = await fetch(`${API_URL}/api/transacciones`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(transaccionData)
@@ -701,7 +702,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
 
   const obtenerCategoria = async (categoriaId: string) => {
     try {
-      const r = await fetch(`http://localhost:8080/api/categorias/${categoriaId}`);
+      const r = await fetch(`${API_URL}/api/categorias/${categoriaId}`);
       if (!r.ok) return null;
       const d = await r.json();
       return { id: d.id || d._id, nombre: d.nombre, descripcion: d.descripcion };
@@ -710,7 +711,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
 
   const obtenerUsuario = async (usuarioId: string) => {
     try {
-      const r = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+      const r = await fetch(`${API_URL}/api/usuarios/${usuarioId}`);
       if (!r.ok) return null;
       const d = await r.json();
       return { id: d.id || d._id, nombre: d.nombre, apellido: d.apellido, correo: d.correo, telefono: d.telefono, carrera: d.carrera, tipoUsuario: d.tipoUsuario };
@@ -721,7 +722,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     if (!usuarioActual?.id || !emprendimiento) return;
     try {
       const empId = emprendimiento.id || emprendimiento._id;
-      const r = await fetch(`http://localhost:8080/api/seguimientos/verificar?usuarioId=${usuarioActual.id}&emprendimientoId=${empId}`);
+      const r = await fetch(`${API_URL}/api/seguimientos/verificar?usuarioId=${usuarioActual.id}&emprendimientoId=${empId}`);
       if (r.ok) { const d = await r.json(); setSiguiendo(d.estaSiguiendo); setTotalSeguidores(d.totalSeguidores); }
     } catch { /* silent */ }
   };
@@ -737,7 +738,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     try {
       const empId = emprendimiento.id || emprendimiento._id;
       const r = await fetch(
-        siguiendo ? `http://localhost:8080/api/seguimientos/dejar-de-seguir` : `http://localhost:8080/api/seguimientos/seguir`,
+        siguiendo ? `${API_URL}/api/seguimientos/dejar-de-seguir` : `${API_URL}/api/seguimientos/seguir`,
         { method: siguiendo ? 'DELETE' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuarioId: usuarioActual.id, emprendimientoId: empId }) }
       );
       if (r.ok) {
@@ -757,7 +758,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     const cargar = async () => {
       try {
         setLoading(true);
-        const r = await fetch(`http://localhost:8080/api/emprendimientos/${id}`);
+        const r = await fetch(`${API_URL}/api/emprendimientos/${id}`);
         if (!r.ok) throw new Error(r.status === 404 ? "Emprendimiento no encontrado" : `Error ${r.status}`);
         const data: Emprendimiento = await r.json();
         setEmprendimiento(data);
@@ -777,7 +778,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
       const getCount = async () => {
         try {
           const empId = emprendimiento.id || emprendimiento._id;
-          const r = await fetch(`http://localhost:8080/api/seguimientos/verificar?usuarioId=dummy&emprendimientoId=${empId}`);
+          const r = await fetch(`${API_URL}/api/seguimientos/verificar?usuarioId=dummy&emprendimientoId=${empId}`);
           if (r.ok) { const d = await r.json(); setTotalSeguidores(d.totalSeguidores); }
         } catch { /* silent */ }
       };

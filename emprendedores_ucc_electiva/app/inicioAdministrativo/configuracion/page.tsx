@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioAdministrativo/configuracion.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/src/config/api";
 
 export default function ConfiguracionAdministrativoPage() {
   const router = useRouter();
@@ -72,7 +73,7 @@ export default function ConfiguracionAdministrativoPage() {
     setIsLoading(true);
     
     try {
-      const resGet = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+      const resGet = await fetch(`${API_URL}/api/usuarios/${usuarioId}`);
       if (!resGet.ok) {
         throw new Error("Error al obtener datos del usuario");
       }
@@ -90,7 +91,7 @@ export default function ConfiguracionAdministrativoPage() {
         tipoUsuario: usuarioActual.tipoUsuario
       };
       
-      const resUpdate = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`, {
+      const resUpdate = await fetch(`${API_URL}/api/usuarios/${usuarioId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(usuarioActualizado)
@@ -176,7 +177,7 @@ export default function ConfiguracionAdministrativoPage() {
     setIsLoading(true);
     
     try {
-      const loginRes = await fetch("http://localhost:8080/api/usuarios/login", {
+      const loginRes = await fetch(`${API_URL}/api/usuarios/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo: email, password: currentPassword })
@@ -188,7 +189,7 @@ export default function ConfiguracionAdministrativoPage() {
         return;
       }
       
-      const updateRes = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}/cambiar-password`, {
+      const updateRes = await fetch(`${API_URL}/api/usuarios/${usuarioId}/cambiar-password`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nuevaPassword: newPassword })
@@ -234,7 +235,7 @@ export default function ConfiguracionAdministrativoPage() {
     
     try {
       // Verificar que la contraseña sea correcta
-      const loginRes = await fetch("http://localhost:8080/api/usuarios/login", {
+      const loginRes = await fetch(`${API_URL}/api/usuarios/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo: email, password: deletePassword })
@@ -247,7 +248,7 @@ export default function ConfiguracionAdministrativoPage() {
       }
       
       // Eliminar al usuario
-      const resDeleteUser = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`, {
+      const resDeleteUser = await fetch(`${API_URL}/api/usuarios/${usuarioId}`, {
         method: "DELETE",
       });
       
