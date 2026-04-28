@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "../../../lib/config";
 import styles from "../../css/inicioAdmin/gestionCategorias.module.css";
 
 interface Categoria {
@@ -41,7 +42,7 @@ export default function GestionCategoriasPage() {
 
   async function cargarEmprendimientos() {
     try {
-      const res = await fetch("http://localhost:8080/api/emprendimientos");
+      const res = await fetch(`${API_BASE_URL}/api/emprendimientos`);
       if (res.ok) {
         const data = await res.json();
         // Solo emprendimientos ACTIVOS
@@ -56,7 +57,7 @@ export default function GestionCategoriasPage() {
   async function cargarCategorias() {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8080/api/categorias");
+      const res = await fetch(`${API_BASE_URL}/api/categorias`);
       if (!res.ok) throw new Error();
       const data: Categoria[] = await res.json();
       
@@ -93,7 +94,7 @@ export default function GestionCategoriasPage() {
   async function crearCategoria() {
     if (!form.nombre.trim()) return;
     try {
-      const res = await fetch("http://localhost:8080/api/categorias", {
+      const res = await fetch(`${API_BASE_URL}/api/categorias`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre: form.nombre.trim(), descripcion: form.descripcion.trim() }),
@@ -110,7 +111,7 @@ export default function GestionCategoriasPage() {
   async function editarCategoria() {
     if (!editarId || !form.nombre.trim()) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/categorias/${editarId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/categorias/${editarId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre: form.nombre.trim(), descripcion: form.descripcion.trim() }),
@@ -126,7 +127,7 @@ export default function GestionCategoriasPage() {
 
   async function eliminarCategoria(id: string) {
     try {
-      const res = await fetch(`http://localhost:8080/api/categorias/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/categorias/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {

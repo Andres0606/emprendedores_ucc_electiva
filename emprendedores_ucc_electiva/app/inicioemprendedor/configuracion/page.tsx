@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioemprendedor/configuracion.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../../lib/config";
 import { useRouter } from "next/navigation";
 
 interface Usuario {
@@ -66,7 +67,7 @@ export default function ConfiguracionPage() {
     setErrorPerfil(null);
     try {
       const uid = usuario?.id || usuario?._id;
-      const res = await fetch(`http://localhost:8080/api/usuarios/${uid}`, {
+      const res = await fetch(`${API_BASE_URL}/api/usuarios/${uid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre: nombre.trim(), telefono: telefono.trim() }),
@@ -97,7 +98,7 @@ export default function ConfiguracionPage() {
     setGuardandoPass(true);
     try {
       const uid = usuario?.id || usuario?._id;
-      const res = await fetch(`http://localhost:8080/api/usuarios/${uid}/password`, {
+      const res = await fetch(`${API_BASE_URL}/api/usuarios/${uid}/password`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contrasenaActual: passActual, contrasenaNueva: passNueva }),
@@ -118,7 +119,7 @@ export default function ConfiguracionPage() {
     setEliminando(true);
     try {
       const uid = usuario?.id || usuario?._id;
-      const res = await fetch(`http://localhost:8080/api/usuarios/${uid}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE_URL}/api/usuarios/${uid}`, { method: "DELETE" });
       if (!res.ok) throw new Error("No se pudo eliminar la cuenta.");
       sessionStorage.clear();
       router.push("/");

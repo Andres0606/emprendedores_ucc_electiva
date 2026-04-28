@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioAdministrativo/miperfil.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../../lib/config";
 
 // Categorías
 const CATEGORIAS = [

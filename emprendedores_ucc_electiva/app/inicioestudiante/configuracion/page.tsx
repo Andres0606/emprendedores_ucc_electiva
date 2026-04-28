@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioestudiante/configuracion.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../../lib/config";
 import { useRouter } from "next/navigation";
 
 export default function ConfiguracionPage() {
@@ -66,7 +67,7 @@ export default function ConfiguracionPage() {
     setIsLoading(true);
     
     try {
-      const resGet = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+      const resGet = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}`);
       if (!resGet.ok) {
         throw new Error("Error al obtener datos del usuario");
       }
@@ -81,7 +82,7 @@ export default function ConfiguracionPage() {
         carrera: usuarioActual.carrera
       };
       
-      const resUpdate = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`, {
+      const resUpdate = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
@@ -161,7 +162,7 @@ export default function ConfiguracionPage() {
     setIsLoading(true);
     
     try {
-      const loginRes = await fetch("http://localhost:8080/api/usuarios/login", {
+      const loginRes = await fetch(`${API_BASE_URL}/api/usuarios/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -178,7 +179,7 @@ export default function ConfiguracionPage() {
         return;
       }
       
-      const updateRes = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}/cambiar-password`, {
+      const updateRes = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}/cambiar-password`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json"
@@ -228,7 +229,7 @@ export default function ConfiguracionPage() {
     
     try {
       // Verificar que la contraseña sea correcta
-      const loginRes = await fetch("http://localhost:8080/api/usuarios/login", {
+      const loginRes = await fetch(`${API_BASE_URL}/api/usuarios/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -246,7 +247,7 @@ export default function ConfiguracionPage() {
       }
       
       // 1. Obtener todos los emprendimientos del usuario
-      const resEmprendimientos = await fetch(`http://localhost:8080/api/emprendimientos/usuario/${usuarioId}`);
+      const resEmprendimientos = await fetch(`${API_BASE_URL}/api/emprendimientos/usuario/${usuarioId}`);
       
       if (resEmprendimientos.ok) {
         const emprendimientos = await resEmprendimientos.json();
@@ -255,7 +256,7 @@ export default function ConfiguracionPage() {
         for (const emp of emprendimientos) {
           const empId = emp.id || emp._id;
           if (empId) {
-            await fetch(`http://localhost:8080/api/emprendimientos/${empId}`, {
+            await fetch(`${API_BASE_URL}/api/emprendimientos/${empId}`, {
               method: "DELETE",
             });
           }
@@ -263,7 +264,7 @@ export default function ConfiguracionPage() {
       }
       
       // 3. Eliminar al usuario
-      const resDeleteUser = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`, {
+      const resDeleteUser = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}`, {
         method: "DELETE",
       });
       

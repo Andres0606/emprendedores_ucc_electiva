@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioestudiante/pedidos.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../../lib/config";
 import { useRouter } from "next/navigation";
 
 /* ── Tipos ── */
@@ -93,7 +94,7 @@ export default function PedidosPage() {
       const uid = u.id || u._id;
 
       try {
-        const res = await fetch(`http://localhost:8080/api/transacciones?compradorId=${uid}`);
+        const res = await fetch(`${API_BASE_URL}/api/transacciones?compradorId=${uid}`);
         if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
         const data: Transaccion[] = await res.json();
 
@@ -141,7 +142,7 @@ export default function PedidosPage() {
     }
     
     try {
-      const res = await fetch(`http://localhost:8080/api/transacciones/${id}/estado`, {
+      const res = await fetch(`${API_BASE_URL}/api/transacciones/${id}/estado`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado: "cancelado" })

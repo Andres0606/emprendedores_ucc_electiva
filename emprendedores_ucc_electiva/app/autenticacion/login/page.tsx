@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "../../css/Autenticación/login.module.css";
+import { API_BASE_URL } from "../../../lib/config";
 
 export default function LoginPage() {
 
@@ -22,7 +23,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/api/usuarios/login", {
+      const res = await fetch(`${API_BASE_URL}/api/usuarios/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
