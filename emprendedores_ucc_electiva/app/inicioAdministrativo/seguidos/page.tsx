@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioAdministrativo/seguidos.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../../lib/config";
 
 interface Emprendimiento {
   id?: string;
@@ -37,7 +38,7 @@ export default function SeguidosAdministrativoPage() {
 
   const obtenerCategorias = async (): Promise<Map<string, string>> => {
     try {
-      const res = await fetch("http://localhost:8080/api/categorias");
+      const res = await fetch(`${API_BASE_URL}/api/categorias`);
       if (!res.ok) return new Map();
       
       const data: Categoria[] = await res.json();
@@ -56,7 +57,7 @@ export default function SeguidosAdministrativoPage() {
 
   const obtenerSeguidos = async (usuarioId: string): Promise<Emprendimiento[]> => {
     try {
-      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
+      const res = await fetch(`${API_BASE_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
       
       if (!res.ok) {
         console.log("⚠️ Error al obtener seguidos, status:", res.status);
@@ -80,7 +81,7 @@ export default function SeguidosAdministrativoPage() {
         return;
       }
 
-      const res = await fetch(`http://localhost:8080/api/seguimientos/dejar-de-seguir`, {
+      const res = await fetch(`${API_BASE_URL}/api/seguimientos/dejar-de-seguir`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuarioId, emprendimientoId })

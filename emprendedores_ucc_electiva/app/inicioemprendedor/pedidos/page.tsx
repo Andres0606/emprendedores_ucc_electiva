@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioemprendedor/pedidos.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../../lib/config";
 import { useRouter } from "next/navigation";
 
 /* ── Tipos ── */
@@ -104,7 +105,7 @@ export default function PedidosEmprendedorPage() {
     console.log("🔍 Tipo de UID:", typeof uid);
 
     try {
-      const res = await fetch(`http://localhost:8080/api/transacciones/vendedor/${uid}`);
+      const res = await fetch(`${API_BASE_URL}/api/transacciones/vendedor/${uid}`);
       if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
       const data: Transaccion[] = await res.json();
       
@@ -141,7 +142,7 @@ export default function PedidosEmprendedorPage() {
   /* ── Cambiar estado rápido ── */
   const cambiarEstado = async (id: string, nuevoEstado: string) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/transacciones/${id}/estado`, {
+      const res = await fetch(`${API_BASE_URL}/api/transacciones/${id}/estado`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado: nuevoEstado }),
@@ -163,7 +164,7 @@ export default function PedidosEmprendedorPage() {
     try {
       // Actualizar estado
       if (estadoEdit !== detalle.estado) {
-        const r1 = await fetch(`http://localhost:8080/api/transacciones/${detalle.id}/estado`, {
+        const r1 = await fetch(`${API_BASE_URL}/api/transacciones/${detalle.id}/estado`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ estado: estadoEdit }),
@@ -173,7 +174,7 @@ export default function PedidosEmprendedorPage() {
 
       // Actualizar método de pago
       if (metodoEdit !== detalle.metodoPago) {
-        const r2 = await fetch(`http://localhost:8080/api/transacciones/${detalle.id}/metodo-pago`, {          method: "PATCH",
+        const r2 = await fetch(`${API_BASE_URL}/api/transacciones/${detalle.id}/metodo-pago`, {          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ metodoPago: metodoEdit }),
         });

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/inicioestudiante/miperfil.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../../lib/config";
 
 const CATEGORIAS = [
   { id: 1, label: "Gastronomía" },
@@ -52,7 +53,7 @@ export default function MiPerfilPage() {
         // Obtener carrera del usuario desde el backend
         if (usuarioId) {
           try {
-            const res = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+            const res = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}`);
             if (res.ok) {
               const data = await res.json();
               const carreraBackend = data.carrera || data.facultad;

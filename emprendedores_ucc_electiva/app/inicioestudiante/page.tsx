@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "../css/inicioestudiante/inicioestudiante.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../lib/config";
 import { useRouter } from "next/navigation";
 
 interface Emprendimiento {
@@ -233,7 +234,7 @@ const confirmarPedido = async () => {
         
         try {
           // 🔥 PRIMERO: Obtener el emprendimiento completo
-          const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${item.emprendimientoId}`);
+          const resEmp = await fetch(`${API_BASE_URL}/api/emprendimientos/${item.emprendimientoId}`);
           if (resEmp.ok) {
             const emprendimiento = await resEmp.json();
             
@@ -244,7 +245,7 @@ const confirmarPedido = async () => {
             } 
             // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
             else if (emprendimiento.usuarioId) {
-              const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+              const resUser = await fetch(`${API_BASE_URL}/api/usuarios/${emprendimiento.usuarioId}`);
               if (resUser.ok) {
                 const usuario = await resUser.json();
                 telefono = usuario.telefono || "";
@@ -366,11 +367,11 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${emp.id}`);
+    const resEmp = await fetch(`${API_BASE_URL}/api/emprendimientos/${emp.id}`);
     if (resEmp.ok) {
       const emprendimiento = await resEmp.json();
       if (emprendimiento.usuarioId) {
-        const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+        const resUser = await fetch(`${API_BASE_URL}/api/usuarios/${emprendimiento.usuarioId}`);
         if (resUser.ok) {
           const usuario = await resUser.json();
           vendedorData = {
@@ -410,7 +411,7 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const response = await fetch("http://localhost:8080/api/transacciones", {
+    const response = await fetch(`${API_BASE_URL}/api/transacciones`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(transaccionData)
@@ -802,13 +803,13 @@ const finalizarTodosLosPedidos = async () => {
     try {
       const actividadesTemp: Actividad[] = [];
       
-      const resSeguimientos = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}`);
+      const resSeguimientos = await fetch(`${API_BASE_URL}/api/seguimientos/usuario/${usuarioId}`);
       if (resSeguimientos.ok) {
         const seguimientos: SeguimientoConFecha[] = await resSeguimientos.json();
         const seguimientosRecientes = seguimientos.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()).slice(0, 2);
         
         for (const seg of seguimientosRecientes) {
-          const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${seg.emprendimientoId}`);
+          const resEmp = await fetch(`${API_BASE_URL}/api/emprendimientos/${seg.emprendimientoId}`);
           if (resEmp.ok) {
             const emp = await resEmp.json();
             actividadesTemp.push({
@@ -870,7 +871,7 @@ const finalizarTodosLosPedidos = async () => {
 
   const obtenerUltimoSeguido = async (usuarioId: string) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
+      const res = await fetch(`${API_BASE_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
       
       if (!res.ok) return null;
       
@@ -886,7 +887,7 @@ const finalizarTodosLosPedidos = async () => {
       const ultimoEmprendimiento = emprendimientos[emprendimientos.length - 1];
       
       try {
-        const resCat = await fetch(`http://localhost:8080/api/categorias/${ultimoEmprendimiento.categoriaId}`);
+        const resCat = await fetch(`${API_BASE_URL}/api/categorias/${ultimoEmprendimiento.categoriaId}`);
         let categoriaNombre = "Sin categoría";
         if (resCat.ok) {
           const categoria = await resCat.json();

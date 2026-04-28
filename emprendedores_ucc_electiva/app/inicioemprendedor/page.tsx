@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../css/inicioemprendedor/inicioemprendedor.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../../lib/config";
 import { useRouter } from "next/navigation";
 
 interface Producto {
@@ -108,7 +109,7 @@ export default function InicioEmprendedorPage() {
 
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8080/api/emprendimientos");
+      const res = await fetch(`${API_BASE_URL}/api/emprendimientos`);
       if (res.ok) {
         const emps: Emprendimiento[] = await res.json();
         const misEmprendimientos = emps.filter(e => String(e.usuarioId) === String(uid));
@@ -152,7 +153,7 @@ export default function InicioEmprendedorPage() {
         for (const emp of ordenados) {
           if (emp.categoriaId) {
             try {
-              const resCat = await fetch(`http://localhost:8080/api/categorias/${emp.categoriaId}`);
+              const resCat = await fetch(`${API_BASE_URL}/api/categorias/${emp.categoriaId}`);
               if (resCat.ok) {
                 const cat = await resCat.json();
                 emp.categoriaNombre = cat.nombre;

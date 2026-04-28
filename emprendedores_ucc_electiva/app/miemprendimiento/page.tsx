@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "../css/miemprendimiento/page.module.css";
+import { API_BASE_URL } from "../../lib/config";
 
 const categorias = [
   "Tecnología", "Gastronomía", "Moda y Diseño",
@@ -202,7 +203,7 @@ export default function MiEmprendimientoPage() {
     if (telefono.length === 10) {
       setVerificandoTelefono(true);
       try {
-        const res = await fetch(`http://localhost:8080/api/emprendimientos/verificar-telefono/${telefono}`);
+        const res = await fetch(`${API_BASE_URL}/api/emprendimientos/verificar-telefono/${telefono}`);
         const data = await res.json();
         if (data.existe) {
           setTelefonoError("Este número de teléfono ya está registrado en otro emprendimiento");
@@ -387,7 +388,7 @@ export default function MiEmprendimientoPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:8080/api/emprendimientos", {
+      const res = await fetch(`${API_BASE_URL}/api/emprendimientos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)

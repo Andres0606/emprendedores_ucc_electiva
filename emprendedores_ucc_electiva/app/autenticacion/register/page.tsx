@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "../../css/Autenticación/register.module.css";
+import { API_BASE_URL } from "../../../lib/config";
 
 const facultades = [
   "Administración de Empresas",
@@ -79,7 +80,7 @@ export default function RegisterPage() {
     if (telefono.length === 10) {
       setVerificandoTelefono(true);
       try {
-        const res = await fetch(`http://localhost:8080/api/usuarios/verificar-telefono/${telefono}`);
+        const res = await fetch(`${API_BASE_URL}/api/usuarios/verificar-telefono/${telefono}`);
         const data = await res.json();
         if (data.existe) {
           setTelefonoError("Este número de teléfono ya está registrado. Por favor usa otro");
@@ -102,7 +103,7 @@ export default function RegisterPage() {
     if (correo && validarCorreoInstitucional(correo)) {
       setVerificandoCorreo(true);
       try {
-        const res = await fetch(`http://localhost:8080/api/usuarios/verificar-correo/${encodeURIComponent(correo)}`);
+        const res = await fetch(`${API_BASE_URL}/api/usuarios/verificar-correo/${encodeURIComponent(correo)}`);
         const data = await res.json();
         if (data.existe) {
           setCorreoError("Este correo ya está registrado");
@@ -220,7 +221,7 @@ export default function RegisterPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:8080/api/usuarios/registro", {
+      const res = await fetch(`${API_BASE_URL}/api/usuarios/registro`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(usuario),

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "../../../lib/config";
 import styles from "../../css/inicioAdmin/gestionEmprendimientos.module.css";
 
 interface Producto {
@@ -85,9 +86,9 @@ export default function GestionEmprendimientosPage() {
     try {
       setLoading(true);
       const [resCats, resUsrs, resEmps] = await Promise.all([
-        fetch("http://localhost:8080/api/categorias"),
-        fetch("http://localhost:8080/api/usuarios"),
-        fetch("http://localhost:8080/api/emprendimientos"),
+        fetch(`${API_BASE_URL}/api/categorias`),
+        fetch(`${API_BASE_URL}/api/usuarios`),
+        fetch(`${API_BASE_URL}/api/emprendimientos`),
       ]);
 
       const cats: Categoria[] = resCats.ok ? await resCats.json() : [];
@@ -132,7 +133,7 @@ export default function GestionEmprendimientosPage() {
   // Acciones
   async function cambiarEstado(id: string, estado: string) {
     try {
-      const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}/estado`, {
+      const res = await fetch(`${API_BASE_URL}/api/emprendimientos/${id}/estado`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado }),

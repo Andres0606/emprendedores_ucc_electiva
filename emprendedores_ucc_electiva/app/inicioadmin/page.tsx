@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "../css/inicioAdmin/page.module.css";
+import { API_BASE_URL } from "../../lib/config";
 
 interface Emprendimiento {
   id?: string;
@@ -101,7 +102,7 @@ export default function InicioAdminPage() {
 
   const obtenerCategorias = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/categorias");
+      const res = await fetch(`${API_BASE_URL}/api/categorias`);
       if (!res.ok) return;
       const data: Categoria[] = await res.json();
       const map = new Map<string, string>();
@@ -112,7 +113,7 @@ export default function InicioAdminPage() {
 
   const obtenerTodosUsuarios = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/usuarios");
+      const res = await fetch(`${API_BASE_URL}/api/usuarios`);
       if (!res.ok) return [];
       return await res.json();
     } catch (e) { return []; }
@@ -122,7 +123,7 @@ export default function InicioAdminPage() {
     try {
       setLoading(true);
       await obtenerCategorias();
-      const res = await fetch("http://localhost:8080/api/emprendimientos");
+      const res = await fetch(`${API_BASE_URL}/api/emprendimientos`);
       if (!res.ok) throw new Error();
       const emprendimientos: Emprendimiento[] = await res.json();
       const usuarios = await obtenerTodosUsuarios();
@@ -140,17 +141,17 @@ export default function InicioAdminPage() {
 
   const aprobarEmprendimiento = async (id: string) => {
     if (!confirm("¿Aprobar este emprendimiento?")) return;
-    try { const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}/estado`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado: "activo" }) }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
+    try { const res = await fetch(`${API_BASE_URL}/api/emprendimientos/${id}/estado`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado: "activo" }) }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
   };
 
   const rechazarEmprendimiento = async (id: string) => {
     const motivo = prompt("Motivo del rechazo:"); if (!motivo) return;
-    try { const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}/estado`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado: "rechazado" }) }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
+    try { const res = await fetch(`${API_BASE_URL}/api/emprendimientos/${id}/estado`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ estado: "rechazado" }) }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
   };
 
   const eliminarEmprendimiento = async (id: string) => {
     if (!confirm("¿Eliminar este emprendimiento? No se puede deshacer.")) return;
-    try { const res = await fetch(`http://localhost:8080/api/emprendimientos/${id}`, { method: "DELETE" }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
+    try { const res = await fetch(`${API_BASE_URL}/api/emprendimientos/${id}`, { method: "DELETE" }); if (res.ok) cargarDatos(); } catch (e) { alert("Error de conexión"); }
   };
 
   const filtrar = (list: Emprendimiento[]) => !searchTerm ? list : list.filter(e => e.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || e.descripcion.toLowerCase().includes(searchTerm.toLowerCase()));

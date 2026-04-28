@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "../Components/header";
 import Footer from "../Components/footer";
 import styles from "../css/emprendimientos/page.module.css";
+import { API_BASE_URL } from "../../lib/config";
 
 interface Emprendimiento {
   id?: string;
@@ -139,7 +140,7 @@ export default function EmprendimientosPage() {
         total: items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0)
       };
       
-      const response = await fetch('http://localhost:8080/api/carrito', {
+      const response = await fetch(`${API_BASE_URL}/api/carrito`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(carritoData)
@@ -165,7 +166,7 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
     }
 
     // ✅ Solo si no existe carrito local, se intenta cargar desde backend
-    const response = await fetch(`http://localhost:8080/api/carrito/${usuarioId}`);
+    const response = await fetch(`${API_BASE_URL}/api/carrito/${usuarioId}`);
 
     if (response.ok) {
       const carritoBackend = await response.json();
@@ -219,7 +220,7 @@ const confirmarPedido = async () => {
         
         try {
           // 🔥 Obtener el emprendimiento completo
-          const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${item.emprendimientoId}`);
+          const resEmp = await fetch(`${API_BASE_URL}/api/emprendimientos/${item.emprendimientoId}`);
           if (resEmp.ok) {
             const emprendimiento = await resEmp.json();
             
@@ -229,7 +230,7 @@ const confirmarPedido = async () => {
             } 
             // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
             else if (emprendimiento.usuarioId) {
-              const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+              const resUser = await fetch(`${API_BASE_URL}/api/usuarios/${emprendimiento.usuarioId}`);
               if (resUser.ok) {
                 const usuario = await resUser.json();
                 telefono = usuario.telefono || "";
@@ -350,11 +351,11 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const resEmp = await fetch(`http://localhost:8080/api/emprendimientos/${emp.id}`);
+    const resEmp = await fetch(`${API_BASE_URL}/api/emprendimientos/${emp.id}`);
     if (resEmp.ok) {
       const emprendimiento = await resEmp.json();
       if (emprendimiento.usuarioId) {
-        const resUser = await fetch(`http://localhost:8080/api/usuarios/${emprendimiento.usuarioId}`);
+        const resUser = await fetch(`${API_BASE_URL}/api/usuarios/${emprendimiento.usuarioId}`);
         if (resUser.ok) {
           const usuario = await resUser.json();
           vendedorData = {
@@ -394,7 +395,7 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-    const response = await fetch("http://localhost:8080/api/transacciones", {
+    const response = await fetch(`${API_BASE_URL}/api/transacciones`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(transaccionData)
@@ -832,7 +833,7 @@ const imprimirFactura = () => {
   // ── Datos ──
   const obtenerUsuario = async (usuarioId: string): Promise<Usuario | null> => {
     try {
-      const r = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}`);
+      const r = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}`);
       if (!r.ok) return null;
       return await r.json();
     } catch { return null; }
@@ -840,7 +841,7 @@ const imprimirFactura = () => {
 
   const obtenerCategorias = async () => {
     try {
-      const r = await fetch("http://localhost:8080/api/categorias");
+      const r = await fetch(`${API_BASE_URL}/api/categorias`);
       if (!r.ok) return;
       const data: Categoria[] = await r.json();
       const map = new Map<string, string>();
@@ -859,7 +860,7 @@ const imprimirFactura = () => {
       try {
         setLoading(true);
         await obtenerCategorias();
-        const r = await fetch("http://localhost:8080/api/emprendimientos");
+        const r = await fetch(`${API_BASE_URL}/api/emprendimientos`);
         if (!r.ok) throw new Error(`Error ${r.status}`);
         const data: Emprendimiento[] = await r.json();
         const usuariosMap = new Map<string, Usuario>();
