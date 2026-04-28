@@ -17,9 +17,14 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
 
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000")
+                        .allowedOrigins(
+                            "http://localhost:3000",
+                            "https://emprendedores-ucc-electiva-ay75q8bxc-andys-projects-1a6861a7.vercel.app"
+                        )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
+                        .allowedHeaders("*")
+                        .allowCredentials(true)  // Importante para cookies/sesiones
+                        .maxAge(3600);  // Cache de la política CORS por 1 hora
             }
         };
     }
