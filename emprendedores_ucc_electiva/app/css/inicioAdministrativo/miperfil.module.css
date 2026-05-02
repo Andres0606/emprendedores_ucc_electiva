@@ -176,60 +176,6 @@
   color: #0d1b2a;
 }
 
-/* ── Compras ── */
-.comprasList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.compraItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px;
-  background: #f8fafc;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-}
-
-.compraInfo {
-  flex: 1;
-}
-
-.compraNombre {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #0d1b2a;
-  margin: 0 0 4px;
-}
-
-.compraDetalle {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin: 0 0 4px;
-}
-
-.compraFecha {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  margin: 0;
-}
-
-.compraTotal {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #009FE3;
-  flex-shrink: 0;
-}
-
-.noDataText {
-  color: #94a3b8;
-  font-size: 0.85rem;
-  text-align: center;
-  padding: 20px;
-  margin: 0;
-}
 
 /* ── Categorías de interés ── */
 .catHeader {

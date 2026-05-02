@@ -20,7 +20,6 @@ export default function MiPerfilPage() {
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [carrera, setCarrera] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [compras, setCompras] = useState<any[]>([]);
   const [selectedCats, setSelectedCats] = useState<Set<number>>(new Set());
   const [editingCats, setEditingCats] = useState(false);
 
@@ -80,31 +79,12 @@ export default function MiPerfilPage() {
         }
 
         // Cargar compras realizadas
-        await cargarCompras(usuarioId);
 
       } catch (error) {
         console.error("Error al cargar datos del usuario:", error);
         setCarrera("Carrera no especificada");
       } finally {
         setIsLoading(false);
-      }
-    };
-
-    const cargarCompras = async (usuarioId: string | null) => {
-      if (!usuarioId) return;
-      
-      try {
-        // Cargar transacciones del usuario
-        const res = await fetch(`${API_URL}/api/transacciones?compradorId=${usuarioId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setCompras(data);
-        } else {
-          setCompras([]);
-        }
-      } catch (error) {
-        console.error("Error al cargar compras:", error);
-        setCompras([]);
       }
     };
 
@@ -188,33 +168,6 @@ export default function MiPerfilPage() {
                 </li>
               )}
             </ul>
-          </section>
-
-          {/* Compras realizadas */}
-          <section className={styles.card}>
-            <h2 className={styles.cardTitle}>Mis compras</h2>
-            {compras && compras.length > 0 ? (
-              <div className={styles.comprasList}>
-                {compras.map((compra, index) => (
-                  <div key={index} className={styles.compraItem}>
-                    <div className={styles.compraInfo}>
-                      <p className={styles.compraNombre}>{compra.productoNombre || compra.nombre || "Producto"}</p>
-                      <p className={styles.compraDetalle}>
-                        {compra.emprendimientoNombre || compra.vendedor?.nombre || "Emprendimiento"} • {compra.cantidad || 1} unidades
-                      </p>
-                      <p className={styles.compraFecha}>
-                        {compra.fecha ? new Date(compra.fecha).toLocaleDateString('es-CO') : "Fecha no disponible"}
-                      </p>
-                    </div>
-                    <div className={styles.compraTotal}>
-                      ${(compra.total || compra.monto || 0).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className={styles.noDataText}>Aún no has realizado compras</p>
-            )}
           </section>
 
           {/* Categorías de interés */}
