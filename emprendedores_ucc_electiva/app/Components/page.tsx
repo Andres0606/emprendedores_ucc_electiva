@@ -243,12 +243,18 @@ export default function HomePage() {
         const usuariosMap = new Map<string, Usuario>();
         const usuariosIds = [...new Set(activos.map(emp => emp.usuarioId))];
         
-        for (const usuarioId of usuariosIds) {
-          const usuario = await obtenerUsuario(usuarioId);
-          if (usuario) {
-            usuariosMap.set(usuarioId, usuario);
-          }
-        }
+const usuariosResultados = await Promise.all(
+  usuariosIds.map(async (usuarioId) => {
+    const usuario = await obtenerUsuario(usuarioId);
+    return { usuarioId, usuario };
+  })
+);
+
+usuariosResultados.forEach(({ usuarioId, usuario }) => {
+  if (usuario) {
+    usuariosMap.set(usuarioId, usuario);
+  }
+});
         
         setUsuarios(usuariosMap);
         
@@ -355,19 +361,7 @@ export default function HomePage() {
     cargarDatos();
   }, []);
 
-  if (loading) {
-    return (
-      <>
-        <Header />
-        <main className={styles.main}>
-          <div style={{ textAlign: "center", padding: "4rem" }}>
-            <div>Cargando emprendimientos...</div>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
+ 
 
   if (error) {
     return (
@@ -557,7 +551,12 @@ export default function HomePage() {
             </div>
 
             <div className={styles.venturesGrid}>
-              {featuredVentures.map((v) => (
+              {loading ? (
+                <p>Cargando emprendimientos...</p>
+              ) : featuredVentures.length === 0 ? (
+                <p>No hay emprendimientos activos por el momento.</p>
+              ) : (
+                featuredVentures.map((v) => (
                 <div key={v.id} className={styles.ventureCard}>
                   <div className={styles.ventureTop}>
                     <span className={styles.ventureCat}>{v.emoji} {v.category}</span>
@@ -595,7 +594,8 @@ export default function HomePage() {
                     )}
                   </div>
                 </div>
-              ))}
+              ))
+            )}
             </div>
           </div>
         </section>
