@@ -865,10 +865,16 @@ useEffect(() => {
       const data: Emprendimiento[] = await r.json();
       const usuariosMap = new Map<string, Usuario>();
       const ids = [...new Set(data.map(e => e.usuarioId))];
-      for (const uid of ids) {
-        const u = await obtenerUsuario(uid);
-        if (u) usuariosMap.set(uid, u);
-      }
+const usuariosResultados = await Promise.all(
+  ids.map(async (uid) => {
+    const u = await obtenerUsuario(uid);
+    return { uid, u };
+  })
+);
+
+usuariosResultados.forEach(({ uid, u }) => {
+  if (u) usuariosMap.set(uid, u);
+});
       setUsuarios(usuariosMap);
       setEmprendimientos(data);
     } catch {
