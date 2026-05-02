@@ -99,7 +99,7 @@ export default function EmprendimientosPage() {
   const [usuarios, setUsuarios] = useState<Map<string, Usuario>>(new Map());
   const [categorias, setCategorias] = useState<Map<string, string>>(new Map());
   const [categoriasList, setCategoriasList] = useState<{ id: string; nombre: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usuarioActual, setUsuarioActual] = useState<{ id: string; tipoUsuario?: string } | null>(null);
 
@@ -859,30 +859,41 @@ useEffect(() => {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      await obtenerCategorias();
-      const r = await fetch(`${API_URL}/api/emprendimientos`);  // 👈 CAMBIADO: era "carrito", ahora es "emprendimientos" y corregido el template string
+
+      obtenerCategorias();
+
+      const r = await fetch(`${API_URL}/api/emprendimientos`);
       if (!r.ok) throw new Error(`Error ${r.status}`);
+
       const data: Emprendimiento[] = await r.json();
+
+      // Mostrar tarjetas rápido
+      setEmprendimientos(data);
+      setLoading(false);
+
+      // Cargar usuarios después
       const usuariosMap = new Map<string, Usuario>();
       const ids = [...new Set(data.map(e => e.usuarioId))];
-const usuariosResultados = await Promise.all(
-  ids.map(async (uid) => {
-    const u = await obtenerUsuario(uid);
-    return { uid, u };
-  })
-);
 
-usuariosResultados.forEach(({ uid, u }) => {
-  if (u) usuariosMap.set(uid, u);
-});
+      const usuariosResultados = await Promise.all(
+        ids.map(async (uid) => {
+          const u = await obtenerUsuario(uid);
+          return { uid, u };
+        })
+      );
+
+      usuariosResultados.forEach(({ uid, u }) => {
+        if (u) usuariosMap.set(uid, u);
+      });
+
       setUsuarios(usuariosMap);
-      setEmprendimientos(data);
+
     } catch {
       setError("No se pudieron cargar los emprendimientos");
-    } finally {
       setLoading(false);
     }
   };
+
   cargarDatos();
 }, []);
 
