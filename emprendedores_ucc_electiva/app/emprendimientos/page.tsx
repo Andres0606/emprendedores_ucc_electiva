@@ -971,13 +971,7 @@ useEffect(() => {
 
   const categoriasFiltro = ["Todas", ...categoriasList.map(c => c.nombre)];
 
-  if (loading) return (
-    <><Header />
-      <main className={styles.main}>
-        <div style={{ textAlign: "center", padding: "4rem" }}>Cargando emprendimientos...</div>
-      </main>
-      <Footer /></>
-  );
+
 
   if (error) return (
     <><Header />
@@ -1278,8 +1272,13 @@ useEffect(() => {
             </div>
           </div>
 
-          {emprendimientosFiltrados.length > 0 ? (
-            <div className={styles.grid}>
+{loading ? (
+  <div className={styles.empty}>
+    <span className={styles.emptyEmoji}>⏳</span>
+    <h3 className={styles.emptyTitle}>Cargando emprendimientos...</h3>
+    <p className={styles.emptyDesc}>Estamos trayendo los proyectos disponibles.</p>
+  </div>
+) : emprendimientosFiltrados.length > 0 ? (            <div className={styles.grid}>
               {emprendimientosFiltrados.map((emp) => {
                 const usuario = usuarios.get(emp.usuarioId);
                 const nombreCategoria = getNombreCategoria(emp.categoriaId);
