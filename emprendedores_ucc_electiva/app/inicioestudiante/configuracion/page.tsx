@@ -312,11 +312,10 @@ export default function ConfiguracionPage() {
                 />
               ) : (
                 <input
-                  className={`${styles.input} ${styles.readonly}`}
+                  className={styles.input}
                   type="text"
                   value={nombreUsuario}
                   readOnly
-                  disabled
                 />
               )}
             </div>
@@ -353,11 +352,10 @@ export default function ConfiguracionPage() {
                 />
               ) : (
                 <input
-                  className={`${styles.input} ${styles.readonly}`}
+                  className={styles.input}
                   type="tel"
                   value={telefono || "No especificado"}
                   readOnly
-                  disabled
                 />
               )}
               <small className={styles.helperText}>10 dígitos, solo números</small>
