@@ -209,7 +209,7 @@
 }
 
 .formInput {
-  background: var(--bg);
+  background: var(--white);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-dark);
@@ -224,9 +224,10 @@
 .formInput:focus { border-color: var(--blue-main); background: var(--white); }
 
 .formInputDisabled {
-  color: var(--text-muted);
+  color: #ffffff !important;
   cursor: not-allowed;
-  background: #f0f3f7 !important;
+  background: #475569 !important;
+  border-color: #334155 !important;
 }
 
 .formHelper {

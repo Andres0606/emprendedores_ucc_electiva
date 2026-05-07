@@ -74,7 +74,7 @@
   text-transform: uppercase;
 }
 .input {
-  background: #f5f7fa;
+  background: #fff;
   border: 1.5px solid #e0e7ef;
   border-radius: 9px;
   color: #0d1b2a;
@@ -89,10 +89,10 @@
 .input:focus { border-color: #009FE3; background: #fff; }
 
 .readonly {
-  background: #f0f2f5 !important;
-  color: #6c757d !important;
+  background: #475569 !important;
+  color: #ffffff !important;
   cursor: not-allowed;
-  border-color: #e0e7ef !important;
+  border-color: #334155 !important;
 }
 
 .helperText {
