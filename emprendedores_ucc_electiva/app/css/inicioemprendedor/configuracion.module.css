@@ -224,10 +224,10 @@
 .formInput:focus { border-color: var(--blue-main); background: var(--white); }
 
 .formInputDisabled {
-  color: #ffffff !important;
+  color: #64748b !important;
   cursor: not-allowed;
-  background: #475569 !important;
-  border-color: #334155 !important;
+  background: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
 }
 
 .formHelper {

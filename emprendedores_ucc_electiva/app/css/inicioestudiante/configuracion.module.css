@@ -89,10 +89,10 @@
 .input:focus { border-color: #009FE3; background: #fff; }
 
 .readonly {
-  background: #475569 !important;
-  color: #ffffff !important;
+  background: #e2e8f0 !important;
+  color: #64748b !important;
   cursor: not-allowed;
-  border-color: #334155 !important;
+  border-color: #cbd5e1 !important;
 }
 
 .helperText {
