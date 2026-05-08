@@ -15,6 +15,9 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     // Método para validar contraseña segura
     private boolean validarPasswordSegura(String password) {
         if (password.length() < 8) return false;
@@ -94,8 +97,8 @@ public class UsuarioService {
             }
         }
         
-        // Aquí deberías encriptar la contraseña antes de guardar
-        // usuario.setPassword(encriptarPassword(usuario.getPassword()));
+        // Encriptar la contraseña antes de guardar
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         
         return usuarioRepository.save(usuario);
     }
@@ -106,7 +109,7 @@ public class UsuarioService {
         if (usuario == null) {
             throw new RuntimeException("Usuario no encontrado");
         }
-        if (!usuario.getPassword().equals(password)) {
+        if (!passwordEncoder.matches(password, usuario.getPassword())) {
             throw new RuntimeException("Contraseña incorrecta");
         }
         // 🔥 VERIFICAR QUE EL USUARIO ESTÉ ACTIVO
