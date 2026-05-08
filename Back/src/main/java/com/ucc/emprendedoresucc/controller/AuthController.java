@@ -35,7 +35,9 @@ public class AuthController {
                     usuario.getTipoUsuario()
             ));
         } catch (Exception e) {
-            return ResponseEntity.status(401).body(e.getMessage());
+            java.util.Map<String, String> error = new java.util.HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(401).body(error);
         }
     }
 
