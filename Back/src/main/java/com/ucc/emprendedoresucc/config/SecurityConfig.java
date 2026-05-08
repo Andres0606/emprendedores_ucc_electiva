@@ -29,9 +29,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll() // Rutas públicas de autenticación
                 .requestMatchers("/api/usuarios/verificar-telefono/**").permitAll() // Verificación de teléfono
                 .requestMatchers("/api/usuarios/verificar-correo/**").permitAll() // Verificación de correo
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/usuarios/**").permitAll() // Permitir ver info de usuarios públicamente
                 .requestMatchers("/api/categorias/**").permitAll() // Categorías públicas
-                .requestMatchers("/api/emprendimientos/**").permitAll() // Emprendimientos públicos (opcional)
-                .anyRequest().authenticated() // Todo lo demás requiere token
+                .requestMatchers("/api/emprendimientos/**").permitAll() // Emprendimientos públicos
+                .anyRequest().authenticated() // Todo lo demás requiere token (POST, PUT, DELETE)
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
