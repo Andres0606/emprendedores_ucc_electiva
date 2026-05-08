@@ -221,7 +221,7 @@ export default function RegisterPage() {
     };
 
     try {
-      const res = await fetch(`${API_URL}/api/usuarios/registro`, {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(usuario),

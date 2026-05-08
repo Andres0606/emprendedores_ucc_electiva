@@ -27,6 +27,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sin estado
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // Rutas públicas de autenticación
+                .requestMatchers("/api/usuarios/verificar-telefono/**").permitAll() // Verificación de teléfono
+                .requestMatchers("/api/usuarios/verificar-correo/**").permitAll() // Verificación de correo
                 .requestMatchers("/api/categorias/**").permitAll() // Categorías públicas
                 .requestMatchers("/api/emprendimientos/**").permitAll() // Emprendimientos públicos (opcional)
                 .anyRequest().authenticated() // Todo lo demás requiere token

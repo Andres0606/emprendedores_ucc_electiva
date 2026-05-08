@@ -23,7 +23,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/usuarios/login`, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -37,22 +37,19 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Correo o contraseña incorrectos");
+        alert(data.message || data || "Correo o contraseña incorrectos");
         return;
       }
 
-      // Guardar usuario en sesión
+      // Guardar JWT y datos de usuario en sesión
+      sessionStorage.setItem("token", data.token); // IMPORTANTE: Guardar el token
       sessionStorage.setItem("usuario", JSON.stringify(data));
-      sessionStorage.setItem("usuarioId", data.id || data._id);
-      sessionStorage.setItem("tipoUsuario", data.tipoUsuario);
-      
-      // Guardar también el nombre para mostrarlo en la interfaz
-      sessionStorage.setItem("nombreUsuario", data.nombre || data.correo?.split('@')[0] || "Usuario");
+      sessionStorage.setItem("tipoUsuario", data.role);
+      sessionStorage.setItem("nombreUsuario", data.username);
 
       alert("Inicio de sesión correcto");
       
-      // 👈 REDIRECCIÓN SEGÚN TIPO DE USUARIO
-      const tipoUsuario = data.tipoUsuario?.toLowerCase();
+      const tipoUsuario = data.role?.toLowerCase();
       
       if (tipoUsuario === "admin") {
         router.push("/inicioadmin");
