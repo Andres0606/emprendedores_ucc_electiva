@@ -34,9 +34,12 @@ export default function Footer() {
           {/* Brand column */}
           <div className={styles.brandCol}>
             <div className={styles.brandLogo}>
-              <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
-                <polygon points="20,4 36,32 4,32" fill="var(--ucc-green)" />
-                <circle cx="20" cy="20" r="6" fill="var(--ucc-white)" />
+              <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2"  y="2"  width="11" height="22" rx="3" fill="#009FE3"/>
+                <rect x="2"  y="18" width="11" height="6"  rx="2" fill="#009FE3"/>
+                <rect x="16" y="2"  width="11" height="22" rx="3" fill="#8DC63F"/>
+                <circle cx="30" cy="10" r="6"   fill="none" stroke="#009FE3" strokeWidth="2.5"/>
+                <circle cx="30" cy="10" r="2.5" fill="#8DC63F"/>
               </svg>
               <div>
                 <span className={styles.brandMain}>Emprendedores</span>

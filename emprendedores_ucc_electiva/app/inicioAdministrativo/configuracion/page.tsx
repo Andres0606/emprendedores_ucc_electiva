@@ -297,7 +297,7 @@ export default function ConfiguracionAdministrativoPage() {
                   placeholder="Ej: Francy Patiño"
                 />
               ) : (
-                <input className={`${styles.input} ${styles.readonly}`} type="text" value={nombreUsuario} readOnly disabled />
+                <input className={styles.input} type="text" value={nombreUsuario} readOnly />
               )}
             </div>
 
@@ -312,7 +312,7 @@ export default function ConfiguracionAdministrativoPage() {
               {editMode ? (
                 <input className={styles.input} type="text" value={editCargo} onChange={(e) => setEditCargo(e.target.value)} placeholder="Ej: Coordinador de Bienestar" />
               ) : (
-                <input className={`${styles.input} ${styles.readonly}`} type="text" value={cargo || "No especificado"} readOnly disabled />
+                <input className={styles.input} type="text" value={cargo || "No especificado"} readOnly />
               )}
             </div>
 
@@ -321,7 +321,7 @@ export default function ConfiguracionAdministrativoPage() {
               {editMode ? (
                 <input className={styles.input} type="text" value={editDependencia} onChange={(e) => setEditDependencia(e.target.value)} placeholder="Ej: Bienestar Universitario" />
               ) : (
-                <input className={`${styles.input} ${styles.readonly}`} type="text" value={dependencia || "No especificada"} readOnly disabled />
+                <input className={styles.input} type="text" value={dependencia || "No especificada"} readOnly />
               )}
             </div>
 
@@ -333,7 +333,7 @@ export default function ConfiguracionAdministrativoPage() {
                   if (valor.length <= 10) setEditTelefono(valor);
                 }} maxLength={10} />
               ) : (
-                <input className={`${styles.input} ${styles.readonly}`} type="tel" value={telefono || "No especificado"} readOnly disabled />
+                <input className={styles.input} type="tel" value={telefono || "No especificado"} readOnly />
               )}
               <small className={styles.helperText}>10 dígitos, solo números</small>
             </div>
