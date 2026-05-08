@@ -126,6 +126,7 @@ export default function Footer() {
       <div className={styles.bottomBar}>
         <span>© {new Date().getFullYear()} EmprendedoresUCC — Universidad Cooperativa de Colombia</span>
         <span className={styles.bottomLinks}>
+          <Link href="/terminos-y-condiciones">Términos y Condiciones</Link>
         </span>
       </div>
     </footer>
