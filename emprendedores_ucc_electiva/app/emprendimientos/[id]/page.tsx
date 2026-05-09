@@ -778,8 +778,13 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
       const getCount = async () => {
         try {
           const empId = emprendimiento.id || emprendimiento._id;
-          const r = await fetch(`${API_URL}/api/seguimientos/verificar?usuarioId=dummy&emprendimientoId=${empId}`);
-          if (r.ok) { const d = await r.json(); setTotalSeguidores(d.totalSeguidores); }
+          // 🔥 CORRECCIÓN: No enviar usuarioId=dummy ya que el backend devuelve 403
+          // Al no enviar usuarioId, el backend debería retornar solo el total de seguidores
+          const r = await fetch(`${API_URL}/api/seguimientos/verificar?emprendimientoId=${empId}`);
+          if (r.ok) { 
+            const d = await r.json(); 
+            setTotalSeguidores(d.totalSeguidores || 0); 
+          }
         } catch { /* silent */ }
       };
       getCount();
