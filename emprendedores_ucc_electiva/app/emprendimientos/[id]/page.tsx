@@ -779,6 +779,10 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
         if (!r.ok) throw new Error(r.status === 404 ? "Emprendimiento no encontrado" : `Error ${r.status}`);
         const data: Emprendimiento = await r.json();
         setEmprendimiento(data);
+        // 🔥 Si el backend envía el total en el objeto principal, lo capturamos aquí para evitar llamadas extra
+        if ((data as any).totalSeguidores !== undefined) {
+          setTotalSeguidores((data as any).totalSeguidores);
+        }
         if (data.usuarioId) { const u = await obtenerUsuario(data.usuarioId); if (u) setUsuario(u as Usuario); }
         if (data.categoriaId) { const c = await obtenerCategoria(data.categoriaId); if (c) setCategoria(c as Categoria); }
       } catch (e) {
@@ -789,22 +793,13 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
   }, [id]);
 
   useEffect(() => {
-    if (emprendimiento && usuarioActual?.id) {
+    const token = sessionStorage.getItem("token");
+    if (emprendimiento && (usuarioActual?.id || token)) {
       verificarSeguimiento();
-    } else if (emprendimiento && !usuarioActual) {
-      const getCount = async () => {
-        try {
-          const empId = emprendimiento.id || emprendimiento._id;
-          // 🔥 CORRECCIÓN: No enviar usuarioId=dummy ya que el backend devuelve 403
-          // Al no enviar usuarioId, el backend debería retornar solo el total de seguidores
-          const r = await fetch(`${API_URL}/api/seguimientos/verificar?emprendimientoId=${empId}`);
-          if (r.ok) { 
-            const d = await r.json(); 
-            setTotalSeguidores(d.totalSeguidores || 0); 
-          }
-        } catch { /* silent */ }
-      };
-      getCount();
+    } else if (emprendimiento) {
+      // 🔥 CORRECCIÓN: Para usuarios invitados sin token, no llamamos a /verificar para evitar el 403.
+      // El total de seguidores ya debería venir en la carga inicial del emprendimiento si el backend lo soporta públicamente.
+      console.log("ℹ️ Usuario invitado o sin sesión activa: omitiendo verificación de seguimiento para evitar 403.");
     }
   }, [emprendimiento, usuarioActual]);
 
