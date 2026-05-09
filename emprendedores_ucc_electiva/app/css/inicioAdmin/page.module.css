@@ -274,31 +274,50 @@
 .empInfo { flex: 1; min-width: 0; }
 .empNombre { font-size: 0.92rem; font-weight: 700; color: #0d1b2a; margin: 0 0 4px; }
 .empDesc {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: #78909c;
   margin: 0 0 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
-.empMeta { display: flex; flex-wrap: wrap; gap: 6px; }
+.empMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .metaTag {
-  background: #f5f7fa;
-  border: 1px solid #e0e7ef;
-  color: #37474f;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-.metaActivo {
-  background: #e8f5e9;
-  border-color: #a5d6a7;
-  color: #2e7d32;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #78909c;
+  background: #f1f5f9;
+  padding: 2px 10px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.empActions { display: flex; gap: 8px; flex-shrink: 0; }
+.metaActivo {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.metaVentas {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fef3c7;
+}
+
+.empActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
 
 .btnAprobar {
   background: #e8f5e9;
@@ -717,3 +736,41 @@
   .searchInput { width: 100%; }
   .formRow { grid-template-columns: 1fr; }
 }
+
+/* ── Ranking ── */
+.rankingHeader {
+  padding: 24px 24px 12px;
+  border-bottom: 1px solid #f0f3f7;
+}
+.rankingTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0d1b2a;
+  margin: 0 0 4px;
+}
+.rankingSub {
+  font-size: 0.82rem;
+  color: #78909c;
+  margin: 0;
+}
+.rankingCard {
+  position: relative;
+  background: #fff;
+}
+.rankingBadge {
+  width: 32px;
+  height: 32px;
+  background: #009FE3;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,159,227,0.3);
+}
+.rankingCard:nth-child(2) .rankingBadge { background: #ffd700; color: #000; box-shadow: 0 2px 8px rgba(255,215,0,0.4); } /* Oro */
+.rankingCard:nth-child(3) .rankingBadge { background: #c0c0c0; color: #000; box-shadow: 0 2px 8px rgba(192,192,192,0.4); } /* Plata */
+.rankingCard:nth-child(4) .rankingBadge { background: #cd7f32; color: #fff; box-shadow: 0 2px 8px rgba(205,127,50,0.4); } /* Bronce */

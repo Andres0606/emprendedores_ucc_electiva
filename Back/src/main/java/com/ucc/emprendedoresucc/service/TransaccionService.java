@@ -1,7 +1,11 @@
 package com.ucc.emprendedoresucc.service;
 
 import com.ucc.emprendedoresucc.model.Transaccion;
+import com.ucc.emprendedoresucc.model.Emprendimiento;
+import com.ucc.emprendedoresucc.model.Producto;
+import com.ucc.emprendedoresucc.model.ProductoTransaccion;
 import com.ucc.emprendedoresucc.repository.TransaccionRepository;
+import com.ucc.emprendedoresucc.repository.EmprendimientoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +19,9 @@ public class TransaccionService {
 
     @Autowired
     private TransaccionRepository transaccionRepository;
+
+    @Autowired
+    private EmprendimientoRepository emprendimientoRepository;
 
     private String getFechaActual() {
         return LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -30,6 +37,32 @@ public class TransaccionService {
         
         if (transaccion.getMetodoPago() == null || transaccion.getMetodoPago().isEmpty()) {
             transaccion.setMetodoPago("pendiente");
+        }
+        
+        // 🔥 DESCONTAR STOCK Y ACTUALIZAR VENTAS
+        if (transaccion.getEmprendimiento() != null && transaccion.getEmprendimiento().getId() != null) {
+            Optional<Emprendimiento> empOpt = emprendimientoRepository.findById(transaccion.getEmprendimiento().getId());
+            if (empOpt.isPresent()) {
+                Emprendimiento emp = empOpt.get();
+                int totalCantidadPedido = 0;
+
+                for (ProductoTransaccion prodT : transaccion.getProductos()) {
+                    totalCantidadPedido += prodT.getCantidad();
+                    
+                    // Buscar producto por nombre (ya que no tienen ID propio)
+                    for (Producto p : emp.getProductos()) {
+                        if (p.getNombre().equals(prodT.getNombre())) {
+                            int nuevoStock = p.getStock() - prodT.getCantidad();
+                            p.setStock(Math.max(0, nuevoStock));
+                            break;
+                        }
+                    }
+                }
+                
+                // Incrementar ventas totales del emprendimiento
+                emp.setTotalVentas(emp.getTotalVentas() + totalCantidadPedido);
+                emprendimientoRepository.save(emp);
+            }
         }
         
         return transaccionRepository.save(transaccion);

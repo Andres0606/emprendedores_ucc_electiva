@@ -22,6 +22,7 @@ public class Emprendimiento {
     // NUNCA NULL
     private List<String> imagenes = new ArrayList<>();
     private List<Producto> productos = new ArrayList<>();
+    private int totalVentas = 0;
 
     public Emprendimiento() {}
 
@@ -56,4 +57,7 @@ public class Emprendimiento {
     public void setProductos(List<Producto> productos) {
         this.productos = (productos != null) ? productos : new ArrayList<>();
     }
+
+    public int getTotalVentas() { return totalVentas; }
+    public void setTotalVentas(int totalVentas) { this.totalVentas = totalVentas; }
 }

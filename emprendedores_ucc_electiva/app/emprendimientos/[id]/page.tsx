@@ -23,6 +23,7 @@ interface Emprendimiento {
     stock: number;
     imagen: string;
   }>;
+  totalVentas?: number;
 }
 
 interface Usuario {
@@ -1108,9 +1109,9 @@ Gracias por apoyar los emprendimientos UCC`;
                   <h3 className={styles.productName}>{prod.nombre}</h3>
                   <p className={styles.productPrice}>${prod.precio.toLocaleString()}</p>
                   {prod.stock > 0 ? (
-                    <span className={styles.productStock}>
+                    <span className={`${styles.productStock} ${prod.stock <= 5 ? styles.pocoStock : ""}`}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                      En stock
+                      Stock: {prod.stock}
                     </span>
                   ) : (
                     <span className={styles.productOutOfStock}>

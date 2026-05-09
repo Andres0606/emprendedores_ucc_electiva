@@ -21,7 +21,7 @@
 
 /* ══════════════════════════════
    BREADCRUMB
-══════════════════════════════ */
+   ══════════════════════════════ */
 .breadcrumb { max-width: 1200px; margin: 0 auto; padding: 1.25rem 2rem; font-size: 0.8rem; color: var(--gray); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
 .breadcrumb a { color: var(--blue); text-decoration: none; font-weight: 600; transition: color 0.15s; }
 .breadcrumb a:hover { color: var(--blue-dark); }
@@ -30,12 +30,12 @@
 
 /* ══════════════════════════════
    LAYOUT PRINCIPAL
-══════════════════════════════ */
+   ══════════════════════════════ */
 .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
 
 /* ══════════════════════════════
    GALERÍA
-══════════════════════════════ */
+   ══════════════════════════════ */
 .gallery { position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .mainImage { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; aspect-ratio: 1; }
 .mainImage img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
@@ -51,7 +51,7 @@
 
 /* ══════════════════════════════
    PANEL DE INFORMACIÓN
-══════════════════════════════ */
+   ══════════════════════════════ */
 .info { display: flex; flex-direction: column; gap: 1.5rem; }
 .header { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 .category { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); background: var(--blue-light); border: 1px solid rgba(0,159,227,0.2); padding: 0.25rem 0.75rem; border-radius: 100px; }
@@ -63,7 +63,7 @@
 
 /* ══════════════════════════════
    SEGUIMIENTO
-══════════════════════════════ */
+   ══════════════════════════════ */
 .followSection { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .followButton { display: inline-flex; align-items: center; gap: 8px; padding: 0.65rem 1.35rem; border-radius: 999px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: transform 0.15s, background 0.15s; letter-spacing: 0.01em; line-height: 1; }
 .followButton:hover:not(:disabled) { transform: translateY(-2px); }
@@ -96,7 +96,7 @@
 
 /* ══════════════════════════════
    PRODUCTOS
-══════════════════════════════ */
+   ══════════════════════════════ */
 .productsSection { max-width: 1200px; margin: 0 auto; padding: 0 2rem 3rem; }
 .productsHeader { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
 .productsHeader h2 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; color: var(--navy); letter-spacing: -0.02em; }
@@ -110,13 +110,15 @@
 .productInfo { padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .productName { font-size: 0.92rem; font-weight: 700; color: var(--navy); line-height: 1.3; }
 .productPrice { font-size: 1.05rem; font-weight: 800; color: var(--green-dark); }
-.productStock { font-size: 0.75rem; font-weight: 600; color: #15803d; background: var(--green-light); border: 1px solid #bbf7d0; border-radius: 100px; padding: 0.15rem 0.55rem; width: fit-content; }
-.productOutOfStock { font-size: 0.75rem; font-weight: 600; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 100px; padding: 0.15rem 0.55rem; width: fit-content; }
+.productStock { font-size: 0.75rem; font-weight: 600; color: #15803d; background: var(--green-light); border: 1px solid #bbf7d0; border-radius: 100px; padding: 0.15rem 0.55rem; width: fit-content; display: flex; align-items: center; gap: 4px; }
+.pocoStock { color: #f59e0b; background: #fffbeb; border-color: #fef3c7; }
+.productOutOfStock { font-size: 0.75rem; font-weight: 600; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 100px; padding: 0.15rem 0.55rem; width: fit-content; display: flex; align-items: center; gap: 4px; }
 
 .addToCartButton { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 12px; padding: 10px 14px; background: var(--navy); color: #fff; border: none; border-radius: 9px; font-size: 0.845rem; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; letter-spacing: 0.01em; }
 .addToCartButton svg { width: 16px; height: 16px; flex-shrink: 0; }
 .addToCartButton:hover { background: #003865; transform: translateY(-2px); box-shadow: 0 5px 16px rgba(0,56,101,0.2); }
 .addToCartButton:active { transform: translateY(0); }
+.addToCartButton:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
 
 .cantidadSelector { margin-top: 12px; padding: 14px; background: var(--blue-light); border: 1.5px solid rgba(0,159,227,0.2); border-radius: 11px; display: flex; flex-direction: column; gap: 10px; animation: slideDown 0.2s ease; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
@@ -137,7 +139,7 @@
 
 /* ══════════════════════════════
    CARRITO FLOTANTE
-══════════════════════════════ */
+   ══════════════════════════════ */
 .carritoFlotante {
   position: fixed; top: 18px; right: 20px; z-index: 1100;
   width: 52px; height: 52px; background: var(--navy); border-radius: 50%;
@@ -178,7 +180,7 @@
 
 /* ══════════════════════════════
    DRAWER DEL CARRITO
-══════════════════════════════ */
+   ══════════════════════════════ */
 .drawerOverlay {
   position: fixed; inset: 0; z-index: 2000;
   background: rgba(10,22,40,0.5); backdrop-filter: blur(3px);
@@ -252,7 +254,7 @@
 
 /* ══════════════════════════════
    FACTURA (dentro del drawer)
-══════════════════════════════ */
+   ══════════════════════════════ */
 .facturaContainer {
   padding: 1.75rem 1.5rem;
   display: flex; flex-direction: column; gap: 1.2rem;
@@ -377,7 +379,7 @@
 
 /* ══════════════════════════════
    VOLVER / LOADING / ERROR
-══════════════════════════════ */
+   ══════════════════════════════ */
 .backSection { max-width: 1200px; margin: 0 auto 3rem; padding: 0 2rem; }
 .backToList { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--gray); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 0.5rem 1rem; border: 1.5px solid var(--border); border-radius: 8px; background: var(--white); transition: color 0.15s, border-color 0.15s; }
 .backToList:hover { color: var(--blue); border-color: var(--blue); }
@@ -394,7 +396,7 @@
 
 /* ══════════════════════════════
    RESPONSIVE
-══════════════════════════════ */
+   ══════════════════════════════ */
 @media (max-width: 860px) {
   .container { grid-template-columns: 1fr; gap: 2rem; padding: 0 1.25rem 2rem; }
   .gallery { position: static; }
@@ -410,7 +412,7 @@
 
 /* ══════════════════════════════
    ESTILOS DE IMPRESIÓN
-══════════════════════════════ */
+   ══════════════════════════════ */
 @media print {
   /* ── Ocultar TODO el sitio ── */
   body * { visibility: hidden; }
@@ -593,7 +595,7 @@
 
 /* ══════════════════════════════
    MODAL WHATSAPP
-══════════════════════════════ */
+   ══════════════════════════════ */
 .modalOverlay {
   position: fixed;
   top: 0;

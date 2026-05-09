@@ -31,6 +31,7 @@ interface Emprendimiento {
   telefono?: string;
   imagenes?: string[];
   productos?: Producto[];
+  totalVentas?: number;
   createdAt?: string;
 }
 
@@ -441,6 +442,12 @@ function ProductosContent() {
             {productosFiltrados.reduce((acc, p) => acc + p.stock, 0)}
           </span>
           <span className={styles.statLabel}>UNIDADES EN STOCK</span>
+        </div>
+        <div className={styles.statItem}>
+          <span className={styles.statValue}>
+            {emprendimientos.reduce((acc, e) => acc + (e.totalVentas || 0), 0)}
+          </span>
+          <span className={styles.statLabel}>VENTAS TOTALES</span>
         </div>
         <div className={styles.statItem}>
           <span className={styles.statValue}>

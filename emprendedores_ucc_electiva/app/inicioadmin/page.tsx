@@ -16,6 +16,7 @@ interface Emprendimiento {
   telefono?: string;
   imagenes: string[];
   productos: Array<{ nombre: string; precio: number; stock: number; imagen: string; }>;
+  totalVentas?: number;
   createdAt?: string;
 }
 
@@ -48,7 +49,7 @@ interface Evento {
   imagen: string;
 }
 
-type Tab = "pendientes" | "activos" | "eventos";
+type Tab = "pendientes" | "activos" | "eventos" | "ranking";
 
 export default function InicioAdminPage() {
   const router = useRouter();
@@ -313,6 +314,9 @@ export default function InicioAdminPage() {
               <button className={`${styles.tab} ${activeTab === "eventos" ? styles.tabActive : ""}`} onClick={() => setActiveTab("eventos")}>
                 Eventos <span className={styles.tabCount}>{eventos.length}</span>
               </button>
+              <button className={`${styles.tab} ${activeTab === "ranking" ? styles.tabActive : ""}`} onClick={() => setActiveTab("ranking")}>
+                Ranking 🔥
+              </button>
             </div>
 
             {activeTab !== "eventos" && (
@@ -371,6 +375,7 @@ export default function InicioAdminPage() {
                         <span className={styles.metaTag}>{getNombreEmprendedor(emp.usuarioId)}</span>
                         <span className={styles.metaTag}>{emp.productos?.length || 0} productos</span>
                         <span className={`${styles.metaTag} ${styles.metaActivo}`}>Activo</span>
+                        <span className={`${styles.metaTag} ${styles.metaVentas}`}>🔥 {emp.totalVentas || 0} ventas</span>
                       </div>
                     </div>
                     <div className={styles.empActions}>
@@ -432,6 +437,40 @@ export default function InicioAdminPage() {
                     <div className={styles.empActions}>
                       <button className={styles.btnVer} onClick={() => abrirEditar(ev)}>Editar</button>
                       <button className={styles.btnEliminar} onClick={() => eliminarEvento(ev.id)}>Eliminar</button>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          )}
+
+          {/* Tab: Ranking */}
+          {activeTab === "ranking" && (
+            <div className={styles.list}>
+              <div className={styles.rankingHeader}>
+                <h2 className={styles.rankingTitle}>Emprendimientos más populares</h2>
+                <p className={styles.rankingSub}>Basado en el número total de ventas registradas</p>
+              </div>
+              {[...emprendimientosActivos]
+                .sort((a, b) => (b.totalVentas || 0) - (a.totalVentas || 0))
+                .slice(0, 10)
+                .map((emp, index) => (
+                  <div key={emp.id || emp._id} className={`${styles.empCard} ${styles.rankingCard}`}>
+                    <div className={styles.rankingBadge}>#{index + 1}</div>
+                    <div className={styles.empImgWrap}>
+                      {emp.imagenes?.[0] ? <img src={emp.imagenes[0]} alt={emp.nombre} className={styles.empImg} /> : <div className={styles.empImgPlaceholder} />}
+                    </div>
+                    <div className={styles.empInfo}>
+                      <h3 className={styles.empNombre}>{emp.nombre}</h3>
+                      <div className={styles.empMeta}>
+                        <span className={styles.metaTag}>{getNombreCategoria(emp.categoriaId)}</span>
+                        <span className={`${styles.metaTag} ${styles.metaVentas}`}>
+                          {emp.totalVentas || 0} ventas totales
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.empActions}>
+                      <Link href={`/emprendimientos/${emp.id || emp._id}`} className={styles.btnVer}>Ver</Link>
                     </div>
                   </div>
                 ))
