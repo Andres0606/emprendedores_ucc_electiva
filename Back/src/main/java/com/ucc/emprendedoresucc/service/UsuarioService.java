@@ -143,22 +143,33 @@ public class UsuarioService {
     public Usuario actualizarUsuario(String id, Usuario usuarioActualizado) {
         return usuarioRepository.findById(id)
                 .map(usuario -> {
-                    usuario.setNombre(usuarioActualizado.getNombre());
-                    usuario.setApellido(usuarioActualizado.getApellido());
-                    
-                    // Validar teléfono duplicado en actualización
-                    if (usuarioActualizado.getTelefono() != null && !usuarioActualizado.getTelefono().equals(usuario.getTelefono())) {
-                        String telefonoLimpio = usuarioActualizado.getTelefono().replaceAll("\\D", "");
-                        Usuario existentePorTelefono = usuarioRepository.findByTelefono(telefonoLimpio);
-                        if (existentePorTelefono != null && !existentePorTelefono.getId().equals(id)) {
-                            throw new RuntimeException("El número de teléfono ya está registrado por otro usuario");
-                        }
-                        usuario.setTelefono(telefonoLimpio);
+                    if (usuarioActualizado.getNombre() != null && !usuarioActualizado.getNombre().trim().isEmpty()) {
+                        usuario.setNombre(usuarioActualizado.getNombre().trim());
+                    }
+                    if (usuarioActualizado.getApellido() != null && !usuarioActualizado.getApellido().trim().isEmpty()) {
+                        usuario.setApellido(usuarioActualizado.getApellido().trim());
                     }
                     
-                    usuario.setTipoUsuario(usuarioActualizado.getTipoUsuario());
-                    usuario.setCarrera(usuarioActualizado.getCarrera());
-                    // No actualizamos password ni correo por seguridad
+                    // Validar teléfono duplicado en actualización
+                    if (usuarioActualizado.getTelefono() != null && !usuarioActualizado.getTelefono().trim().isEmpty()) {
+                        String telefonoLimpio = usuarioActualizado.getTelefono().replaceAll("\\D", "");
+                        if (!telefonoLimpio.equals(usuario.getTelefono())) {
+                            Usuario existentePorTelefono = usuarioRepository.findByTelefono(telefonoLimpio);
+                            if (existentePorTelefono != null && !existentePorTelefono.getId().equals(id)) {
+                                throw new RuntimeException("El número de teléfono ya está registrado por otro usuario");
+                            }
+                            usuario.setTelefono(telefonoLimpio);
+                        }
+                    }
+                    
+                    if (usuarioActualizado.getTipoUsuario() != null) {
+                        usuario.setTipoUsuario(usuarioActualizado.getTipoUsuario());
+                    }
+                    if (usuarioActualizado.getCarrera() != null) {
+                        usuario.setCarrera(usuarioActualizado.getCarrera());
+                    }
+                    
+                    // No actualizamos password ni correo por seguridad en este método
                     return usuarioRepository.save(usuario);
                 })
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));

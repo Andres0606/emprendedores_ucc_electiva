@@ -52,7 +52,9 @@ export default function ConfiguracionPage() {
     if (!guardado) { router.push("/autenticacion/login"); return; }
     const u: Usuario = JSON.parse(guardado);
     setUsuario(u);
-    setNombre(u.nombre || "");
+    // Concatenar nombre y apellido para el input de "Nombre completo"
+    const nombreCompleto = `${u.nombre || ""} ${u.apellido || ""}`.trim();
+    setNombre(nombreCompleto);
     setTelefono(u.telefono || "");
     setLoading(false);
   }, []);
@@ -60,6 +62,12 @@ export default function ConfiguracionPage() {
   // ── Guardar perfil ────────────────────────────
   async function guardarPerfil() {
     if (!nombre.trim()) { setErrorPerfil("El nombre no puede estar vacío."); return; }
+    
+    // Intentar separar nombre y apellido (toma la primera palabra como nombre y el resto como apellido)
+    const partes = nombre.trim().split(/\s+/);
+    const firstName = partes[0];
+    const lastName = partes.slice(1).join(" ");
+
     if (telefono && !/^\d{7,15}$/.test(telefono.replace(/\s/g, ""))) {
       setErrorPerfil("Ingresa un teléfono válido (solo dígitos, 7-15 caracteres)."); return;
     }
@@ -70,7 +78,11 @@ export default function ConfiguracionPage() {
       const res = await fetch(`${API_URL}/api/usuarios/${uid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: nombre.trim(), telefono: telefono.trim() }),
+        body: JSON.stringify({ 
+          nombre: firstName, 
+          apellido: lastName, 
+          telefono: telefono.trim() 
+        }),
       });
       if (!res.ok) throw new Error("No se pudo guardar.");
       const actualizado: Usuario = await res.json();
