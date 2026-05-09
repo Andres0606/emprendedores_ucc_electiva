@@ -6,6 +6,8 @@ import com.ucc.emprendedoresucc.model.Usuario;
 public interface UsuarioRepository extends MongoRepository<Usuario, String> {
 
     Usuario findByCorreo(String correo);
+    Usuario findFirstByCorreo(String correo);
+    boolean existsByCorreo(String correo);
     
     // Método para buscar por teléfono
     Usuario findByTelefono(String telefono);

@@ -131,7 +131,7 @@ public class UsuarioService {
 
     // Obtener usuario por correo
     public Usuario obtenerPorCorreo(String correo) {
-        return usuarioRepository.findByCorreo(correo);
+        return usuarioRepository.findFirstByCorreo(correo);
     }
     
     // Obtener usuario por teléfono
@@ -207,7 +207,7 @@ public class UsuarioService {
         if (!correo.endsWith("@campusucc.edu.co") && !correo.endsWith("@ucc.edu.co")) {
             throw new RuntimeException("Solo se permiten correos institucionales (@campusucc.edu.co o @ucc.edu.co)");
         }
-        Usuario usuario = usuarioRepository.findByCorreo(correo);
+        Usuario usuario = usuarioRepository.findFirstByCorreo(correo);
         if (usuario != null) {
             // Generar PIN de 6 dígitos
             String pin = String.format("%06d", new java.util.Random().nextInt(999999));
