@@ -29,6 +29,7 @@ interface Emprendimiento {
     stock: number;
     imagen: string;
   }>;
+  totalVentas?: number;
 }
 
 interface Usuario {
@@ -54,40 +55,120 @@ const CATEGORIAS_POR_DEFECTO: Categoria[] = [
 ];
 
 // Componente para Iconos de Categoría (SVG)
-const IconoCategoria = ({ nombre, className }: { nombre: string; className?: string }) => {
-  const props = {
-    width: "24",
-    height: "24",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2",
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    className: className
+const CategoryIcon = ({ nombre, size = 24 }: { nombre: string; size?: number }) => {
+  const getColors = (n: string) => {
+    switch (n) {
+      case "Tecnología": return { bg: "#e0f2fe", border: "#bae6fd", icon: "#0369a1" };
+      case "Gastronomía":
+      case "Comida": return { bg: "#fef2f2", border: "#fecaca", icon: "#991b1b" };
+      case "Moda y Diseño": return { bg: "#f5f3ff", border: "#ddd6fe", icon: "#5b21b6" };
+      case "Salud y Bienestar": return { bg: "#f0fdf4", border: "#bbf7d0", icon: "#166534" };
+      case "Arte y Cultura": return { bg: "#fff7ed", border: "#fed7aa", icon: "#9a3412" };
+      case "Servicios": return { bg: "#f8fafc", border: "#e2e8f0", icon: "#334155" };
+      case "Educación": return { bg: "#ecfeff", border: "#cffafe", icon: "#0891b2" };
+      case "Sostenibilidad": return { bg: "#f0fdf4", border: "#dcfce7", icon: "#166534" };
+      default: return { bg: "#f1f5f9", border: "#e2e8f0", icon: "#475569" };
+    }
   };
 
-  switch (nombre) {
-    case "Tecnología":
-      return <svg {...props}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>;
-    case "Gastronomía":
-    case "Comida":
-      return <svg {...props}><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>;
-    case "Moda y Diseño":
-      return <svg {...props}><path d="M20.38 3.46L16 2.14 11.62 3.46c-.51.15-.87.62-.87 1.15v14.78c0 .53.36 1 .87 1.15L16 21.86l4.38-1.32c.51-.15.87-.62.87-1.15V4.61c0-.53-.36-1-.87-1.15z"></path><path d="M3.62 3.46L8 2.14l4.38 1.32c.51.15.87.62.87 1.15v14.78c0 .53-.36 1-.87 1.15L8 21.86l-4.38-1.32C3.11 20.39 2.75 19.92 2.75 19.39V4.61c0-.53.36-1 .87-1.15z"></path></svg>;
-    case "Salud y Bienestar":
-      return <svg {...props}><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path></svg>;
-    case "Arte y Cultura":
-      return <svg {...props}><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.71-.74 1.71-1.71 0-.43-.17-.83-.44-1.14-.28-.31-.44-.72-.44-1.17 0-.93.77-1.71 1.71-1.71h1.76c3.15 0 5.71-2.56 5.71-5.71 0-4.73-4.39-8.56-9.29-8.56z"></path></svg>;
-    case "Servicios":
-      return <svg {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>;
-    case "Educación":
-      return <svg {...props}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>;
-    case "Sostenibilidad":
-      return <svg {...props}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path></svg>;
-    default:
-      return <svg {...props}><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>;
-  }
+  const colors = getColors(nombre);
+  const iconProps: React.SVGProps<SVGSVGElement> = {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: colors.icon,
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
+
+  const renderIcon = () => {
+    switch (nombre) {
+      case "Tecnología":
+        return (
+          <svg {...iconProps}>
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+        );
+      case "Gastronomía":
+      case "Comida":
+        return (
+          <svg {...iconProps}>
+            <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+            <path d="M7 2v20" />
+            <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+          </svg>
+        );
+      case "Moda y Diseño":
+        return (
+          <svg {...iconProps}>
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+            <path d="M3 6h18" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+          </svg>
+        );
+      case "Salud y Bienestar":
+        return (
+          <svg {...iconProps}>
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg>
+        );
+      case "Arte y Cultura":
+        return (
+          <svg {...iconProps}>
+            <circle cx="13.5" cy="6.5" r=".5" />
+            <circle cx="17.5" cy="10.5" r=".5" />
+            <circle cx="8.5" cy="7.5" r=".5" />
+            <circle cx="6.5" cy="12.5" r=".5" />
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.77 1.7-1.7 0-.44-.19-.84-.49-1.12-.29-.28-.48-.68-.48-1.13 0-.92.75-1.67 1.67-1.67h1.91c4.22 0 7.6-3.38 7.6-7.6 0-4.75-3.8-8.5-8.5-8.5Z" />
+          </svg>
+        );
+      case "Servicios":
+        return (
+          <svg {...iconProps}>
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z" />
+          </svg>
+        );
+      case "Educación":
+        return (
+          <svg {...iconProps}>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+        );
+      case "Sostenibilidad":
+        return (
+          <svg {...iconProps}>
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+          </svg>
+        );
+      default:
+        return (
+          <svg {...iconProps}>
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        );
+    }
+  };
+
+  return (
+    <div style={{
+      width: size + 16,
+      height: size + 16,
+      backgroundColor: colors.bg,
+      border: `1px solid ${colors.border}`,
+      borderRadius: '14px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      {renderIcon()}
+    </div>
+  );
 };
 
 export default function HomePage() {
@@ -260,8 +341,11 @@ export default function HomePage() {
         
         setUsuarios(usuariosMap);
         
-        // Transformar emprendimientos para mostrar (solo los primeros 4)
-        const venturesDisplay = activos.slice(0, 4).map(emp => {
+        // 🔥 CALCULAR LOS MÁS VENDIDOS PARA LA PORTADA
+        const venturesDisplay = activos
+          .sort((a, b) => (b.totalVentas || 0) - (a.totalVentas || 0))
+          .slice(0, 4)
+          .map(emp => {
           const usuario = usuariosMap.get(emp.usuarioId);
           const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido}` : "Estudiante UCC";
           const carrera = usuario?.carrera || "";
@@ -494,7 +578,7 @@ export default function HomePage() {
                     className={styles.categoryCard}
                   >
                     <div className={styles.categoryIconWrapper}>
-                      <IconoCategoria nombre={cat.nombre} />
+                      <CategoryIcon nombre={cat.nombre} size={28} />
                     </div>
                     <span className={styles.categoryLabel}>{cat.nombre}</span>
                     <span className={styles.categoryCount}>
@@ -530,7 +614,7 @@ export default function HomePage() {
                 <div key={v.id} className={styles.ventureCard}>
                   <div className={styles.ventureTop}>
                     <span className={styles.ventureCat}>
-                      <IconoCategoria nombre={v.category} className={styles.miniIcon} />
+                      <CategoryIcon nombre={v.category} size={14} />
                       {v.category}
                     </span>
                   </div>
