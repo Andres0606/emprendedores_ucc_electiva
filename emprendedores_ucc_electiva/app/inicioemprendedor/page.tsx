@@ -31,7 +31,7 @@ interface Emprendimiento {
 
 interface Usuario {
   id?: string;
-  userId?: string; // 🔥 Nuevo campo necesario para el login
+  userId?: string; // Nuevo campo necesario para el login
   _id?: string;
   nombre: string;
   apellido: string;
@@ -59,7 +59,7 @@ export default function InicioEmprendedorPage() {
   const [ultimosProductos, setUltimosProductos] = useState<Producto[]>([]);
   const [ultimoEmprendimiento, setUltimoEmprendimiento] = useState<Emprendimiento | null>(null);
 
-  // 🔥 Función para obtener timestamp de forma confiable
+  // Función para obtener timestamp de forma confiable
   const getTimestamp = (item: any): number => {
     if (item.createdAt) {
       const timestamp = new Date(item.createdAt).getTime();
@@ -78,7 +78,7 @@ export default function InicioEmprendedorPage() {
     return 0;
   };
 
-  // 🔥 Función para ordenar por fecha (más reciente primero)
+  // Función para ordenar por fecha (más reciente primero)
   const ordenarPorFecha = <T extends { createdAt?: string; id?: string; _id?: string }>(items: T[]): T[] => {
     return [...items].sort((a, b) => {
       const timestampA = getTimestamp(a);
@@ -88,7 +88,7 @@ export default function InicioEmprendedorPage() {
   };
 
   const cargarDatos = async () => {
-    console.log("🔄 Cargando datos...");
+    console.log("Cargando datos...");
     
     const guardado = sessionStorage.getItem("usuario");
     if (!guardado) { 
@@ -156,7 +156,7 @@ export default function InicioEmprendedorPage() {
           }
         }
         
-        // 🔥 Forzar actualización de estado para que React vea los nombres de categoría
+        // Forzar actualización de estado para que React vea los nombres de categoría
         setEmprendimientos([...ordenados]);
         if (ordenados.length > 0) setUltimoEmprendimiento({...ordenados[0]});
       }
@@ -175,7 +175,7 @@ export default function InicioEmprendedorPage() {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "productosActualizados" || e.key === "emprendimientosActualizados") {
-        console.log("📦 Datos actualizados, recargando...");
+        console.log("Datos actualizados, recargando...");
         cargarDatos();
       }
     };
@@ -189,7 +189,7 @@ export default function InicioEmprendedorPage() {
 
   useEffect(() => {
     const handleFocus = () => {
-      console.log("📌 Página enfocada, recargando...");
+      console.log("Página enfocada, recargando...");
       cargarDatos();
     };
     

@@ -50,10 +50,10 @@ const ESTADO_CONFIG: Record<string, {
   pillCls: string;
   mensaje: string;
 }> = {
-  activo:    { label: "Activo",    badgeCls: "badgeActivo",    pillCls: "pillActivo",    mensaje: "✅ Tu emprendimiento está activo y visible para toda la comunidad." },
-  pendiente: { label: "Pendiente", badgeCls: "badgePendiente", pillCls: "pillPendiente", mensaje: "⏳ Tu emprendimiento está en revisión. Un administrador lo evaluará pronto." },
-  rechazado: { label: "Rechazado", badgeCls: "badgeRechazado", pillCls: "pillRechazado", mensaje: "❌ Tu emprendimiento fue rechazado. Puedes crear uno nuevo." },
-  suspendido: { label: "Suspendido", badgeCls: "badgeSuspendido", pillCls: "pillSuspendido", mensaje: "⚠️ Tu emprendimiento ha sido suspendido por incumplir las normas." },
+  activo:    { label: "Activo",    badgeCls: "badgeActivo",    pillCls: "pillActivo",    mensaje: "Tu emprendimiento está activo y visible para toda la comunidad." },
+  pendiente: { label: "Pendiente", badgeCls: "badgePendiente", pillCls: "pillPendiente", mensaje: "Tu emprendimiento está en revisión. Un administrador lo evaluará pronto." },
+  rechazado: { label: "Rechazado", badgeCls: "badgeRechazado", pillCls: "pillRechazado", mensaje: "Tu emprendimiento fue rechazado. Puedes crear uno nuevo." },
+  suspendido: { label: "Suspendido", badgeCls: "badgeSuspendido", pillCls: "pillSuspendido", mensaje: "Tu emprendimiento ha sido suspendido por incumplir las normas." },
 };
 
 export default function MisEmprendimientosPage() {

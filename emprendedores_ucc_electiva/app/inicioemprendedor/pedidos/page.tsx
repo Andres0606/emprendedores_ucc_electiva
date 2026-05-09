@@ -101,8 +101,8 @@ export default function PedidosEmprendedorPage() {
     const u = JSON.parse(guardado);
     const uid = u.userId || u.id || u._id;
     
-    console.log("🔍 UID del emprendedor:", uid);
-    console.log("🔍 Tipo de UID:", typeof uid);
+    console.log("UID del emprendedor:", uid);
+    console.log("Tipo de UID:", typeof uid);
 
     try {
       const token = sessionStorage.getItem("token");
@@ -114,21 +114,21 @@ export default function PedidosEmprendedorPage() {
       if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
       const data: Transaccion[] = await res.json();
       
-      console.log("📦 Todos los pedidos recibidos:", data.length);
-      console.log("📦 Datos completos:", JSON.stringify(data, null, 2));
+      console.log("Todos los pedidos recibidos:", data.length);
+      console.log("Datos completos:", JSON.stringify(data, null, 2));
 
       const ordenados = data
         .filter(t => {
             const vendedorId = t.vendedor?.id || t.vendedor?._id;
-            console.log(`Pedido ${t.numeroPedido}: vendedorId=${vendedorId}, uid=${uid}, coincide=${vendedorId === uid || String(vendedorId) === String(uid)}`);
+            console.log(`Pedido ${t.numeroPedido}: vendedorId=${vendedorId}, uid=${uid}`);
             return vendedorId === uid || String(vendedorId) === String(uid);
         })
         .sort((a, b) => b.numeroPedido - a.numeroPedido);
 
-      console.log("✅ Pedidos filtrados:", ordenados.length);
+      console.log("Pedidos filtrados:", ordenados.length);
       setPedidos(ordenados);
     } catch (e: any) {
-      console.error("❌ Error:", e);
+      console.error("Error:", e);
       setError(e.message || "Error inesperado.");
     } finally {
       setLoading(false);
@@ -488,16 +488,16 @@ export default function PedidosEmprendedorPage() {
 
               <div className={styles.modalSep} />
 
-              {/* 🔥 Mensaje si está cancelado o entregado */}
+              {/* Mensaje si está cancelado o entregado */}
               {(detalle.estado === "cancelado" || detalle.estado === "entregado") && (
                 <div className={styles.pedidoCanceladoMsg}>
                     {detalle.estado === "cancelado" 
-                    ? "⚠️ Este pedido ha sido cancelado. No se pueden realizar cambios."
-                    : "✅ Este pedido ya ha sido entregado. No se pueden realizar cambios."}
+                    ? "Este pedido ha sido cancelado. No se pueden realizar cambios."
+                    : "Este pedido ya ha sido entregado. No se pueden realizar cambios."}
                 </div>
                 )}
 
-              {/* 🔥 Mostrar solo si NO está cancelado ni entregado */}
+              {/* Mostrar solo si NO está cancelado ni entregado */}
               {detalle.estado !== "cancelado" &&  detalle.estado !== "entregado" && (
                 <>
                   {/* Cambiar estado */}
