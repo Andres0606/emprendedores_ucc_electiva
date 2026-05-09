@@ -24,4 +24,7 @@ public interface SeguimientoRepository extends MongoRepository<Seguimiento, Stri
     
     // Eliminar seguimiento específico
     void deleteByUsuarioIdAndEmprendimientoId(String usuarioId, String emprendimientoId);
+
+    // Conteo flexible para evitar errores de ID
+    long countByEmprendimientoIdIn(List<String> ids);
 }

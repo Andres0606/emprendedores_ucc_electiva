@@ -141,8 +141,17 @@ public class SeguimientoController {
             @RequestParam String usuarioId, 
             @RequestParam String emprendimientoId) {
         try {
-            boolean sigue = seguimientoService.estaSiguiendo(usuarioId, emprendimientoId);
-            long totalSeguidores = seguimientoService.contarSeguidores(emprendimientoId);
+            // Intentar obtener ambos IDs (id y _id) para una búsqueda flexible
+            List<String> ids = new ArrayList<>();
+            ids.add(emprendimientoId);
+            
+            Optional<Emprendimiento> empOpt = emprendimientoService.obtenerPorId(emprendimientoId);
+            empOpt.ifPresent(emp -> {
+                if (emp.getId() != null && !ids.contains(emp.getId())) ids.add(emp.getId());
+            });
+
+            boolean sigue = seguimientoService.estaSiguiendoFlex(usuarioId, ids);
+            long totalSeguidores = seguimientoService.contarSeguidoresFlex(ids);
             
             Map<String, Object> response = new HashMap<>();
             response.put("estaSiguiendo", sigue);
@@ -153,7 +162,6 @@ public class SeguimientoController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al verificar seguimiento");
-            error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
@@ -165,7 +173,16 @@ public class SeguimientoController {
             if (emprendimientoId == null) {
                 return ResponseEntity.badRequest().body("Falta emprendimientoId");
             }
-            long total = seguimientoService.contarSeguidores(emprendimientoId);
+
+            List<String> ids = new ArrayList<>();
+            ids.add(emprendimientoId);
+            
+            Optional<Emprendimiento> empOpt = emprendimientoService.obtenerPorId(emprendimientoId);
+            empOpt.ifPresent(emp -> {
+                if (emp.getId() != null && !ids.contains(emp.getId())) ids.add(emp.getId());
+            });
+
+            long total = seguimientoService.contarSeguidoresFlex(ids);
             Map<String, Object> response = new HashMap<>();
             response.put("totalSeguidores", total);
             return ResponseEntity.ok(response);

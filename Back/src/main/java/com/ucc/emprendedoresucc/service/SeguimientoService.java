@@ -58,9 +58,23 @@ public class SeguimientoService {
             .isPresent();
     }
     
-    // Obtener conteo de seguidores
+    // Obtener conteo de seguidores (Flexible)
     public long contarSeguidores(String emprendimientoId) {
         return seguimientoRepository.countByEmprendimientoId(emprendimientoId);
+    }
+
+    public long contarSeguidoresFlex(List<String> ids) {
+        return seguimientoRepository.countByEmprendimientoIdIn(ids);
+    }
+    
+    // Verificar si sigue (Flexible)
+    public boolean estaSiguiendoFlex(String usuarioId, List<String> ids) {
+        for (String id : ids) {
+            if (seguimientoRepository.findByUsuarioIdAndEmprendimientoId(usuarioId, id).isPresent()) {
+                return true;
+            }
+        }
+        return false;
     }
     
     // Obtener emprendimientos que sigue un usuario
