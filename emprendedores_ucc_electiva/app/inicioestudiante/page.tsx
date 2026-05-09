@@ -802,14 +802,19 @@ const finalizarTodosLosPedidos = async () => {
       setProximosEventos([]);
     }
   };
-
+  
   const obtenerActividad = async (usuarioId: string) => {
     try {
-  const actividadesTemp: Actividad[] = [];
-  
-  const resSeguimientos = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}`);
-  if (resSeguimientos.ok) {
-    const seguimientos: SeguimientoConFecha[] = await resSeguimientos.json();
+      const token = sessionStorage.getItem("token");
+      const actividadesTemp: Actividad[] = [];
+      
+      const resSeguimientos = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (resSeguimientos.ok) {
+        const seguimientos: SeguimientoConFecha[] = await resSeguimientos.json();
     const seguimientosRecientes = seguimientos.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()).slice(0, 2);
     
     for (const seg of seguimientosRecientes) {
@@ -875,7 +880,12 @@ const finalizarTodosLosPedidos = async () => {
 
   const obtenerUltimoSeguido = async (usuarioId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       
       if (!res.ok) return null;
       
