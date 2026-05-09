@@ -1,3 +1,4 @@
+// MODIFICADO POR ANTIGRAVITY - ESTE COMENTARIO CONFIRMA LA MODIFICACIÓN
 package com.ucc.emprendedoresucc.controller;
 
 import com.ucc.emprendedoresucc.config.JwtUtils;
@@ -34,8 +35,6 @@ public class AuthController {
         }
 
         try {
-            // En un sistema real, aquí generaríamos un token temporal.
-            // Por ahora, enviamos un correo de confirmación de que el sistema funciona.
             String subject = "Recuperación de Contraseña - EmprendedoresUCC";
             String body = "Hola " + usuario.getNombre() + ",\n\n" +
                           "Hemos recibido una solicitud para restablecer tu contraseña en EmprendedoresUCC.\n" +
@@ -54,13 +53,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
         try {
-            // Validar credenciales
             Usuario usuario = usuarioService.login(authRequest.getCorreo(), authRequest.getPassword());
-            
-            // Generar Token
             String token = jwtUtils.generateToken(usuario.getCorreo(), usuario.getTipoUsuario());
             
-            // Retornar respuesta con token y datos básicos
             return ResponseEntity.ok(new AuthResponse(
                     token, 
                     usuario.getNombre() + " " + usuario.getApellido(), 

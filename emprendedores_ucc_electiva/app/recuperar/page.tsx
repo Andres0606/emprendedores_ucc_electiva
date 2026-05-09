@@ -1,4 +1,5 @@
 "use client";
+// MODIFICADO POR ANTIGRAVITY - ESTA PÁGINA ES NUEVA
 import Link from "next/link";
 import { useState } from "react";
 import styles from "../css/Autenticación/recuperar.module.css";
