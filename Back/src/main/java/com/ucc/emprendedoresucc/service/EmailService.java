@@ -27,7 +27,7 @@ public class EmailService {
         String safeBody = body.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
 
         String jsonInputString = "{" +
-            "\"from\": \"onboarding@resend.dev\"," +
+            "\"from\": \"recuperacion@emprendedoresucc.company\"," +
             "\"to\": \"" + safeTo + "\"," +
             "\"subject\": \"" + safeSubject + "\"," +
             "\"text\": \"" + safeBody + "\"" +
