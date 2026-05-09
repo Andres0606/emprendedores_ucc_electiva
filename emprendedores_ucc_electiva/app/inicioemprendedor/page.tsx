@@ -31,6 +31,7 @@ interface Emprendimiento {
 
 interface Usuario {
   id?: string;
+  userId?: string; // 🔥 Nuevo campo necesario para el login
   _id?: string;
   nombre: string;
   apellido: string;
@@ -99,7 +100,7 @@ export default function InicioEmprendedorPage() {
     setUsuario(u);
     setNombreUsuario(`${u.nombre} ${u.apellido}`);
 
-    const uid = u.id || u._id;
+    const uid = u.userId || u.id || u._id;
     if (!uid) {
       setLoading(false);
       return;
