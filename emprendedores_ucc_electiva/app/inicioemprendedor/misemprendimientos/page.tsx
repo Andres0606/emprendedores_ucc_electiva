@@ -93,9 +93,10 @@ export default function MisEmprendimientosPage() {
 
       try {
         // Cargar categorías
+        let cats: Categoria[] = [];
         const resCat = await fetch(`${API_URL}/api/categorias`);
         if (resCat.ok) {
-          const cats = await resCat.json();
+          cats = await resCat.json();
           setCategorias(cats);
         }
 
@@ -105,9 +106,9 @@ export default function MisEmprendimientosPage() {
 
         const mios = data.filter(e => String(e.usuarioId || "") === String(uid));
 
-        // Mapa de categorías
+        // Mapa de categorías - USANDO 'cats' DIRECTAMENTE
         let categoriasMap: Record<string, string> = {};
-        categorias.forEach((c: any) => {
+        cats.forEach((c: any) => {
           const cid = c.id || c._id;
           if (cid) categoriasMap[cid] = c.nombre;
         });
@@ -364,7 +365,11 @@ export default function MisEmprendimientosPage() {
             {/* Mensaje cuando el emprendimiento está PENDIENTE */}
             {emp?.estado === "pendiente" && (
               <div className={styles.warningCard}>
-                <span className={styles.warningIcon}>⏳</span>
+                <span className={styles.warningIcon}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </span>
                 <p className={styles.warningText}>Tienes un emprendimiento en revisión. Espera a que sea evaluado antes de crear otro.</p>
               </div>
             )}
@@ -372,7 +377,11 @@ export default function MisEmprendimientosPage() {
             {/* Mensaje cuando el emprendimiento está SUSPENDIDO */}
             {emp?.estado === "suspendido" && (
               <div className={`${styles.warningCard} ${styles.warningCardSuspendido}`}>
-                <span className={styles.warningIcon}>🔒</span>
+                <span className={styles.warningIcon}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </span>
                 <p className={styles.warningText}>Tu emprendimiento ha sido suspendido por el administrador. No puedes editarlo ni gestionar productos hasta que sea reactivado.</p>
                 <Link href="/contacto" className={styles.btnLinkWarning}>
         

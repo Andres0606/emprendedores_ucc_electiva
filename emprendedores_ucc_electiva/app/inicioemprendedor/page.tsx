@@ -144,14 +144,21 @@ export default function InicioEmprendedorPage() {
         for (const emp of ordenados) {
           if (emp.categoriaId) {
             try {
+              // Buscar en la lista de categorías ya cargada o hacer fetch
               const resCat = await fetch(`${API_URL}/api/categorias/${emp.categoriaId}`);
               if (resCat.ok) {
                 const cat = await resCat.json();
                 emp.categoriaNombre = cat.nombre;
               }
             } catch { emp.categoriaNombre = "Sin categoría"; }
+          } else {
+            emp.categoriaNombre = "Sin categoría";
           }
         }
+        
+        // 🔥 Forzar actualización de estado para que React vea los nombres de categoría
+        setEmprendimientos([...ordenados]);
+        if (ordenados.length > 0) setUltimoEmprendimiento({...ordenados[0]});
       }
     } catch (e) { 
       console.error(e);
@@ -314,7 +321,12 @@ export default function InicioEmprendedorPage() {
                         <p className={styles.productoRowNombre}>{p.nombre}</p>
                         <p className={styles.productoRowPrecio}>${p.precio.toLocaleString("es-CO")}</p>
                         {(p as any).emprendimientoNombre && (
-                          <p className={styles.productoRowEmp}>📦 {(p as any).emprendimientoNombre}</p>
+                          <p className={styles.productoRowEmp}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+                              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                            {(p as any).emprendimientoNombre}
+                          </p>
                         )}
                       </div>
                       <span className={styles.productoRowStock}>Stock: {p.stock}</span>
