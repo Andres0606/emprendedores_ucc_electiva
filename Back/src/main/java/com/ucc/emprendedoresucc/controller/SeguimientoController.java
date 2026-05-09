@@ -17,39 +17,38 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/seguimientos")
-// @CrossOrigin ELIMINADO - La configuración CORS está en CorsConfig.java
 public class SeguimientoController {
-    
+
     @Autowired
     private SeguimientoService seguimientoService;
 
     @Autowired
     private EmprendimientoService emprendimientoService;
-    
-    // Seguir un emprendimiento
+
+    // Seguir un emprendimiento (requiere autenticación)
     @PostMapping("/seguir")
     public ResponseEntity<?> seguirEmprendimiento(@RequestBody Map<String, String> request) {
         try {
             String usuarioId = request.get("usuarioId");
             String emprendimientoId = request.get("emprendimientoId");
-            
+
             if (usuarioId == null || emprendimientoId == null) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Faltan parámetros");
                 error.put("message", "Se requiere usuarioId y emprendimientoId");
                 return ResponseEntity.badRequest().body(error);
             }
-            
+
             Seguimiento seguimiento = seguimientoService.seguirEmprendimiento(usuarioId, emprendimientoId);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Ahora sigues este emprendimiento");
             response.put("seguimiento", seguimiento);
             response.put("totalSeguidores", seguimientoService.contarSeguidores(emprendimientoId));
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
@@ -63,30 +62,29 @@ public class SeguimientoController {
         }
     }
 
-    
-    // Dejar de seguir
+    // Dejar de seguir (requiere autenticación)
     @DeleteMapping("/dejar-de-seguir")
     public ResponseEntity<?> dejarDeSeguir(@RequestBody Map<String, String> request) {
         try {
             String usuarioId = request.get("usuarioId");
             String emprendimientoId = request.get("emprendimientoId");
-            
+
             if (usuarioId == null || emprendimientoId == null) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Faltan parámetros");
                 error.put("message", "Se requiere usuarioId y emprendimientoId");
                 return ResponseEntity.badRequest().body(error);
             }
-            
+
             seguimientoService.dejarDeSeguir(usuarioId, emprendimientoId);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Has dejado de seguir este emprendimiento");
             response.put("totalSeguidores", seguimientoService.contarSeguidores(emprendimientoId));
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
@@ -100,16 +98,16 @@ public class SeguimientoController {
         }
     }
 
-
-    // Obtener todos los emprendimientos que sigue un usuario
+    // Obtener todos los emprendimientos que sigue un usuario (requiere
+    // autenticación)
     @GetMapping("/usuario/{usuarioId}/emprendimientos")
     public ResponseEntity<?> obtenerEmprendimientosSeguidos(@PathVariable String usuarioId) {
         try {
             System.out.println("🔍 Buscando seguimientos para usuario: " + usuarioId);
-            
+
             List<Seguimiento> seguimientos = seguimientoService.obtenerSeguimientosPorUsuario(usuarioId);
             System.out.println("📊 Seguimientos encontrados: " + seguimientos.size());
-            
+
             List<Emprendimiento> emprendimientos = new ArrayList<>();
             for (Seguimiento seg : seguimientos) {
                 try {
@@ -124,10 +122,10 @@ public class SeguimientoController {
                     System.err.println("❌ Error al procesar seguimiento: " + e.getMessage());
                 }
             }
-            
+
             System.out.println("🎯 Emprendimientos a devolver: " + emprendimientos.size());
             return ResponseEntity.ok(emprendimientos);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, String> error = new HashMap<>();
@@ -136,51 +134,62 @@ public class SeguimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
+
+    // 🔥 ENDPOINT PÚBLICO - Verificar seguimiento (NO requiere autenticación)
     @GetMapping("/verificar")
     public ResponseEntity<?> verificarSeguimiento(
-            @RequestParam String usuarioId, 
+            @RequestParam(required = false) String usuarioId,
             @RequestParam String emprendimientoId) {
         try {
             // Intentar obtener ambos IDs (id y _id) para una búsqueda flexible
             List<String> ids = new ArrayList<>();
             ids.add(emprendimientoId);
-            
+
             Optional<Emprendimiento> empOpt = emprendimientoService.obtenerPorId(emprendimientoId);
             empOpt.ifPresent(emp -> {
-                if (emp.getId() != null && !ids.contains(emp.getId())) ids.add(emp.getId());
+                if (emp.getId() != null && !ids.contains(emp.getId()))
+                    ids.add(emp.getId());
             });
 
-            boolean sigue = seguimientoService.estaSiguiendoFlex(usuarioId, ids);
+            // 🔥 Si usuarioId es nulo o vacío, simplemente no está siguiendo
+            boolean sigue = false;
+            if (usuarioId != null && !usuarioId.isEmpty()) {
+                sigue = seguimientoService.estaSiguiendoFlex(usuarioId, ids);
+            }
+
             long totalSeguidores = seguimientoService.contarSeguidoresFlex(ids);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("estaSiguiendo", sigue);
             response.put("totalSeguidores", totalSeguidores);
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al verificar seguimiento");
+            error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
-    // Endpoint público para obtener el total de seguidores (soporta parámetro o path)
+    // 🔥 ENDPOINT PÚBLICO - Obtener total de seguidores (NO requiere autenticación)
     @GetMapping("/total")
     public ResponseEntity<?> obtenerTotalSeguidoresPublico(@RequestParam(required = false) String emprendimientoId) {
         try {
-            if (emprendimientoId == null) {
-                return ResponseEntity.badRequest().body("Falta emprendimientoId");
+            if (emprendimientoId == null || emprendimientoId.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Falta emprendimientoId");
+                return ResponseEntity.badRequest().body(error);
             }
 
             List<String> ids = new ArrayList<>();
             ids.add(emprendimientoId);
-            
+
             Optional<Emprendimiento> empOpt = emprendimientoService.obtenerPorId(emprendimientoId);
             empOpt.ifPresent(emp -> {
-                if (emp.getId() != null && !ids.contains(emp.getId())) ids.add(emp.getId());
+                if (emp.getId() != null && !ids.contains(emp.getId()))
+                    ids.add(emp.getId());
             });
 
             long total = seguimientoService.contarSeguidoresFlex(ids);
@@ -190,16 +199,19 @@ public class SeguimientoController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al obtener total de seguidores");
+            error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
+    // 🔥 ENDPOINT PÚBLICO - Alternativa con path variable
     @GetMapping("/total/{emprendimientoId}")
     public ResponseEntity<?> obtenerTotalSeguidoresPath(@PathVariable String emprendimientoId) {
         return obtenerTotalSeguidoresPublico(emprendimientoId);
     }
 
-    // Obtener todos los seguimientos de un usuario (con fecha)
+    // Obtener todos los seguimientos de un usuario (con fecha) - requiere
+    // autenticación
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<?> obtenerSeguimientosPorUsuario(@PathVariable String usuarioId) {
         try {
@@ -214,7 +226,7 @@ public class SeguimientoController {
                     seguimientoService.dejarDeSeguir(usuarioId, seg.getEmprendimientoId());
                 }
             }
-            
+
             return ResponseEntity.ok(seguimientosValidos);
         } catch (Exception e) {
             e.printStackTrace();
@@ -223,16 +235,26 @@ public class SeguimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
-    // Obtener estadísticas de seguimiento
+
+    // Obtener estadísticas de seguimiento (público parcial - total es público,
+    // estado sigue requiere auth)
     @GetMapping("/estadisticas/{emprendimientoId}")
     public ResponseEntity<?> obtenerEstadisticas(
             @PathVariable String emprendimientoId,
-            @RequestParam String usuarioId) {
+            @RequestParam(required = false) String usuarioId) {
         try {
-            Map<String, Object> stats = seguimientoService.obtenerEstadisticas(emprendimientoId, usuarioId);
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalSeguidores", seguimientoService.contarSeguidores(emprendimientoId));
+
+            // Solo si se proporciona usuarioId, verificamos si sigue
+            if (usuarioId != null && !usuarioId.isEmpty()) {
+                stats.put("estaSiguiendo", seguimientoService.estaSiguiendo(usuarioId, emprendimientoId));
+            } else {
+                stats.put("estaSiguiendo", false);
+            }
+
             return ResponseEntity.ok(stats);
-            
+
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al obtener estadísticas");
@@ -240,7 +262,7 @@ public class SeguimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
+
     // Obtener todos los seguimientos (opcional, para debugging)
     @GetMapping
     public ResponseEntity<?> obtenerTodos() {

@@ -116,19 +116,16 @@ export default function DetalleEmprendimientoPage() {
   const [totalSeguidores, setTotalSeguidores] = useState(0);
   const [cargandoSeguimiento, setCargandoSeguimiento] = useState(false);
   const [creandoPedido, setCreandoPedido] = useState(false);
-  const [pedidoConfirmado, setPedidoConfirmado] = useState(false); // Nuevo estado
+  const [pedidoConfirmado, setPedidoConfirmado] = useState(false);
 
-    // Modal WhatsApp
   const [mostrarModalWhatsApp, setMostrarModalWhatsApp] = useState(false);
   const [productosAgrupados, setProductosAgrupados] = useState<Record<string, any>>({});
 
-  // Carrito - selector por producto
   const [estadoCarrito, setEstadoCarrito] = useState<Record<number, ProductoCarritoState>>({});
   const [flyingParticles, setFlyingParticles] = useState<FlyingParticle[]>([]);
   const carritoIconRef = useRef<HTMLDivElement>(null);
   const particleCounter = useRef(0);
 
-  // Drawer del carrito
   const [itemsCarrito, setItemsCarrito] = useState<ItemCarrito[]>([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [carritoAnimando, setCarritoAnimando] = useState(false);
@@ -136,10 +133,9 @@ export default function DetalleEmprendimientoPage() {
   const [numFactura, setNumFactura] = useState("");
   const [fechaFactura, setFechaFactura] = useState("");
 
-  // ── Funciones de sincronización con backend ──
   const sincronizarCarritoConBackend = async (usuarioId: string, items: ItemCarrito[]) => {
     if (!usuarioId) return;
-    
+
     try {
       const carritoData = {
         usuarioId: usuarioId,
@@ -152,17 +148,17 @@ export default function DetalleEmprendimientoPage() {
         })),
         total: items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0)
       };
-      
+
       const token = sessionStorage.getItem("token");
       const response = await fetch(`${API_URL}/api/carrito`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
         body: JSON.stringify(carritoData)
       });
-      
+
       if (!response.ok) {
         console.error('Error al sincronizar carrito con backend');
       }
@@ -171,161 +167,149 @@ export default function DetalleEmprendimientoPage() {
     }
   };
 
-const cargarCarritoDesdeBackend = async (usuarioId: string) => {
-  try {
-    // ✅ Primero respetamos el carrito local del usuario
-    const carritoLocal = localStorage.getItem(`carrito_${usuarioId}`);
+  const cargarCarritoDesdeBackend = async (usuarioId: string) => {
+    try {
+      const carritoLocal = localStorage.getItem(`carrito_${usuarioId}`);
 
-    if (carritoLocal !== null) {
-      const items = JSON.parse(carritoLocal);
-      setItemsCarrito(items);
-      return;
-    }
-
-    // ✅ Solo si no existe carrito local, se intenta cargar desde backend
-    const token = sessionStorage.getItem("token");
-    const response = await fetch(`${API_URL}/api/carrito/${usuarioId}`, {
-      headers: {
-        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      if (carritoLocal !== null) {
+        const items = JSON.parse(carritoLocal);
+        setItemsCarrito(items);
+        return;
       }
-    });
 
-    if (response.ok) {
-      const carritoBackend = await response.json();
+      const token = sessionStorage.getItem("token");
+      const response = await fetch(`${API_URL}/api/carrito/${usuarioId}`, {
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        }
+      });
 
-      if (carritoBackend && carritoBackend.productos && carritoBackend.productos.length > 0) {
-        const itemsCarritoFrontend = carritoBackend.productos.map((p: any) => ({
-          nombre: p.nombreProducto,
-          precio: p.precio,
-          imagen: p.imagen || "",
-          cantidad: p.cantidad,
-          stock: 999,
-          emprendimientoId: p.emprendimientoId,
-          emprendimientoNombre: p.emprendimientoNombre || ""
-        }));
+      if (response.ok) {
+        const carritoBackend = await response.json();
 
-        // ✅ Aquí estaba el error: antes decía 'carrito'
-        localStorage.setItem(`carrito_${usuarioId}`, JSON.stringify(itemsCarritoFrontend));
-        setItemsCarrito(itemsCarritoFrontend);
-      } else {
-        localStorage.setItem(`carrito_${usuarioId}`, "[]");
-        setItemsCarrito([]);
+        if (carritoBackend && carritoBackend.productos && carritoBackend.productos.length > 0) {
+          const itemsCarritoFrontend = carritoBackend.productos.map((p: any) => ({
+            nombre: p.nombreProducto,
+            precio: p.precio,
+            imagen: p.imagen || "",
+            cantidad: p.cantidad,
+            stock: 999,
+            emprendimientoId: p.emprendimientoId,
+            emprendimientoNombre: p.emprendimientoNombre || ""
+          }));
+
+          localStorage.setItem(`carrito_${usuarioId}`, JSON.stringify(itemsCarritoFrontend));
+          setItemsCarrito(itemsCarritoFrontend);
+        } else {
+          localStorage.setItem(`carrito_${usuarioId}`, "[]");
+          setItemsCarrito([]);
+        }
+      } else if (response.status !== 404) {
+        console.error('Error al cargar carrito desde backend');
       }
-    } else if (response.status !== 404) {
-      console.error('Error al cargar carrito desde backend');
+    } catch (error) {
+      console.error("Error al cargar carrito desde backend:", error);
     }
-  } catch (error) {
-    console.error("Error al cargar carrito desde backend:", error);
-  }
-};
+  };
 
-  // 🔥 FUNCIÓN CORREGIDA: Primero muestra la factura, luego crea el pedido
   const mostrarFactura = () => {
     if (itemsCarrito.length === 0) {
       alert("No hay productos en el carrito");
       return;
     }
-    
-    // Generar número de factura y mostrar la vista
+
     setNumFactura(generarNumFactura());
     setFechaFactura(fechaActual());
     setPedidoConfirmado(false);
     setVistaFactura(true);
   };
 
-  // 🔥 FUNCIÓN PARA CONFIRMAR EL PEDIDO (desde la factura)
- // Confirmar pedido (ajustado a la estructura de MongoDB)
-// Confirmar pedido (ajustado a tu estructura de backend con DTOs)
-const confirmarPedido = async () => {
-  if (itemsCarrito.length === 0) {
-    alert("No hay productos en el carrito");
-    return false;
-  }
-  
-  setCreandoPedido(true);
-  
-  try {
-    const agrupado: Record<string, any> = {};
-    
-    for (const item of itemsCarrito) {
-      if (!agrupado[item.emprendimientoId]) {
-        let telefono = "";
-        
-        try {
-          // 🔥 Obtener el emprendimiento completo
-          const resEmp = await fetch(`${API_URL}/api/emprendimientos/${item.emprendimientoId}`);
-          if (resEmp.ok) {
-            const emprendimiento = await resEmp.json();
-            
-            // 🔥 PRIORIDAD 1: Teléfono del emprendimiento
-            if (emprendimiento.telefono && emprendimiento.telefono !== "") {
-              telefono = emprendimiento.telefono;
-            } 
-            // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
-            else if (emprendimiento.usuarioId) {
-              const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
-              if (resUser.ok) {
-                const usuario = await resUser.json();
-                telefono = usuario.telefono || "";
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error al obtener teléfono:", error);
-        }
-        
-        agrupado[item.emprendimientoId] = {
-          id: item.emprendimientoId,
-          nombre: item.emprendimientoNombre,
-          productos: [],
-          total: 0,
-          telefono: telefono,
-        };
-      }
-      
-      const subtotal = item.precio * item.cantidad;
-      agrupado[item.emprendimientoId].productos.push({
-        nombre: item.nombre,
-        cantidad: item.cantidad,
-        precio: item.precio,
-        subtotal: subtotal,
-      });
-      agrupado[item.emprendimientoId].total += subtotal;
+  const confirmarPedido = async () => {
+    if (itemsCarrito.length === 0) {
+      alert("No hay productos en el carrito");
+      return false;
     }
 
-    console.log("📦 Productos agrupados:", agrupado);
-    
-    setProductosAgrupados(agrupado);
-    setMostrarModalWhatsApp(true);
-    
-    return true;
-    
-  } catch (error) {
-    console.error('Error al preparar pedido:', error);
-    alert('Error al preparar el pedido');
-    return false;
-  } finally {
-    setCreandoPedido(false);
-  }
-};
+    setCreandoPedido(true);
 
+    try {
+      const agrupado: Record<string, any> = {};
 
-const enviarWhatsApp = (emprendimientoId: string, nombreEmp: string, productos: any[], total: number, telefono: string) => {
-  console.log("📞 Teléfono recibido:", telefono, "para:", nombreEmp);
-  
-  if (!telefono || telefono === "") {
-    alert(`No hay número de teléfono disponible para ${nombreEmp}. El emprendedor debe actualizar su perfil.`);
-    return;
-  }
-  
-  const nombreCliente = sessionStorage.getItem("nombreUsuario") || "Cliente";
-  const telefonoCliente = sessionStorage.getItem("telefono") || "No especificado";
-  
-  const listaProductos = productos.map(p => 
-    `• ${p.nombre} x${p.cantidad} → $${p.precio.toLocaleString()} c/u = $${p.subtotal.toLocaleString()}`
-  ).join('\n');
-  
-  const mensaje = `NUEVO PEDIDO - EmprendedoresUCC
+      for (const item of itemsCarrito) {
+        if (!agrupado[item.emprendimientoId]) {
+          let telefono = "";
+
+          try {
+            const resEmp = await fetch(`${API_URL}/api/emprendimientos/${item.emprendimientoId}`);
+            if (resEmp.ok) {
+              const emprendimiento = await resEmp.json();
+
+              if (emprendimiento.telefono && emprendimiento.telefono !== "") {
+                telefono = emprendimiento.telefono;
+              }
+              else if (emprendimiento.usuarioId) {
+                const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
+                if (resUser.ok) {
+                  const usuario = await resUser.json();
+                  telefono = usuario.telefono || "";
+                }
+              }
+            }
+          } catch (error) {
+            console.error("Error al obtener teléfono:", error);
+          }
+
+          agrupado[item.emprendimientoId] = {
+            id: item.emprendimientoId,
+            nombre: item.emprendimientoNombre,
+            productos: [],
+            total: 0,
+            telefono: telefono,
+          };
+        }
+
+        const subtotal = item.precio * item.cantidad;
+        agrupado[item.emprendimientoId].productos.push({
+          nombre: item.nombre,
+          cantidad: item.cantidad,
+          precio: item.precio,
+          subtotal: subtotal,
+        });
+        agrupado[item.emprendimientoId].total += subtotal;
+      }
+
+      console.log("📦 Productos agrupados:", agrupado);
+
+      setProductosAgrupados(agrupado);
+      setMostrarModalWhatsApp(true);
+
+      return true;
+
+    } catch (error) {
+      console.error('Error al preparar pedido:', error);
+      alert('Error al preparar el pedido');
+      return false;
+    } finally {
+      setCreandoPedido(false);
+    }
+  };
+
+  const enviarWhatsApp = (emprendimientoId: string, nombreEmp: string, productos: any[], total: number, telefono: string) => {
+    console.log("📞 Teléfono recibido:", telefono, "para:", nombreEmp);
+
+    if (!telefono || telefono === "") {
+      alert(`No hay número de teléfono disponible para ${nombreEmp}. El emprendedor debe actualizar su perfil.`);
+      return;
+    }
+
+    const nombreCliente = sessionStorage.getItem("nombreUsuario") || "Cliente";
+    const telefonoCliente = sessionStorage.getItem("telefono") || "No especificado";
+
+    const listaProductos = productos.map(p =>
+      `• ${p.nombre} x${p.cantidad} → $${p.precio.toLocaleString()} c/u = $${p.subtotal.toLocaleString()}`
+    ).join('\n');
+
+    const mensaje = `NUEVO PEDIDO - EmprendedoresUCC
 
 Cliente: ${nombreCliente}
 Telefono: ${telefonoCliente}
@@ -341,206 +325,185 @@ El cliente esta interesado en coordinar pago y entrega.
 Contacta al cliente directamente para acordar los detalles.
 
 Gracias por apoyar los emprendimientos UCC`;
-  
-  let numeroLimpio = telefono.replace(/\D/g, '');
-  if (!numeroLimpio.startsWith('57')) {
-    numeroLimpio = '57' + numeroLimpio;
-  }
-  
-  const url = `https://wa.me/${numeroLimpio}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank');
-};
 
-
-// 🔥 FINALIZAR PEDIDO PARA UN EMPRENDIMIENTO ESPECÍFICO
-const finalizarPedidoPorEmpresa = async (emp: any) => {
-  const uid = sessionStorage.getItem("usuarioId");
-  
-  // Obtener datos del comprador
-  const usuarioStr = sessionStorage.getItem("usuario");
-  let compradorData = null;
-  try {
-    if (usuarioStr) {
-      const usuario = JSON.parse(usuarioStr);
-      compradorData = {
-        id: usuario.id || usuario._id || uid,
-        nombre: usuario.nombre || "",
-        apellido: usuario.apellido || "",
-        tipoUsuario: sessionStorage.getItem("tipoUsuario") || "estudiante",
-        telefono: usuario.telefono || "",
-        correo: usuario.correo || ""
-      };
+    let numeroLimpio = telefono.replace(/\D/g, '');
+    if (!numeroLimpio.startsWith('57')) {
+      numeroLimpio = '57' + numeroLimpio;
     }
-  } catch (error) {
-    console.error("Error al obtener datos del comprador:", error);
-  }
-  
-  // Obtener datos del vendedor
-  let vendedorData = {
-    id: "",
-    nombre: "",
-    apellido: "",
-    telefono: "",
-    correo: ""
+
+    const url = `https://wa.me/${numeroLimpio}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
   };
-  
-  try {
-    const resEmp = await fetch(`${API_URL}/api/emprendimientos/${emp.id}`);
-    if (resEmp.ok) {
-      const emprendimiento = await resEmp.json();
-      if (emprendimiento.usuarioId) {
-        const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
-        if (resUser.ok) {
-          const usuario = await resUser.json();
-          vendedorData = {
-            id: usuario.id || usuario._id,
-            nombre: usuario.nombre || "",
-            apellido: usuario.apellido || "",
-            telefono: usuario.telefono || emp.telefono || "",
-            correo: usuario.correo || ""
-          };
+
+  const finalizarPedidoPorEmpresa = async (emp: any) => {
+    const uid = sessionStorage.getItem("usuarioId");
+
+    const usuarioStr = sessionStorage.getItem("usuario");
+    let compradorData = null;
+    try {
+      if (usuarioStr) {
+        const usuario = JSON.parse(usuarioStr);
+        compradorData = {
+          id: usuario.id || usuario._id || uid,
+          nombre: usuario.nombre || "",
+          apellido: usuario.apellido || "",
+          tipoUsuario: sessionStorage.getItem("tipoUsuario") || "estudiante",
+          telefono: usuario.telefono || "",
+          correo: usuario.correo || ""
+        };
+      }
+    } catch (error) {
+      console.error("Error al obtener datos del comprador:", error);
+    }
+
+    let vendedorData = {
+      id: "",
+      nombre: "",
+      apellido: "",
+      telefono: "",
+      correo: ""
+    };
+
+    try {
+      const resEmp = await fetch(`${API_URL}/api/emprendimientos/${emp.id}`);
+      if (resEmp.ok) {
+        const emprendimiento = await resEmp.json();
+        if (emprendimiento.usuarioId) {
+          const resUser = await fetch(`${API_URL}/api/usuarios/${emprendimiento.usuarioId}`);
+          if (resUser.ok) {
+            const usuario = await resUser.json();
+            vendedorData = {
+              id: usuario.id || usuario._id,
+              nombre: usuario.nombre || "",
+              apellido: usuario.apellido || "",
+              telefono: usuario.telefono || emp.telefono || "",
+              correo: usuario.correo || ""
+            };
+          }
         }
       }
+    } catch (error) {
+      console.error("Error al obtener vendedor:", error);
+      vendedorData.telefono = emp.telefono || "";
     }
-  } catch (error) {
-    console.error("Error al obtener vendedor:", error);
-    vendedorData.telefono = emp.telefono || "";
-  }
-  
-  // Crear objeto de transacción
-  const transaccionData = {
-    comprador: compradorData,
-    vendedor: vendedorData,
-    emprendimiento: {
-      id: emp.id,
-      nombre: emp.nombre
-    },
-    productos: emp.productos.map((prod: any) => ({
-      nombre: prod.nombre,
-      cantidad: prod.cantidad,
-      precio: prod.precio,
-      subtotal: prod.subtotal
-    })),
-    total: emp.total,
-    metodoPago: "pendiente",
-    estado: "pendiente",
-    telefonoEmprendimiento: emp.telefono
 
-  };
-  
-  try {
-    const token = sessionStorage.getItem("token");
-    const response = await fetch(`${API_URL}/api/transacciones`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+    const transaccionData = {
+      comprador: compradorData,
+      vendedor: vendedorData,
+      emprendimiento: {
+        id: emp.id,
+        nombre: emp.nombre
       },
-      body: JSON.stringify(transaccionData)
-    });
-    
-    if (response.ok) {
-      console.log(`✅ Transacción guardada para ${emp.nombre}`);
-      
-      // 🔥 ELIMINAR SOLO LOS PRODUCTOS DE ESTE EMPRENDIMIENTO DEL CARRITO
-      const nuevosItems = itemsCarrito.filter(item => item.emprendimientoId !== emp.id);
-      guardarCarrito(nuevosItems);
-      
-      // Actualizar productosAgrupados (remover este emprendimiento)
-      const nuevosAgrupados = { ...productosAgrupados };
-      delete nuevosAgrupados[emp.id];
-      setProductosAgrupados(nuevosAgrupados);
-      
-      // Disparar eventos
-      window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: nuevosItems } }));
-      window.dispatchEvent(new Event('storage'));
-      
-      // Si no quedan más emprendimientos, cerrar modal
-      if (Object.keys(nuevosAgrupados).length === 0) {
-        setMostrarModalWhatsApp(false);
-        setCarritoAbierto(false);
-        setVistaFactura(false);
+      productos: emp.productos.map((prod: any) => ({
+        nombre: prod.nombre,
+        cantidad: prod.cantidad,
+        precio: prod.precio,
+        subtotal: prod.subtotal
+      })),
+      total: emp.total,
+      metodoPago: "pendiente",
+      estado: "pendiente",
+      telefonoEmprendimiento: emp.telefono
+    };
+
+    try {
+      const token = sessionStorage.getItem("token");
+      const response = await fetch(`${API_URL}/api/transacciones`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(transaccionData)
+      });
+
+      if (response.ok) {
+        console.log(`✅ Transacción guardada para ${emp.nombre}`);
+
+        const nuevosItems = itemsCarrito.filter(item => item.emprendimientoId !== emp.id);
+        guardarCarrito(nuevosItems);
+
+        const nuevosAgrupados = { ...productosAgrupados };
+        delete nuevosAgrupados[emp.id];
+        setProductosAgrupados(nuevosAgrupados);
+
+        window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: nuevosItems } }));
+        window.dispatchEvent(new Event('storage'));
+
+        if (Object.keys(nuevosAgrupados).length === 0) {
+          setMostrarModalWhatsApp(false);
+          setCarritoAbierto(false);
+          setVistaFactura(false);
+        }
+
+        alert(`✅ Pedido de "${emp.nombre}" realizado exitosamente!`);
+      } else {
+        const error = await response.text();
+        alert(`Error al guardar el pedido de "${emp.nombre}": ${error}`);
       }
-      
-      alert(`✅ Pedido de "${emp.nombre}" realizado exitosamente!`);
-    } else {
-      const error = await response.text();
-      alert(`Error al guardar el pedido de "${emp.nombre}": ${error}`);
+    } catch (error) {
+      console.error(`Error al guardar transacción para ${emp.nombre}:`, error);
+      alert(`Error al procesar el pedido de "${emp.nombre}"`);
     }
-  } catch (error) {
-    console.error(`Error al guardar transacción para ${emp.nombre}:`, error);
-    alert(`Error al procesar el pedido de "${emp.nombre}"`);
-  }
-};
+  };
 
-// 🔥 FINALIZAR TODOS LOS PEDIDOS
-const finalizarTodosLosPedidos = async () => {
-  const uid = sessionStorage.getItem("usuarioId");
-  
-  // Guardar cada emprendimiento
-  for (const emp of Object.values(productosAgrupados)) {
-    await finalizarPedidoPorEmpresa(emp);
-  }
-  
-  // Cerrar modales
-  setMostrarModalWhatsApp(false);
-  setCarritoAbierto(false);
-  setVistaFactura(false);
-  
-  alert('🎉 ¡Todos los pedidos realizados exitosamente!');
-};
+  const finalizarTodosLosPedidos = async () => {
+    for (const emp of Object.values(productosAgrupados)) {
+      await finalizarPedidoPorEmpresa(emp);
+    }
 
+    setMostrarModalWhatsApp(false);
+    setCarritoAbierto(false);
+    setVistaFactura(false);
 
-  // Cerrar factura y volver al carrito
+    alert('🎉 ¡Todos los pedidos realizados exitosamente!');
+  };
+
   const cerrarFactura = () => {
     if (pedidoConfirmado) {
-      // Si el pedido ya fue confirmado, cerrar todo
       setCarritoAbierto(false);
       setVistaFactura(false);
       setPedidoConfirmado(false);
     } else {
-      // Solo cerrar la factura, volver al carrito
       setVistaFactura(false);
     }
   };
 
-  // ── Leer carrito ──
   const leerCarrito = () => {
-  if (!usuarioActual?.id) {
-    setItemsCarrito([]);
-    return;
-  }
-  const carritoKey = `carrito_${usuarioActual.id}`;
-  const data = JSON.parse(localStorage.getItem(carritoKey) || '[]');
-  setItemsCarrito(data);
-};
-const guardarCarrito = (items: ItemCarrito[]) => {
-  if (!usuarioActual?.id) return;
-  
-  // Validar que todos los items tengan emprendimientoId
-  const itemsValidos = items.filter(item => item.emprendimientoId);
-  
-  const carritoKey = `carrito_${usuarioActual.id}`;
-  localStorage.setItem(carritoKey, JSON.stringify(itemsValidos));
-  setItemsCarrito(itemsValidos);
-  
-  if (usuarioActual?.id) {
-    sincronizarCarritoConBackend(usuarioActual.id, itemsValidos);
-  }
-};
+    if (!usuarioActual?.id) {
+      setItemsCarrito([]);
+      return;
+    }
+    const carritoKey = `carrito_${usuarioActual.id}`;
+    const data = JSON.parse(localStorage.getItem(carritoKey) || '[]');
+    setItemsCarrito(data);
+  };
 
-  useEffect(() => { 
-  if (usuarioActual?.id) {
-    leerCarrito();
-  } else {
-    setItemsCarrito([]);
-  }
-}, [usuarioActual]);
+  const guardarCarrito = (items: ItemCarrito[]) => {
+    if (!usuarioActual?.id) return;
+
+    const itemsValidos = items.filter(item => item.emprendimientoId);
+
+    const carritoKey = `carrito_${usuarioActual.id}`;
+    localStorage.setItem(carritoKey, JSON.stringify(itemsValidos));
+    setItemsCarrito(itemsValidos);
+
+    if (usuarioActual?.id) {
+      sincronizarCarritoConBackend(usuarioActual.id, itemsValidos);
+    }
+  };
+
+  useEffect(() => {
+    if (usuarioActual?.id) {
+      leerCarrito();
+    } else {
+      setItemsCarrito([]);
+    }
+  }, [usuarioActual]);
 
   const totalItems = itemsCarrito.reduce((acc, i) => acc + i.cantidad, 0);
   const subtotal = itemsCarrito.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
 
-  // Escape cierra drawer
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { setCarritoAbierto(false); setVistaFactura(false); }
@@ -549,41 +512,39 @@ const guardarCarrito = (items: ItemCarrito[]) => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Bloquear scroll
   useEffect(() => {
     document.body.style.overflow = carritoAbierto ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [carritoAbierto]);
 
-  // ── Acciones drawer ──
-const cambiarCantidadDrawer = (idx: number, delta: number) => {
-  const c = [...itemsCarrito];
-  const nuevo = c[idx].cantidad + delta;
-  if (nuevo < 1 || nuevo > c[idx].stock) return;
-  c[idx].cantidad = nuevo;
-  guardarCarrito(c);
-  window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: c } }));
-  window.dispatchEvent(new Event('storage'));
-};
-
-const eliminarItemDrawer = (idx: number) => {
-  const c = itemsCarrito.filter((_, i) => i !== idx);
-  guardarCarrito(c);
-  window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: c } }));
-  window.dispatchEvent(new Event('storage'));
-};
-
-const vaciarCarrito = async () => {
-  if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
-    guardarCarrito([]);
-    setVistaFactura(false);
-    window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: [] } }));
+  const cambiarCantidadDrawer = (idx: number, delta: number) => {
+    const c = [...itemsCarrito];
+    const nuevo = c[idx].cantidad + delta;
+    if (nuevo < 1 || nuevo > c[idx].stock) return;
+    c[idx].cantidad = nuevo;
+    guardarCarrito(c);
+    window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: c } }));
     window.dispatchEvent(new Event('storage'));
-    if (usuarioActual?.id) {
-      await sincronizarCarritoConBackend(usuarioActual.id, []);
+  };
+
+  const eliminarItemDrawer = (idx: number) => {
+    const c = itemsCarrito.filter((_, i) => i !== idx);
+    guardarCarrito(c);
+    window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: c } }));
+    window.dispatchEvent(new Event('storage'));
+  };
+
+  const vaciarCarrito = async () => {
+    if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
+      guardarCarrito([]);
+      setVistaFactura(false);
+      window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: [] } }));
+      window.dispatchEvent(new Event('storage'));
+      if (usuarioActual?.id) {
+        await sincronizarCarritoConBackend(usuarioActual.id, []);
+      }
     }
-  }
-};
+  };
 
   const abrirCarrito = () => {
     leerCarrito();
@@ -596,7 +557,6 @@ const vaciarCarrito = async () => {
 
   const cerrarDrawer = () => { setCarritoAbierto(false); setVistaFactura(false); setPedidoConfirmado(false); };
 
-  // ── Animación partícula ──
   const lanzarAnimacion = (botonEl: HTMLButtonElement, imagenProducto: string) => {
     const botonRect = botonEl.getBoundingClientRect();
     let endX = window.innerWidth - 60;
@@ -623,7 +583,6 @@ const vaciarCarrito = async () => {
     }, 900);
   };
 
-  // ── Selector de cantidad por producto ──
   const abrirSelectorCantidad = (idx: number) => {
     setEstadoCarrito(prev => ({
       ...prev,
@@ -640,59 +599,57 @@ const vaciarCarrito = async () => {
     setEstadoCarrito(prev => ({ ...prev, [idx]: { mostrarSelector: false, cantidad: 1 } }));
   };
 
-const confirmarAgregarAlCarrito = async (
-  idx: number,
-  producto: Emprendimiento["productos"][0],
-  event: React.MouseEvent<HTMLButtonElement>
-) => {
-  const cantidad = estadoCarrito[idx]?.cantidad || 1;
+  const confirmarAgregarAlCarrito = async (
+    idx: number,
+    producto: Emprendimiento["productos"][0],
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    const cantidad = estadoCarrito[idx]?.cantidad || 1;
 
-if (!usuarioActual?.id) {
-  alert("Debes iniciar sesión para agregar productos al carrito");
-  router.push("/autenticacion/login");
-  return;
-}
+    if (!usuarioActual?.id) {
+      alert("Debes iniciar sesión para agregar productos al carrito");
+      router.push("/autenticacion/login");
+      return;
+    }
 
-const carritoKey = `carrito_${usuarioActual.id}`;
-const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey) || "[]");
+    const carritoKey = `carrito_${usuarioActual.id}`;
+    const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey) || "[]");
 
-  const empId = emprendimiento?.id || emprendimiento?._id;
-  
-  // 🔥 Validar que el ID del emprendimiento existe
-  if (!empId) {
-    console.error("No se pudo obtener el ID del emprendimiento");
-    alert("Error al agregar al carrito. Intenta de nuevo.");
-    return;
-  }
-  
-  const itemExistente = carritoActual.findIndex(
-    (item: any) =>
-      item.nombre === producto.nombre &&
-      item.emprendimientoId === empId
-  );
-  
-  if (itemExistente >= 0) {
-    carritoActual[itemExistente].cantidad += cantidad;
-  } else {
-    carritoActual.push({
-      nombre: producto.nombre,
-      precio: producto.precio,
-      imagen: producto.imagen,
-      cantidad,
-      stock: producto.stock,
-      emprendimientoId: empId, // ✅ Ahora es string, no undefined
-      emprendimientoNombre: emprendimiento?.nombre || "",
-    });
-  }
+    const empId = emprendimiento?.id || emprendimiento?._id;
 
-  guardarCarrito(carritoActual);
-  window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: carritoActual } }));
-  window.dispatchEvent(new Event('storage'));
-  lanzarAnimacion(event.currentTarget, producto.imagen || "🛒");
-  cancelarSeleccion(idx);
-};
+    if (!empId) {
+      console.error("No se pudo obtener el ID del emprendimiento");
+      alert("Error al agregar al carrito. Intenta de nuevo.");
+      return;
+    }
 
-  // ── Auth ──
+    const itemExistente = carritoActual.findIndex(
+      (item: any) =>
+        item.nombre === producto.nombre &&
+        item.emprendimientoId === empId
+    );
+
+    if (itemExistente >= 0) {
+      carritoActual[itemExistente].cantidad += cantidad;
+    } else {
+      carritoActual.push({
+        nombre: producto.nombre,
+        precio: producto.precio,
+        imagen: producto.imagen,
+        cantidad,
+        stock: producto.stock,
+        emprendimientoId: empId,
+        emprendimientoNombre: emprendimiento?.nombre || "",
+      });
+    }
+
+    guardarCarrito(carritoActual);
+    window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: { items: carritoActual } }));
+    window.dispatchEvent(new Event('storage'));
+    lanzarAnimacion(event.currentTarget, producto.imagen || "🛒");
+    cancelarSeleccion(idx);
+  };
+
   useEffect(() => {
     const userStr = sessionStorage.getItem('usuario');
     const userId = sessionStorage.getItem('usuarioId');
@@ -707,11 +664,11 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
         } else {
           setUsuarioActual(null);
         }
-      } catch { 
-        setUsuarioActual(null); 
+      } catch {
+        setUsuarioActual(null);
       }
-    } else { 
-      setUsuarioActual(null); 
+    } else {
+      setUsuarioActual(null);
     }
   }, []);
 
@@ -732,37 +689,50 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     } catch { return null; }
   };
 
+  // 🔥 FUNCIÓN CORREGIDA - Verificar seguimiento (solo cuando hay usuario)
   const verificarSeguimiento = async () => {
     if (!usuarioActual?.id || !emprendimiento) return;
+
     try {
-      const token = sessionStorage.getItem("token");
       const empId = emprendimiento.id || emprendimiento._id;
+      const token = sessionStorage.getItem("token");
+
       const r = await fetch(`${API_URL}/api/seguimientos/verificar?usuarioId=${usuarioActual.id}&emprendimientoId=${empId}`, {
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         }
       });
-      if (r.ok) { 
-        const d = await r.json(); 
-        setSiguiendo(d.estaSiguiendo); 
-        setTotalSeguidores(d.totalSeguidores); 
-      }
-    } catch { /* silent */ }
-  };
 
-  const obtenerTotalSeguidoresPublico = async () => {
-    if (!emprendimiento) return;
-    try {
-      const empId = emprendimiento.id || emprendimiento._id;
-      const r = await fetch(`${API_URL}/api/seguimientos/total?emprendimientoId=${empId}`);
       if (r.ok) {
         const d = await r.json();
+        setSiguiendo(d.estaSiguiendo);
+      }
+    } catch (error) {
+      console.error("Error verificando seguimiento:", error);
+    }
+  };
+
+  // 🔥 FUNCIÓN CORREGIDA - Obtener total de seguidores (siempre pública)
+  const obtenerTotalSeguidoresPublico = async () => {
+    if (!emprendimiento) return;
+
+    try {
+      const empId = emprendimiento.id || emprendimiento._id;
+      console.log("🔍 Consultando seguidores para:", empId);
+
+      const r = await fetch(`${API_URL}/api/seguimientos/total?emprendimientoId=${empId}`);
+
+      if (r.ok) {
+        const d = await r.json();
+        console.log("✅ Total seguidores recibido:", d.totalSeguidores);
         setTotalSeguidores(d.totalSeguidores || 0);
       } else {
-        console.warn("⚠️ Falló la consulta pública de seguidores");
+        console.warn("⚠️ Falló la consulta pública de seguidores, status:", r.status);
+        setTotalSeguidores(0);
       }
     } catch (e) {
-      console.error("❌ Error en fetch público:", e);
+      console.error("❌ Error en fetch público de seguidores:", e);
+      setTotalSeguidores(0);
     }
   };
 
@@ -779,13 +749,13 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
       const empId = emprendimiento.id || emprendimiento._id;
       const r = await fetch(
         siguiendo ? `${API_URL}/api/seguimientos/dejar-de-seguir` : `${API_URL}/api/seguimientos/seguir`,
-        { 
-          method: siguiendo ? 'DELETE' : 'POST', 
-          headers: { 
+        {
+          method: siguiendo ? 'DELETE' : 'POST',
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          }, 
-          body: JSON.stringify({ usuarioId: usuarioActual.id, emprendimientoId: empId }) 
+          },
+          body: JSON.stringify({ usuarioId: usuarioActual.id, emprendimientoId: empId })
         }
       );
       if (r.ok) {
@@ -809,10 +779,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
         if (!r.ok) throw new Error(r.status === 404 ? "Emprendimiento no encontrado" : `Error ${r.status}`);
         const data: Emprendimiento = await r.json();
         setEmprendimiento(data);
-        // 🔥 Si el backend envía el total en el objeto principal, lo capturamos aquí para evitar llamadas extra
-        if ((data as any).totalSeguidores !== undefined) {
-          setTotalSeguidores((data as any).totalSeguidores);
-        }
+
         if (data.usuarioId) { const u = await obtenerUsuario(data.usuarioId); if (u) setUsuario(u as Usuario); }
         if (data.categoriaId) { const c = await obtenerCategoria(data.categoriaId); if (c) setCategoria(c as Categoria); }
       } catch (e) {
@@ -822,13 +789,15 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     if (id) cargar();
   }, [id]);
 
+  // 🔥 useEffect CORREGIDO - Carga de datos de seguimiento
   useEffect(() => {
     if (emprendimiento) {
-      const token = sessionStorage.getItem("token");
-      if (usuarioActual?.id || token) {
+      obtenerTotalSeguidoresPublico();
+
+      if (usuarioActual?.id) {
         verificarSeguimiento();
       } else {
-        obtenerTotalSeguidoresPublico();
+        setSiguiendo(false);
       }
     }
   }, [emprendimiento?.id, emprendimiento?._id, usuarioActual?.id]);
@@ -845,33 +814,28 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     <>
       <Header />
 
-      {/* ══ ÍCONO FLOTANTE DEL CARRITO ══ */}
-{/* ══ ÍCONO FLOTANTE DEL CARRITO - Solo visible si hay sesión iniciada ══ */}
-{usuarioActual?.id && (
-  <div
-    ref={carritoIconRef}
-    className={`${styles.carritoFlotante} ${carritoAnimando ? styles.carritoAnimando : ''}`}
-    onClick={abrirCarrito}
-    title="Ver carrito"
-  >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-    </svg>
-    {totalItems > 0 && (
-      <span className={`${styles.carritoBadge} ${carritoAnimando ? styles.badgeAnimando : ''}`}>
-        {totalItems}
-      </span>
-    )}
-  </div>
-)}
+      {usuarioActual?.id && (
+        <div
+          ref={carritoIconRef}
+          className={`${styles.carritoFlotante} ${carritoAnimando ? styles.carritoAnimando : ''}`}
+          onClick={abrirCarrito}
+          title="Ver carrito"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+          </svg>
+          {totalItems > 0 && (
+            <span className={`${styles.carritoBadge} ${carritoAnimando ? styles.badgeAnimando : ''}`}>
+              {totalItems}
+            </span>
+          )}
+        </div>
+      )}
 
-      {/* ══ DRAWER DEL CARRITO ══ */}
       {carritoAbierto && (
         <div className={`${styles.drawerOverlay} ${vistaFactura ? styles.drawerOverlayPrint : ''}`} onClick={cerrarDrawer}>
           <div className={styles.drawerPanel} onClick={e => e.stopPropagation()}>
-
-            {/* Cabecera */}
             <div className={styles.drawerHeader}>
               <div className={styles.drawerHeaderLeft}>
                 {vistaFactura ? (
@@ -892,11 +856,9 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
               <button className={styles.drawerClose} onClick={cerrarDrawer} aria-label="Cerrar">✕</button>
             </div>
 
-            {/* ── VISTA FACTURA ── */}
             {vistaFactura ? (
               <div className={styles.drawerBody}>
                 <div className={styles.facturaContainer}>
-                  {/* Cabecera de factura */}
                   <div className={styles.facturaHeader}>
                     <div className={styles.facturaHeaderTop}>
                       <span className={styles.facturaLogo}>🎓</span>
@@ -912,7 +874,6 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
                     </div>
                   </div>
 
-                  {/* Tabla de items */}
                   <div className={styles.facturaTabla}>
                     <div className={styles.facturaTablaHead}>
                       <span>Producto</span>
@@ -932,7 +893,6 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
                     ))}
                   </div>
 
-                  {/* Totales */}
                   <div className={styles.facturaTotalesBloque}>
                     <div className={styles.facturaTotalFila}>
                       <span>Subtotal</span>
@@ -948,39 +908,21 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
                     </div>
                   </div>
 
-                  {/* Aviso */}
                   <div className={styles.facturaAviso}>
                     ⚠️ Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.
-                    Imprimir primero la factura
                   </div>
 
-                  {/* Pie de página */}
                   <div className={styles.facturaPie}>
                     <span>Gracias por apoyar los emprendimientos estudiantiles</span>
                     <span>EmprendedoresUCC · Universidad Cooperativa de Colombia · Villavicencio</span>
                   </div>
 
-                  {/* 🔥 BOTONES CORREGIDOS */}
                   <div className={styles.facturaAcciones}>
-                    <button 
-                      className={styles.facturaVaciarBtn} 
-                      onClick={cerrarFactura}
-                    >
-                      ← Volver
-                    </button>
-                    <button 
-                      className={styles.facturaPrintBtn} 
-                      onClick={() => window.print()}
-                    >
-                       Imprimir factura
-                    </button>
+                    <button className={styles.facturaVaciarBtn} onClick={cerrarFactura}>← Volver</button>
+                    <button className={styles.facturaPrintBtn} onClick={() => window.print()}>🖨️ Imprimir factura</button>
                     {!pedidoConfirmado && (
-                      <button 
-                        className={styles.facturaConfirmarBtn} 
-                        onClick={confirmarPedido}
-                        disabled={creandoPedido}
-                      >
-                        {creandoPedido ? "⏳ Procesando..." : " Confirmar pedido"}
+                      <button className={styles.facturaConfirmarBtn} onClick={confirmarPedido} disabled={creandoPedido}>
+                        {creandoPedido ? "⏳ Procesando..." : "✅ Confirmar pedido"}
                       </button>
                     )}
                     {pedidoConfirmado && (
@@ -991,9 +933,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
                   </div>
                 </div>
               </div>
-
             ) : (
-              /* ── VISTA CARRITO NORMAL ── */
               <>
                 <div className={styles.drawerBody}>
                   {itemsCarrito.length === 0 ? (
@@ -1045,9 +985,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
                     </div>
                     <div className={styles.drawerAcciones}>
                       <button className={styles.drawerVaciarBtn} onClick={vaciarCarrito}>Vaciar</button>
-                      <button className={styles.drawerPagarBtn} onClick={mostrarFactura}>
-                        💳 Pagar
-                      </button>
+                      <button className={styles.drawerPagarBtn} onClick={mostrarFactura}>💳 Pagar</button>
                     </div>
                   </div>
                 )}
@@ -1057,7 +995,6 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
         </div>
       )}
 
-      {/* ══ PARTÍCULAS VOLADORAS ══ */}
       {flyingParticles.map(p => (
         <div
           key={p.id}
@@ -1119,8 +1056,8 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
                 disabled={cargandoSeguimiento}>
                 {cargandoSeguimiento ? <span className={styles.spinnerSmall}>⏳</span>
                   : !usuarioActual?.id ? <><span>🔒</span> Inicia sesión para seguir</>
-                  : siguiendo ? <><span>✓</span> Siguiendo</>
-                  : <><span>+</span> Seguir emprendimiento</>}
+                    : siguiendo ? <><span>✓</span> Siguiendo</>
+                      : <><span>+</span> Seguir emprendimiento</>}
               </button>
               <div className={styles.followersCount}><span>👥</span> {totalSeguidores} seguidor{totalSeguidores !== 1 ? 'es' : ''}</div>
             </div>
@@ -1230,78 +1167,76 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
         </div>
       </main>
 
-            {/* MODAL WHATSAPP - PRODUCTOS AGRUPADOS POR EMPRENDIMIENTO */}
-{/* MODAL WHATSAPP - PRODUCTOS AGRUPADOS POR EMPRENDIMIENTO */}
-{mostrarModalWhatsApp && (
-  <div className={styles.modalOverlay} onClick={() => setMostrarModalWhatsApp(false)}>
-    <div className={styles.modalWhatsApp} onClick={e => e.stopPropagation()}>
-      <div className={styles.modalHeader}>
-        <h3>📦 Confirma tu pedido</h3>
-        <button className={styles.modalClose} onClick={() => setMostrarModalWhatsApp(false)}>✕</button>
-      </div>
-      
-      <div className={styles.modalBody}>
-        <p className={styles.modalDesc}>
-          Tu pedido incluye productos de diferentes emprendedores. 
-          Contacta a cada uno por WhatsApp para coordinar pago y entrega, 
-          o finaliza el pedido directamente.
-        </p>
-        
-        {Object.values(productosAgrupados).map((emp: any) => (
-          <div key={emp.id} className={styles.empresaCard}>
-            <div className={styles.empresaHeader}>
-              <span className={styles.empresaIcon}>🏪</span>
-              <div>
-                <h4 className={styles.empresaNombre}>{emp.nombre}</h4>
-                <p className={styles.empresaTotal}>Total: ${emp.total.toLocaleString()}</p>
-              </div>
+      {mostrarModalWhatsApp && (
+        <div className={styles.modalOverlay} onClick={() => setMostrarModalWhatsApp(false)}>
+          <div className={styles.modalWhatsApp} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>📦 Confirma tu pedido</h3>
+              <button className={styles.modalClose} onClick={() => setMostrarModalWhatsApp(false)}>✕</button>
             </div>
-            
-            <div className={styles.productosLista}>
-              {emp.productos.map((prod: any, idx: number) => (
-                <div key={idx} className={styles.productoItem}>
-                  <span>• {prod.nombre}</span>
-                  <span>x{prod.cantidad}</span>
-                  <span>${prod.subtotal.toLocaleString()}</span>
+
+            <div className={styles.modalBody}>
+              <p className={styles.modalDesc}>
+                Tu pedido incluye productos de diferentes emprendedores.
+                Contacta a cada uno por WhatsApp para coordinar pago y entrega,
+                o finaliza el pedido directamente.
+              </p>
+
+              {Object.values(productosAgrupados).map((emp: any) => (
+                <div key={emp.id} className={styles.empresaCard}>
+                  <div className={styles.empresaHeader}>
+                    <span className={styles.empresaIcon}>🏪</span>
+                    <div>
+                      <h4 className={styles.empresaNombre}>{emp.nombre}</h4>
+                      <p className={styles.empresaTotal}>Total: ${emp.total.toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.productosLista}>
+                    {emp.productos.map((prod: any, idx: number) => (
+                      <div key={idx} className={styles.productoItem}>
+                        <span>• {prod.nombre}</span>
+                        <span>x{prod.cantidad}</span>
+                        <span>${prod.subtotal.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className={styles.empresaButtons}>
+                    <button
+                      className={styles.whatsappEmpresaBtn}
+                      onClick={() => enviarWhatsApp(emp.id, emp.nombre, emp.productos, emp.total, emp.telefono)}
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                      </svg>
+                      Contactar por WhatsApp
+                    </button>
+
+                    <button
+                      className={styles.finalizarEmpresaBtn}
+                      onClick={() => finalizarPedidoPorEmpresa(emp)}
+                    >
+                      ✅ Finalizar pedido
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
-            
-            <div className={styles.empresaButtons}>
-              <button 
-                className={styles.whatsappEmpresaBtn}
-                onClick={() => enviarWhatsApp(emp.id, emp.nombre, emp.productos, emp.total, emp.telefono)}
-              >
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
-                Contactar por WhatsApp
+
+            <div className={styles.modalFooter}>
+              <button className={styles.btnCancelar} onClick={() => setMostrarModalWhatsApp(false)}>
+                Seguir comprando
               </button>
-              
-              <button 
-                className={styles.finalizarEmpresaBtn}
-                onClick={() => finalizarPedidoPorEmpresa(emp)}
-              >
-                 Finalizar pedido
-              </button>
+              {Object.keys(productosAgrupados).length > 1 && (
+                <button className={styles.btnFinalizarTodos} onClick={finalizarTodosLosPedidos}>
+                  ✅ Finalizar todos
+                </button>
+              )}
             </div>
           </div>
-        ))}
-      </div>
-      
-      <div className={styles.modalFooter}>
-        <button className={styles.btnCancelar} onClick={() => setMostrarModalWhatsApp(false)}>
-          Seguir comprando
-        </button>
-        {Object.keys(productosAgrupados).length > 1 && (
-          <button className={styles.btnFinalizarTodos} onClick={finalizarTodosLosPedidos}>
-             Finalizar todos
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-)}
+        </div>
+      )}
       <Footer />
     </>
   );
