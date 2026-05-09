@@ -204,7 +204,10 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
     }
     public String generarTokenRecuperacion(String correo) {
-        Usuario usuario = obtenerPorCorreo(correo);
+        if (!correo.endsWith("@campusucc.edu.co") && !correo.endsWith("@ucc.edu.co")) {
+            throw new RuntimeException("Solo se permiten correos institucionales (@campusucc.edu.co o @ucc.edu.co)");
+        }
+        Usuario usuario = usuarioRepository.findByCorreo(correo);
         if (usuario != null) {
             // Generar PIN de 6 dígitos
             String pin = String.format("%06d", new java.util.Random().nextInt(999999));
