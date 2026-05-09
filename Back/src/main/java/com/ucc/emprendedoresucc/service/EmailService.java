@@ -26,9 +26,10 @@ public class EmailService {
         String safeSubject = subject.replace("\"", "\\\"");
         String safeBody = body.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
 
+        // Usar un formato de remitente más estándar
         String jsonInputString = "{" +
-            "\"from\": \"recuperacion@emprendedoresucc.company\"," +
-            "\"to\": \"" + safeTo + "\"," +
+            "\"from\": \"EmprendedoresUCC <recuperacion@emprendedoresucc.company>\"," +
+            "\"to\": [\"" + safeTo + "\"]," + // Resend a veces prefiere el 'to' como array
             "\"subject\": \"" + safeSubject + "\"," +
             "\"text\": \"" + safeBody + "\"" +
             "}";
@@ -40,7 +41,12 @@ public class EmailService {
 
         int code = conn.getResponseCode();
         if (code != 200 && code != 201) {
-            throw new RuntimeException("Error al enviar correo vía Resend. Código: " + code);
+            String errorResponse = "";
+            try (java.util.Scanner s = new java.util.Scanner(conn.getErrorStream())) {
+                errorResponse = s.useDelimiter("\\A").hasNext() ? s.next() : "";
+            } catch (Exception e) {}
+            System.err.println("Resend Error Response: " + errorResponse);
+            throw new RuntimeException("Error al enviar correo vía Resend. Código: " + code + " - " + errorResponse);
         }
     }
 }
