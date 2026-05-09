@@ -63,7 +63,9 @@ function ImageHelper() {
         onMouseEnter={e => (e.currentTarget.style.background = "#f0f0ff")}
         onMouseLeave={e => (e.currentTarget.style.background = "none")}
       >
-        <span style={{ fontSize: "15px" }}>📸</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.8 }}>
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+        </svg>
         ¿Cómo obtener la URL de mi imagen?
         <span style={{
           marginLeft: "auto",
@@ -161,7 +163,7 @@ export default function MiEmprendimientoPage() {
       return;
     }
     const usuario = JSON.parse(usuarioGuardado);
-    if (!usuario.id && !usuario._id) {
+    if (!usuario.userId && !usuario.id && !usuario._id) {
       alert("Sesión inválida. Vuelve a iniciar sesión.");
       router.push("/autenticacion/login");
       return;
@@ -340,7 +342,7 @@ export default function MiEmprendimientoPage() {
       return;
     }
 
-    const usuarioId = usuario.id ?? usuario._id;
+    const usuarioId = usuario.userId || usuario.id || usuario._id;
     if (!usuarioId) {
       alert("No se encontró el ID del usuario. Vuelve a iniciar sesión.");
       setIsPublishing(false);
@@ -381,27 +383,35 @@ export default function MiEmprendimientoPage() {
       imagenes: imagenesValidas,
       productos: productos.map(p => ({
         nombre: p.nombre,
-        precio: Number(p.precio),
-        stock: Number(p.stock) || 0,
+        precio: Math.max(0, parseFloat(p.precio) || 0),
+        stock: Math.max(0, parseInt(p.stock) || 0),
         imagen: p.imagen || ""
       }))
     };
 
     try {
+      const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/emprendimientos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(data)
       });
-      const result = await res.json();
+
+      const result = await res.json().catch(() => ({}));
+
       if (res.ok) {
         alert("✅ ¡Emprendimiento publicado correctamente!");
         router.push("/inicioemprendedor");
       } else {
-        alert("Error: " + (result.message || result.error || "Error al publicar"));
+        const errorMsg = result.message || result.error || JSON.stringify(result) || "Error desconocido";
+        console.error("Server Error:", result);
+        alert("⚠️ Error del servidor (400): " + errorMsg);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Connection Error:", error);
       alert("Error de conexión con el servidor.");
     } finally {
       setIsPublishing(false);

@@ -411,11 +411,15 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-  const response = await fetch(`${API_URL}/api/transacciones`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(transaccionData)
-  });
+    const token = sessionStorage.getItem("token");
+    const response = await fetch(`${API_URL}/api/transacciones`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(transaccionData)
+    });
   
   if (response.ok) {
     console.log(`✅ Transacción guardada para ${emp.nombre}`);
@@ -782,30 +786,33 @@ const finalizarTodosLosPedidos = async () => {
     return fecha.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
   };
 
-  const obtenerProximosEventos = () => {
-    const guardados = localStorage.getItem("eventos_ucc");
-    if (guardados) {
-      try {
-        const eventos: Evento[] = JSON.parse(guardados);
+  const obtenerProximosEventos = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/eventos`);
+      if (res.ok) {
+        const eventos: Evento[] = await res.json();
         const fechaHoy = getFechaHoy();
         const futuros = eventos.filter(evento => evento.fecha >= fechaHoy).sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(0, 3);
         setProximosEventos(futuros);
-      } catch (e) {
-        console.error("Error al cargar eventos:", e);
-        setProximosEventos([]);
       }
-    } else {
+    } catch (e) {
+      console.error("Error al cargar eventos:", e);
       setProximosEventos([]);
     }
   };
-
+  
   const obtenerActividad = async (usuarioId: string) => {
     try {
-  const actividadesTemp: Actividad[] = [];
-  
-  const resSeguimientos = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}`);
-  if (resSeguimientos.ok) {
-    const seguimientos: SeguimientoConFecha[] = await resSeguimientos.json();
+      const token = sessionStorage.getItem("token");
+      const actividadesTemp: Actividad[] = [];
+      
+      const resSeguimientos = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (resSeguimientos.ok) {
+        const seguimientos: SeguimientoConFecha[] = await resSeguimientos.json();
     const seguimientosRecientes = seguimientos.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()).slice(0, 2);
     
     for (const seg of seguimientosRecientes) {
@@ -871,7 +878,12 @@ const finalizarTodosLosPedidos = async () => {
 
   const obtenerUltimoSeguido = async (usuarioId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       
       if (!res.ok) return null;
       
@@ -1298,7 +1310,20 @@ const finalizarTodosLosPedidos = async () => {
                           </div>
                           <div className={styles.eventoInfo}>
                             <p className={styles.eventoNombre}>{evento.nombre}</p>
-                            <p className={styles.eventoDetalle}><span className={styles.eventoHora}>🕐 {evento.hora}</span><span className={styles.eventoLugar}>📍 {evento.lugar}</span></p>
+                            <p className={styles.eventoDetalle}>
+                              <span className={styles.eventoHora}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+                                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                {evento.hora}
+                              </span>
+                              <span className={styles.eventoLugar}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', marginLeft: '8px', verticalAlign: 'middle' }}>
+                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                {evento.lugar}
+                              </span>
+                            </p>
                           </div>
                           {idx < proximosEventos.length - 1 && <div className={styles.eventoDivider} />}
                         </div>

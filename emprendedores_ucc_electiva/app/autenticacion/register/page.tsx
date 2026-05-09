@@ -35,218 +35,118 @@ export default function RegisterPage() {
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [correo, setCorreo] = useState("");
+  const [correoPrefix, setCorreoPrefix] = useState("");
   const [carrera, setCarrera] = useState("");
   const [tipoUsuario, setTipoUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
-  // Estados para errores
+  const getDominio = () => {
+    if (tipoUsuario === "administrativo") return "@ucc.edu.co";
+    return "@campusucc.edu.co";
+  };
+
+  const correoCompleto = correoPrefix ? `${correoPrefix}${getDominio()}` : "";
+
   const [correoError, setCorreoError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [telefonoError, setTelefonoError] = useState("");
   const [verificandoTelefono, setVerificandoTelefono] = useState(false);
   const [verificandoCorreo, setVerificandoCorreo] = useState(false);
 
-  // Validar correo institucional
   const validarCorreoInstitucional = (correo: string) => {
-    const regexCorreo = /^[a-zA-Z0-9._-]+@campusucc\.edu\.co$/;
-    return regexCorreo.test(correo);
+    const dominio = getDominio();
+    return correo.endsWith(dominio) && correo.split('@')[0].length > 0;
   };
 
-  // Validar contraseña segura
   const validarPasswordSegura = (password: string) => {
-    if (password.length < 8) {
-      return { valido: false, mensaje: "La contraseña debe tener al menos 8 caracteres" };
-    }
-    if (!/\d/.test(password)) {
-      return { valido: false, mensaje: "La contraseña debe contener al menos un número" };
-    }
-    if (!/[A-Z]/.test(password)) {
-      return { valido: false, mensaje: "La contraseña debe contener al menos una letra mayúscula" };
-    }
-    if (!/[a-z]/.test(password)) {
-      return { valido: false, mensaje: "La contraseña debe contener al menos una letra minúscula" };
-    }
-    const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>]/;
-    if (!caracteresEspeciales.test(password)) {
-      return { valido: false, mensaje: "La contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?\":{}|<>)" };
-    }
+    if (password.length < 8) return { valido: false, mensaje: "Mínimo 8 caracteres" };
+    if (!/\d/.test(password)) return { valido: false, mensaje: "Falta un número" };
+    if (!/[A-Z]/.test(password)) return { valido: false, mensaje: "Falta una mayúscula" };
+    if (!/[a-z]/.test(password)) return { valido: false, mensaje: "Falta una minúscula" };
     return { valido: true, mensaje: "" };
   };
 
-  // Verificar teléfono en backend
   const verificarTelefono = async (telefono: string) => {
     if (telefono.length === 10) {
       setVerificandoTelefono(true);
       try {
         const res = await fetch(`${API_URL}/api/usuarios/verificar-telefono/${telefono}`);
         const data = await res.json();
-        if (data.existe) {
-          setTelefonoError("Este número de teléfono ya está registrado. Por favor usa otro");
-        } else {
-          setTelefonoError("");
-        }
-      } catch (error) {
-        console.error("Error verificando teléfono:", error);
-        setTelefonoError("Error al verificar teléfono");
-      } finally {
-        setVerificandoTelefono(false);
-      }
-    } else {
-      setTelefonoError("");
+        if (data.existe) setTelefonoError("Teléfono ya registrado");
+        else setTelefonoError("");
+      } catch (error) { console.error(error); }
+      finally { setVerificandoTelefono(false); }
     }
   };
 
-  // Verificar correo en backend
   const verificarCorreo = async (correo: string) => {
     if (correo && validarCorreoInstitucional(correo)) {
       setVerificandoCorreo(true);
       try {
         const res = await fetch(`${API_URL}/api/usuarios/verificar-correo/${encodeURIComponent(correo)}`);
         const data = await res.json();
-        if (data.existe) {
-          setCorreoError("Este correo ya está registrado");
-        } else {
-          setCorreoError("");
-        }
-      } catch (error) {
-        console.error("Error verificando correo:", error);
-      } finally {
-        setVerificandoCorreo(false);
-      }
+        if (data.existe) setCorreoError("Este correo ya está registrado");
+        else setCorreoError("");
+      } catch (error) { console.error(error); }
+      finally { setVerificandoCorreo(false); }
     }
   };
 
-  // Manejar cambio de correo
-  const manejarCambioCorreo = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nuevoCorreo = e.target.value;
-    setCorreo(nuevoCorreo);
-    
-    if (nuevoCorreo && !validarCorreoInstitucional(nuevoCorreo)) {
-      setCorreoError("El correo debe ser institucional (@campusucc.edu.co)");
-    } else {
-      verificarCorreo(nuevoCorreo);
-    }
+  const manejarCambioCorreoPrefix = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nuevoPrefix = e.target.value.replace(/[^a-zA-Z0-9._-]/g, "");
+    setCorreoPrefix(nuevoPrefix);
+    if (nuevoPrefix) verificarCorreo(`${nuevoPrefix}${getDominio()}`);
+    else setCorreoError("");
   };
 
-  // Manejar cambio de contraseña
   const manejarCambioPassword = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nuevaPassword = e.target.value;
     setPassword(nuevaPassword);
-    
     if (nuevaPassword) {
-      const validacion = validarPasswordSegura(nuevaPassword);
-      if (!validacion.valido) {
-        setPasswordError(validacion.mensaje);
-      } else {
-        setPasswordError("");
-      }
-    } else {
-      setPasswordError("");
+      const v = validarPasswordSegura(nuevaPassword);
+      setPasswordError(v.valido ? "" : v.mensaje);
     }
   };
 
-  // Manejar cambio de teléfono
   const manejarCambioTelefono = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let valor = e.target.value;
-    valor = valor.replace(/\D/g, '');
+    let valor = e.target.value.replace(/\D/g, '');
     if (valor.length <= 10) {
       setTelefono(valor);
-      if (valor.length === 10) {
-        verificarTelefono(valor);
-      } else {
-        setTelefonoError("");
-      }
+      if (valor.length === 10) verificarTelefono(valor);
     }
   };
 
-  // Calcular si el formulario es válido
-  const isFormInvalid = !!correoError || !!passwordError || !!telefonoError || (confirmPassword && password !== confirmPassword) || !tipoUsuario || !nombre || !apellido || !correo || !password || !confirmPassword || (tipoUsuario !== "administrativo" && !carrera);
+  const isFormInvalid = !!correoError || !!passwordError || !!telefonoError || !tipoUsuario || !nombre || !apellido || !correoPrefix || !password || (tipoUsuario !== "administrativo" && !carrera);
 
   const registrarUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (password !== confirmPassword) {
-      alert("Las contraseñas no coinciden");
-      return;
-    }
-
-    if (!validarCorreoInstitucional(correo)) {
-      alert("El correo debe ser institucional (@campusucc.edu.co). Ejemplo: estudiante@campusucc.edu.co");
-      return;
-    }
-
-    const validacionPassword = validarPasswordSegura(password);
-    if (!validacionPassword.valido) {
-      alert(validacionPassword.mensaje);
-      return;
-    }
-
-    if (!telefono) {
-      alert("Por favor ingresa tu número de teléfono");
-      return;
-    }
-
-    if (telefono.length !== 10) {
-      alert("El teléfono debe tener exactamente 10 dígitos");
-      return;
-    }
-
-    if (telefonoError) {
-      alert(telefonoError);
-      return;
-    }
-
-    const carreraEnviar = tipoUsuario === "administrativo" ? "administrativo" : carrera;
-
-    if (tipoUsuario !== "administrativo" && !carrera) {
-      alert("Por favor selecciona tu facultad/programa");
-      return;
-    }
-
-    if (!tipoUsuario) {
-      alert("Por favor selecciona tu tipo de usuario");
-      return;
-    }
-
+    if (password !== confirmPassword) { alert("Las contraseñas no coinciden"); return; }
+    
     const usuario = {
       nombre,
       apellido,
       telefono,
-      correo,
-      carrera: carreraEnviar,
+      correo: correoCompleto,
+      carrera: tipoUsuario === "administrativo" ? "administrativo" : carrera,
       tipoUsuario,
       password,
     };
 
     try {
-      const res = await fetch(`${API_URL}/api/usuarios/registro`, {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(usuario),
       });
-
-      const contentType = res.headers.get("content-type");
-      let data;
-      
-      if (contentType && contentType.includes("application/json")) {
-        data = await res.json();
-      } else {
-        data = await res.text();
-      }
-
       if (res.ok) {
         alert("✅ Usuario registrado correctamente");
         router.push("/autenticacion/login");
       } else {
-        const errorMessage = typeof data === 'string' ? data : data.message || "Error al registrar usuario";
-        alert(errorMessage);
+        const data = await res.json();
+        alert(data.message || "Error al registrar");
       }
-    } catch (error) {
-      console.error(error);
-      alert("Error de conexión con el servidor");
-    }
+    } catch (error) { alert("Error de conexión"); }
   };
 
   const EyeIcon = () => (
@@ -380,27 +280,38 @@ export default function RegisterPage() {
             <div className={styles.field}>
               <label className={styles.label}>
                 Correo institucional * 
-                <span className={styles.labelHint}>(@campusucc.edu.co)</span>
+                <span className={styles.labelHint}>({getDominio()})</span>
               </label>
-              <div className={styles.inputWrap}>
+              <div className={styles.inputWrap} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
-                  type="email"
+                  type="text"
                   className={`${styles.input} ${correoError ? styles.inputError : ""}`}
-                  style={{ paddingLeft: "0.9rem" }}
-                  placeholder="estudiante@campusucc.edu.co"
-                  value={correo}
-                  onChange={manejarCambioCorreo}
+                  style={{ flex: 1 }}
+                  placeholder="ej: nombre.apellido"
+                  value={correoPrefix}
+                  onChange={manejarCambioCorreoPrefix}
                   required
                 />
-                {verificandoCorreo && (
-                  <small className={styles.helperText}>Verificando...</small>
-                )}
+                <span style={{ 
+                  backgroundColor: "#f3f4f6", 
+                  padding: "0.6rem 0.8rem", 
+                  borderRadius: "8px",
+                  fontSize: "0.9rem",
+                  color: "#6b7280",
+                  border: "1px solid #e5e7eb",
+                  fontWeight: "500"
+                }}>
+                  {getDominio()}
+                </span>
               </div>
+              {verificandoCorreo && (
+                <small className={styles.helperText}>Verificando disponibilidad...</small>
+              )}
               {correoError && (
                 <small className={styles.errorText}>{correoError}</small>
               )}
-              {correo && !correoError && validarCorreoInstitucional(correo) && !verificandoCorreo && (
-                <small className={styles.successText}>✓ Correo válido</small>
+              {correoPrefix && !correoError && !verificandoCorreo && (
+                <small className={styles.successText}>✓ Usuario disponible</small>
               )}
             </div>
 

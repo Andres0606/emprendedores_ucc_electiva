@@ -418,9 +418,13 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
+    const token = sessionStorage.getItem("token");
     const response = await fetch(`${API_URL}/api/transacciones`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify(transaccionData)
     });
     
@@ -721,8 +725,13 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
   const verificarSeguimiento = async () => {
     if (!usuarioActual?.id || !emprendimiento) return;
     try {
+      const token = sessionStorage.getItem("token");
       const empId = emprendimiento.id || emprendimiento._id;
-      const r = await fetch(`${API_URL}/api/seguimientos/verificar?usuarioId=${usuarioActual.id}&emprendimientoId=${empId}`);
+      const r = await fetch(`${API_URL}/api/seguimientos/verificar?usuarioId=${usuarioActual.id}&emprendimientoId=${empId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       if (r.ok) { const d = await r.json(); setSiguiendo(d.estaSiguiendo); setTotalSeguidores(d.totalSeguidores); }
     } catch { /* silent */ }
   };
@@ -736,10 +745,18 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     if (!emprendimiento) return;
     setCargandoSeguimiento(true);
     try {
+      const token = sessionStorage.getItem("token");
       const empId = emprendimiento.id || emprendimiento._id;
       const r = await fetch(
         siguiendo ? `${API_URL}/api/seguimientos/dejar-de-seguir` : `${API_URL}/api/seguimientos/seguir`,
-        { method: siguiendo ? 'DELETE' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuarioId: usuarioActual.id, emprendimientoId: empId }) }
+        { 
+          method: siguiendo ? 'DELETE' : 'POST', 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }, 
+          body: JSON.stringify({ usuarioId: usuarioActual.id, emprendimientoId: empId }) 
+        }
       );
       if (r.ok) {
         const d = await r.json();

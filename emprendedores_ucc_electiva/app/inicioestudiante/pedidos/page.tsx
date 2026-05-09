@@ -91,10 +91,15 @@ export default function PedidosPage() {
       if (!guardado) { router.push("/autenticacion/login"); return; }
 
       const u = JSON.parse(guardado);
-      const uid = u.id || u._id;
+      const uid = u.userId || u.id || u._id || sessionStorage.getItem("usuarioId");
 
       try {
-        const res = await fetch(`${API_URL}/api/transacciones?compradorId=${uid}`);
+        const token = sessionStorage.getItem("token");
+        const res = await fetch(`${API_URL}/api/transacciones/comprador/${uid}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
         if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
         const data: Transaccion[] = await res.json();
 
@@ -142,9 +147,13 @@ export default function PedidosPage() {
     }
     
     try {
+      const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/transacciones/${id}/estado`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ estado: "cancelado" })
       });
       

@@ -13,8 +13,12 @@ public class Usuario {
     private String apellido;
     private String correo;
     private String telefono;
-    private String tipoUsuario;
+    private String tipoUsuario; // EMPRENDEDOR, ESTUDIANTE, ADMIN
     private String carrera;
+
+    // Campos para recuperación de contraseña
+    private String recoveryToken;
+    private java.util.Date tokenExpiry;
     private String password;
 
         // 🔥 NUEVO CAMPO: estado del usuario
@@ -77,6 +81,12 @@ public class Usuario {
     public void setCarrera(String carrera) {
         this.carrera = carrera;
     }
+
+    public String getRecoveryToken() { return recoveryToken; }
+    public void setRecoveryToken(String recoveryToken) { this.recoveryToken = recoveryToken; }
+
+    public java.util.Date getTokenExpiry() { return tokenExpiry; }
+    public void setTokenExpiry(java.util.Date tokenExpiry) { this.tokenExpiry = tokenExpiry; }
 
     public String getPassword() {
         return password;

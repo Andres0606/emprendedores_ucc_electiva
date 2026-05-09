@@ -99,31 +99,36 @@ export default function PedidosEmprendedorPage() {
     if (!guardado) { router.push("/autenticacion/login"); return; }
 
     const u = JSON.parse(guardado);
-    const uid = u.id || u._id;
+    const uid = u.userId || u.id || u._id;
     
-    console.log("🔍 UID del emprendedor:", uid);
-    console.log("🔍 Tipo de UID:", typeof uid);
+    console.log("UID del emprendedor:", uid);
+    console.log("Tipo de UID:", typeof uid);
 
     try {
-      const res = await fetch(`${API_URL}/api/transacciones/vendedor/${uid}`);
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/transacciones/vendedor/${uid}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
       const data: Transaccion[] = await res.json();
       
-      console.log("📦 Todos los pedidos recibidos:", data.length);
-      console.log("📦 Datos completos:", JSON.stringify(data, null, 2));
+      console.log("Todos los pedidos recibidos:", data.length);
+      console.log("Datos completos:", JSON.stringify(data, null, 2));
 
       const ordenados = data
         .filter(t => {
             const vendedorId = t.vendedor?.id || t.vendedor?._id;
-            console.log(`Pedido ${t.numeroPedido}: vendedorId=${vendedorId}, uid=${uid}, coincide=${vendedorId === uid || String(vendedorId) === String(uid)}`);
+            console.log(`Pedido ${t.numeroPedido}: vendedorId=${vendedorId}, uid=${uid}`);
             return vendedorId === uid || String(vendedorId) === String(uid);
         })
         .sort((a, b) => b.numeroPedido - a.numeroPedido);
 
-      console.log("✅ Pedidos filtrados:", ordenados.length);
+      console.log("Pedidos filtrados:", ordenados.length);
       setPedidos(ordenados);
     } catch (e: any) {
-      console.error("❌ Error:", e);
+      console.error("Error:", e);
       setError(e.message || "Error inesperado.");
     } finally {
       setLoading(false);
@@ -142,9 +147,13 @@ export default function PedidosEmprendedorPage() {
   /* ── Cambiar estado rápido ── */
   const cambiarEstado = async (id: string, nuevoEstado: string) => {
     try {
+      const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/transacciones/${id}/estado`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ estado: nuevoEstado }),
       });
       if (!res.ok) throw new Error();
@@ -164,9 +173,13 @@ export default function PedidosEmprendedorPage() {
     try {
       // Actualizar estado
       if (estadoEdit !== detalle.estado) {
+        const token = sessionStorage.getItem("token");
         const r1 = await fetch(`${API_URL}/api/transacciones/${detalle.id}/estado`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
           body: JSON.stringify({ estado: estadoEdit }),
         });
         if (!r1.ok) throw new Error("Error al actualizar estado.");
@@ -174,9 +187,13 @@ export default function PedidosEmprendedorPage() {
 
       // Actualizar método de pago
       if (metodoEdit !== detalle.metodoPago) {
+        const token = sessionStorage.getItem("token");
         const r2 = await fetch(`${API_URL}/api/transacciones/${detalle.id}/metodo-pago`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
           body: JSON.stringify({ metodoPago: metodoEdit }),
         });
         if (!r2.ok) throw new Error("Error al actualizar método de pago.");
@@ -471,16 +488,16 @@ export default function PedidosEmprendedorPage() {
 
               <div className={styles.modalSep} />
 
-              {/* 🔥 Mensaje si está cancelado o entregado */}
+              {/* Mensaje si está cancelado o entregado */}
               {(detalle.estado === "cancelado" || detalle.estado === "entregado") && (
                 <div className={styles.pedidoCanceladoMsg}>
                     {detalle.estado === "cancelado" 
-                    ? "⚠️ Este pedido ha sido cancelado. No se pueden realizar cambios."
-                    : "✅ Este pedido ya ha sido entregado. No se pueden realizar cambios."}
+                    ? "Este pedido ha sido cancelado. No se pueden realizar cambios."
+                    : "Este pedido ya ha sido entregado. No se pueden realizar cambios."}
                 </div>
                 )}
 
-              {/* 🔥 Mostrar solo si NO está cancelado ni entregado */}
+              {/* Mostrar solo si NO está cancelado ni entregado */}
               {detalle.estado !== "cancelado" &&  detalle.estado !== "entregado" && (
                 <>
                   {/* Cambiar estado */}
