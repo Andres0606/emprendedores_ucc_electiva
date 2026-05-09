@@ -82,6 +82,12 @@ public class Usuario {
         this.carrera = carrera;
     }
 
+    public String getRecoveryToken() { return recoveryToken; }
+    public void setRecoveryToken(String recoveryToken) { this.recoveryToken = recoveryToken; }
+
+    public java.util.Date getTokenExpiry() { return tokenExpiry; }
+    public void setTokenExpiry(java.util.Date tokenExpiry) { this.tokenExpiry = tokenExpiry; }
+
     public String getPassword() {
         return password;
     }
