@@ -179,7 +179,6 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
     
     if (response.ok) {
       const carritoBackend = await response.json();
-
       if (carritoBackend && carritoBackend.productos && carritoBackend.productos.length > 0) {
         const itemsCarritoFrontend = carritoBackend.productos.map((p: any) => ({
           nombre: p.nombreProducto,
@@ -198,6 +197,8 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
         localStorage.setItem(`carrito_${usuarioId}`, "[]");
         setItemsCarrito([]);
       }
+    } else if (response.status !== 404) {
+      console.error('Error al cargar carrito desde backend');
     }
   } catch (error) {
     console.error("Error al cargar carrito desde backend:", error);

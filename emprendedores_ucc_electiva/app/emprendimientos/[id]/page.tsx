@@ -211,6 +211,8 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
         localStorage.setItem(`carrito_${usuarioId}`, "[]");
         setItemsCarrito([]);
       }
+    } else if (response.status !== 404) {
+      console.error('Error al cargar carrito desde backend');
     }
   } catch (error) {
     console.error("Error al cargar carrito desde backend:", error);
