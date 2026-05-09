@@ -746,7 +746,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
       const empId = emprendimiento.id || emprendimiento._id;
       // Intentamos obtener el total de varias formas comunes en el backend
       // 1. Endpoint específico de total
-      let r = await fetch(`${API_URL}/api/seguimientos/total?emprendimientoId=${empId}`);
+      let r = await fetch(`${API_URL}/api/seguimientos/total/${empId}`);
       if (!r.ok) {
         // 2. Endpoint de verificación sin usuario (a veces habilitado para el total)
         r = await fetch(`${API_URL}/api/seguimientos/verificar?emprendimientoId=${empId}`);

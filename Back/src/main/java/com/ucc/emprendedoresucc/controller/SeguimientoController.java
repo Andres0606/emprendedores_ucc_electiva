@@ -130,7 +130,6 @@ public class SeguimientoController {
         }
     }
     
-    // Verificar si un usuario sigue un emprendimiento
     @GetMapping("/verificar")
     public ResponseEntity<?> verificarSeguimiento(
             @RequestParam String usuarioId, 
@@ -148,6 +147,22 @@ public class SeguimientoController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al verificar seguimiento");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    // Nuevo endpoint público para obtener el total de seguidores
+    @GetMapping("/total/{emprendimientoId}")
+    public ResponseEntity<?> obtenerTotalSeguidores(@PathVariable String emprendimientoId) {
+        try {
+            long total = seguimientoService.contarSeguidores(emprendimientoId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("totalSeguidores", total);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al obtener total de seguidores");
             error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
