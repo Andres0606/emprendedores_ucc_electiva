@@ -729,10 +729,33 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
       const empId = emprendimiento.id || emprendimiento._id;
       const r = await fetch(`${API_URL}/api/seguimientos/verificar?usuarioId=${usuarioActual.id}&emprendimientoId=${empId}`, {
         headers: {
-          "Authorization": `Bearer ${token}`
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
         }
       });
-      if (r.ok) { const d = await r.json(); setSiguiendo(d.estaSiguiendo); setTotalSeguidores(d.totalSeguidores); }
+      if (r.ok) { 
+        const d = await r.json(); 
+        setSiguiendo(d.estaSiguiendo); 
+        setTotalSeguidores(d.totalSeguidores); 
+      }
+    } catch { /* silent */ }
+  };
+
+  const obtenerTotalSeguidoresPublico = async () => {
+    if (!emprendimiento) return;
+    try {
+      const empId = emprendimiento.id || emprendimiento._id;
+      // Intentamos obtener el total de varias formas comunes en el backend
+      // 1. Endpoint específico de total
+      let r = await fetch(`${API_URL}/api/seguimientos/total?emprendimientoId=${empId}`);
+      if (!r.ok) {
+        // 2. Endpoint de verificación sin usuario (a veces habilitado para el total)
+        r = await fetch(`${API_URL}/api/seguimientos/verificar?emprendimientoId=${empId}`);
+      }
+      
+      if (r.ok) {
+        const d = await r.json();
+        setTotalSeguidores(d.totalSeguidores || 0);
+      }
     } catch { /* silent */ }
   };
 
@@ -794,12 +817,13 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
-    if (emprendimiento && (usuarioActual?.id || token)) {
-      verificarSeguimiento();
-    } else if (emprendimiento) {
-      // 🔥 CORRECCIÓN: Para usuarios invitados sin token, no llamamos a /verificar para evitar el 403.
-      // El total de seguidores ya debería venir en la carga inicial del emprendimiento si el backend lo soporta públicamente.
-      console.log("ℹ️ Usuario invitado o sin sesión activa: omitiendo verificación de seguimiento para evitar 403.");
+    if (emprendimiento) {
+      if (usuarioActual?.id || token) {
+        verificarSeguimiento();
+      } else {
+        // Para invitados, intentamos obtener el total de forma pública
+        obtenerTotalSeguidoresPublico();
+      }
     }
   }, [emprendimiento, usuarioActual]);
 
