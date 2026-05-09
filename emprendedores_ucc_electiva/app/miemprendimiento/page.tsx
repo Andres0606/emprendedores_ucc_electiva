@@ -383,8 +383,8 @@ export default function MiEmprendimientoPage() {
       imagenes: imagenesValidas,
       productos: productos.map(p => ({
         nombre: p.nombre,
-        precio: Number(p.precio),
-        stock: Number(p.stock) || 0,
+        precio: Math.max(0, parseFloat(p.precio) || 0),
+        stock: Math.max(0, parseInt(p.stock) || 0),
         imagen: p.imagen || ""
       }))
     };
@@ -399,15 +399,19 @@ export default function MiEmprendimientoPage() {
         },
         body: JSON.stringify(data)
       });
-      const result = await res.json();
+
+      const result = await res.json().catch(() => ({}));
+
       if (res.ok) {
         alert("✅ ¡Emprendimiento publicado correctamente!");
         router.push("/inicioemprendedor");
       } else {
-        alert("Error: " + (result.message || result.error || "Error al publicar"));
+        const errorMsg = result.message || result.error || JSON.stringify(result) || "Error desconocido";
+        console.error("Server Error:", result);
+        alert("⚠️ Error del servidor (400): " + errorMsg);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Connection Error:", error);
       alert("Error de conexión con el servidor.");
     } finally {
       setIsPublishing(false);
