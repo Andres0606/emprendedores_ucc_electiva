@@ -64,7 +64,11 @@ public class AuthController {
             return ResponseEntity.ok(new AuthResponse(
                     token, 
                     usuario.getNombre() + " " + usuario.getApellido(), 
-                    usuario.getTipoUsuario()
+                    usuario.getTipoUsuario(),
+                    usuario.getId(),
+                    usuario.getCorreo(),
+                    usuario.getTelefono(),
+                    usuario.getCarrera()
             ));
         } catch (Exception e) {
             java.util.Map<String, String> error = new java.util.HashMap<>();

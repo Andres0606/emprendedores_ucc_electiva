@@ -42,10 +42,11 @@ export default function LoginPage() {
       }
 
       // Guardar JWT y datos de usuario en sesión
-      sessionStorage.setItem("token", data.token); // IMPORTANTE: Guardar el token
+      sessionStorage.setItem("token", data.token);
       sessionStorage.setItem("usuario", JSON.stringify(data));
       sessionStorage.setItem("tipoUsuario", data.role);
       sessionStorage.setItem("nombreUsuario", data.username);
+      sessionStorage.setItem("usuarioId", data.userId); // 🔥 IMPORTANTE: Guardar el ID
 
       alert("Inicio de sesión correcto");
       

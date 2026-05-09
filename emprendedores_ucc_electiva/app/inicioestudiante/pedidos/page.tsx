@@ -91,7 +91,7 @@ export default function PedidosPage() {
       if (!guardado) { router.push("/autenticacion/login"); return; }
 
       const u = JSON.parse(guardado);
-      const uid = u.id || u._id;
+      const uid = u.userId || u.id || u._id || sessionStorage.getItem("usuarioId");
 
       try {
         const res = await fetch(`${API_URL}/api/transacciones?compradorId=${uid}`);

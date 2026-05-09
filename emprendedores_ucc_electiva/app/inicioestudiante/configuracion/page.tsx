@@ -44,7 +44,7 @@ export default function ConfiguracionPage() {
     setTelefono(usuario.telefono || "");
     setEditTelefono(usuario.telefono || "");
 
-    if (tipo.toLowerCase() === "estudiante") {
+    if (tipo.toLowerCase() === "estudiante" || tipo.toLowerCase() === "admin" || tipo.toLowerCase() === "administrativo") {
       const carreraUsuario = usuario.carrera || "";
       setCarrera(carreraUsuario);
     }
