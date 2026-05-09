@@ -120,6 +120,26 @@
   background-color: #f3f4f6;
 }
 
+.registerLink {
+  padding: 0.5rem 0.875rem;
+  color: #009FE3;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  border-radius: 2rem;
+  border: 1.5px solid #009FE3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.registerLink:hover {
+  background-color: #009FE3;
+  color: white;
+  transform: translateY(-1px);
+}
+
 .loginLink svg {
   width: 16px;
   height: 16px;

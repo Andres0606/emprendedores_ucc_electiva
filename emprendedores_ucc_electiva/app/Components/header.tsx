@@ -155,15 +155,19 @@ export default function Header() {
               </div>
             </div>
           ) : (
-            <Link href="/autenticacion/login" className={styles.loginLink}>
-              <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="10" cy="7" r="3.5"/>
-                <path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" strokeLinecap="round"/>
-              </svg>
-              Ingresar
-            </Link>
+            <>
+              <Link href="/autenticacion/login" className={styles.loginLink}>
+                <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <circle cx="10" cy="7" r="3.5"/>
+                  <path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" strokeLinecap="round"/>
+                </svg>
+                Ingresar
+              </Link>
+              <Link href="/autenticacion/registro" className={styles.registerLink}>
+                Registrarse
+              </Link>
+            </>
           )}
-          
           {mostrarBotonPublicar && (
             <Link href="/miemprendimiento" className={styles.ctaBtn}>
               Publicar emprendimiento →
