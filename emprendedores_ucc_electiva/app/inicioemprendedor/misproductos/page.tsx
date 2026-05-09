@@ -36,6 +36,7 @@ interface Emprendimiento {
 
 interface Usuario {
   id?: string;
+  userId?: string;
   _id?: string;
   nombre: string;
   apellido: string;
@@ -72,7 +73,7 @@ function ProductosContent() {
 
   // Función para recargar datos
   const recargarDatos = async () => {
-    const uid = usuario?.id || usuario?._id;
+    const uid = usuario?.userId || usuario?.id || usuario?._id;
     if (!uid) return;
 
     try {
@@ -111,7 +112,7 @@ function ProductosContent() {
       if (!guardado) { router.push("/autenticacion/login"); return; }
       const u: Usuario = JSON.parse(guardado);
       setUsuario(u);
-      const uid = u.id || u._id;
+      const uid = u.userId || u.id || u._id;
       if (!uid) { setLoading(false); return; }
 
       try {

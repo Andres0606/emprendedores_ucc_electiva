@@ -99,7 +99,7 @@ export default function PedidosEmprendedorPage() {
     if (!guardado) { router.push("/autenticacion/login"); return; }
 
     const u = JSON.parse(guardado);
-    const uid = u.id || u._id;
+    const uid = u.userId || u.id || u._id;
     
     console.log("🔍 UID del emprendedor:", uid);
     console.log("🔍 Tipo de UID:", typeof uid);

@@ -30,6 +30,7 @@ interface Emprendimiento {
 
 interface Usuario {
   id?: string;
+  userId?: string;
   _id?: string;
   nombre: string;
   apellido: string;
@@ -87,7 +88,7 @@ export default function MisEmprendimientosPage() {
 
       const u: Usuario = JSON.parse(guardado);
       setUsuario(u);
-      const uid = u.id || u._id;
+      const uid = u.userId || u.id || u._id;
       if (!uid) { setLoading(false); return; }
 
       try {
