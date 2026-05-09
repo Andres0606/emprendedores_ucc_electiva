@@ -5,6 +5,7 @@ import styles from "../css/eventos/page.module.css";
 import Link from "next/link";
 import Header from "../Components/header";
 import Footer from "../Components/footer";
+import { API_URL } from "@/src/config/api";
 
 type Evento = {
   id: string;
@@ -51,40 +52,39 @@ export default function EventosPage() {
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
-    const cargarEventos = () => {
-      const guardados = localStorage.getItem("eventos_ucc");
-      if (guardados) {
-        try {
-          setEventos(JSON.parse(guardados));
-        } catch (e) {
-          console.error("Error al cargar eventos:", e);
-          setEventos([]);
+    const cargarEventos = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/eventos`);
+        if (res.ok) {
+          const data = await res.json();
+          setEventos(data);
         }
-      } else {
+      } catch (e) {
+        console.error("Error al cargar eventos:", e);
         setEventos([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     
     cargarEventos();
   }, []);
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      const guardados = localStorage.getItem("eventos_ucc");
-      if (guardados) {
-        try {
-          setEventos(JSON.parse(guardados));
-        } catch (e) {
-          console.error("Error al cargar eventos:", e);
+    const handleFocus = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/eventos`);
+        if (res.ok) {
+          const data = await res.json();
+          setEventos(data);
         }
-      } else {
-        setEventos([]);
+      } catch (e) {
+        console.error("Error al recargar eventos:", e);
       }
     };
     
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   // Filtrar eventos por búsqueda, categoría y modalidad
