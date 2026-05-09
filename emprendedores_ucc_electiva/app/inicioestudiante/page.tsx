@@ -786,19 +786,17 @@ const finalizarTodosLosPedidos = async () => {
     return fecha.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
   };
 
-  const obtenerProximosEventos = () => {
-    const guardados = localStorage.getItem("eventos_ucc");
-    if (guardados) {
-      try {
-        const eventos: Evento[] = JSON.parse(guardados);
+  const obtenerProximosEventos = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/eventos`);
+      if (res.ok) {
+        const eventos: Evento[] = await res.json();
         const fechaHoy = getFechaHoy();
         const futuros = eventos.filter(evento => evento.fecha >= fechaHoy).sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(0, 3);
         setProximosEventos(futuros);
-      } catch (e) {
-        console.error("Error al cargar eventos:", e);
-        setProximosEventos([]);
       }
-    } else {
+    } catch (e) {
+      console.error("Error al cargar eventos:", e);
       setProximosEventos([]);
     }
   };

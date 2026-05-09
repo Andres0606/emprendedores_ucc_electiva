@@ -64,19 +64,7 @@ export default function InicioAdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("pendientes");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [eventos, setEventos] = useState<Evento[]>(() => {
-    if (typeof window !== "undefined") {
-      const guardados = localStorage.getItem("eventos_ucc");
-      if (guardados) {
-        try {
-          return JSON.parse(guardados);
-        } catch {
-          return [];
-        }
-      }
-    }
-    return [];
-  });
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [modalEventoAbierto, setModalEventoAbierto] = useState(false);
   const [modalAyudaAbierto, setModalAyudaAbierto] = useState(false);
   const [eventoEditando, setEventoEditando] = useState<Evento | null>(null);
@@ -123,6 +111,16 @@ export default function InicioAdminPage() {
     } catch (e) { return []; }
   };
 
+  const obtenerEventos = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/eventos`);
+      if (res.ok) {
+        const data = await res.json();
+        setEventos(data);
+      }
+    } catch (e) { console.error(e); }
+  };
+
   const cargarDatos = async () => {
     try {
       setLoading(true);
@@ -139,6 +137,7 @@ export default function InicioAdminPage() {
       setStats({ totalEmprendimientos: emprendimientos.length, pendientesAprobacion: pendientes.length, activos: activos.length, totalUsuarios: usuarios.length, emprendedores: usuarios.filter((u: Usuario) => u.tipoUsuario === "emprendedor").length, estudiantes: usuarios.filter((u: Usuario) => u.tipoUsuario === "estudiante" || u.tipoUsuario === "administrativo").length });
       setEmprendimientosPendientes(pendientes);
       setEmprendimientosActivos(activos);
+      await obtenerEventos();
     } catch (e) { setError("Error al cargar los datos"); }
     finally { setLoading(false); }
   };
@@ -192,27 +191,51 @@ export default function InicioAdminPage() {
     setModalEventoAbierto(true); 
   };
   
-  const guardarEvento = () => {
+  const guardarEvento = async () => {
     if (!formEvento.nombre || !formEvento.fecha) return;
     
-    let nuevosEventos: Evento[];
-    if (eventoEditando) {
-      nuevosEventos = eventos.map(e => e.id === eventoEditando.id ? { ...formEvento, id: eventoEditando.id } : e);
-    } else {
-      const nuevoEvento = { ...formEvento, id: Date.now().toString() };
-      nuevosEventos = [...eventos, nuevoEvento];
+    try {
+      const token = sessionStorage.getItem("token");
+      const url = eventoEditando ? `${API_URL}/api/eventos/${eventoEditando.id}` : `${API_URL}/api/eventos`;
+      const method = eventoEditando ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(formEvento)
+      });
+      
+      if (res.ok) {
+        await obtenerEventos();
+        setModalEventoAbierto(false);
+      } else {
+        alert("Error al guardar el evento");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error de conexión");
     }
-    
-    setEventos(nuevosEventos);
-    localStorage.setItem("eventos_ucc", JSON.stringify(nuevosEventos));
-    setModalEventoAbierto(false);
   };
   
-  const eliminarEvento = (id: string) => {
-    if (confirm("¿Eliminar este evento?")) {
-      const nuevosEventos = eventos.filter(e => e.id !== id);
-      setEventos(nuevosEventos);
-      localStorage.setItem("eventos_ucc", JSON.stringify(nuevosEventos));
+  const eliminarEvento = async (id: string) => {
+    if (!confirm("¿Eliminar este evento?")) return;
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/eventos/${id}`, { 
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        await obtenerEventos();
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error de conexión");
     }
   };
 

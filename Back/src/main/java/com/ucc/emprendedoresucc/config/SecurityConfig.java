@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/usuarios/**").permitAll() // Permitir ver info de usuarios públicamente
                 .requestMatchers("/api/categorias/**").permitAll() // Categorías públicas
                 .requestMatchers("/api/emprendimientos/**").permitAll() // Emprendimientos públicos
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/eventos/**").permitAll() // Eventos públicos (ver)
                 .anyRequest().authenticated() // Todo lo demás requiere token (POST, PUT, DELETE)
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
