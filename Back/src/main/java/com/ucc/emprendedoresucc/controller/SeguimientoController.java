@@ -156,7 +156,9 @@ public class SeguimientoController {
     @GetMapping("/total/{emprendimientoId}")
     public ResponseEntity<?> obtenerTotalSeguidores(@PathVariable String emprendimientoId) {
         try {
+            System.out.println("🔍 Consultando total seguidores para ID: " + emprendimientoId);
             long total = seguimientoService.contarSeguidores(emprendimientoId);
+            System.out.println("📊 Total encontrado: " + total);
             Map<String, Object> response = new HashMap<>();
             response.put("totalSeguidores", total);
             return ResponseEntity.ok(response);
