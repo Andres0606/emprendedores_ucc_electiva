@@ -24,25 +24,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(request -> {
-                var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                corsConfiguration.setAllowedOrigins(java.util.List.of("https://emprendedores-ucc-electiva.vercel.app", "http://localhost:3000")); // Agregamos tu dominio de Vercel específicamente
-                corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                corsConfiguration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
-                corsConfiguration.setAllowCredentials(true);
-                return corsConfiguration;
-            }))
+            .cors(org.springframework.security.config.Customizer.withDefaults()) // Usa la config de CorsConfig.java
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // PERMITIR TODOS LOS OPTIONS
-                .requestMatchers("/api/auth/**").permitAll() // Rutas públicas de autenticación
-                .requestMatchers("/api/usuarios/verificar-telefono/**").permitAll() // Verificación de teléfono
-                .requestMatchers("/api/usuarios/verificar-correo/**").permitAll() // Verificación de correo
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/usuarios/**").permitAll() // Permitir ver info de usuarios públicamente
-                .requestMatchers("/api/categorias/**").permitAll() // Categorías públicas
-                .requestMatchers("/api/emprendimientos/**").permitAll() // Emprendimientos públicos
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/eventos/**").permitAll() // Eventos públicos (ver)
-                .anyRequest().authenticated() // Todo lo demás requiere token (POST, PUT, DELETE)
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/usuarios/verificar-telefono/**").permitAll()
+                .requestMatchers("/api/usuarios/verificar-correo/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/usuarios/**").permitAll()
+                .requestMatchers("/api/categorias/**").permitAll()
+                .requestMatchers("/api/emprendimientos/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/eventos/**").permitAll()
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
