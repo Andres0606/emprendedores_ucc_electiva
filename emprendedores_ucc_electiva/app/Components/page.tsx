@@ -596,8 +596,7 @@ export default function HomePage() {
           <div className={styles.featuredInner}>
             <div className={styles.featuredHeader}>
               <div>
-                <span className={styles.sectionTag}>Recomendados</span>
-                <h2 className={styles.sectionTitle}>Talento destacado</h2>
+                <h2 className={styles.sectionTitle}>Los más vendidos</h2>
               </div>
               <Link href="/emprendimientos" className={styles.seeAll}>
                 Ver todos →
