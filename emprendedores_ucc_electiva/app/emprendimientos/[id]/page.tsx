@@ -728,8 +728,7 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     try {
       const r = await fetch(`${API_URL}/api/usuarios/${usuarioId}`);
       if (!r.ok) return null;
-      const d = await r.json();
-      return { id: d.id || d._id, nombre: d.nombre, apellido: d.apellido, correo: d.correo, telefono: d.telefono, carrera: d.carrera, tipoUsuario: d.tipoUsuario };
+      return await r.json();
     } catch { return null; }
   };
 
@@ -755,19 +754,13 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     if (!emprendimiento) return;
     try {
       const empId = emprendimiento.id || emprendimiento._id;
-      // Intentamos obtener el total de varias formas comunes en el backend
-      // 1. Endpoint específico de total
-      let r = await fetch(`${API_URL}/api/seguimientos/total/${empId}`);
-      if (!r.ok) {
-        // 2. Endpoint de verificación sin usuario (a veces habilitado para el total)
-        r = await fetch(`${API_URL}/api/seguimientos/verificar?emprendimientoId=${empId}`);
-      }
-      
+      const r = await fetch(`${API_URL}/api/seguimientos/total/${empId}`);
       if (r.ok) {
         const d = await r.json();
         setTotalSeguidores(d.totalSeguidores || 0);
       }
-    } catch { /* silent */ }
+    } catch (e) {
+    }
   };
 
   const toggleSeguimiento = async () => {
@@ -827,16 +820,15 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
   }, [id]);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
     if (emprendimiento) {
+      const token = sessionStorage.getItem("token");
       if (usuarioActual?.id || token) {
         verificarSeguimiento();
       } else {
-        // Para invitados, intentamos obtener el total de forma pública
         obtenerTotalSeguidoresPublico();
       }
     }
-  }, [emprendimiento, usuarioActual]);
+  }, [emprendimiento?.id, emprendimiento?._id, usuarioActual?.id]);
 
   const formatearPrecio = (precio: number) => `$${precio.toLocaleString()}`;
 
