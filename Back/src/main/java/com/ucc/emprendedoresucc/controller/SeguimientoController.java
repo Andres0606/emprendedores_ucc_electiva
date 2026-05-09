@@ -117,10 +117,11 @@ public class SeguimientoController {
                     if (empOpt.isPresent()) {
                         emprendimientos.add(empOpt.get());
                     } else {
-                        System.out.println("⚠️ Seguimiento encontrado para emprendimiento inexistente: " + seg.getEmprendimientoId());
+                        System.out.println("🧹 Limpiando seguimiento fantasma: " + seg.getEmprendimientoId());
+                        seguimientoService.dejarDeSeguir(usuarioId, seg.getEmprendimientoId());
                     }
                 } catch (Exception e) {
-                    System.err.println("❌ Error al obtener emprendimiento " + seg.getEmprendimientoId() + ": " + e.getMessage());
+                    System.err.println("❌ Error al procesar seguimiento: " + e.getMessage());
                 }
             }
             
