@@ -26,13 +26,15 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                corsConfiguration.setAllowedOrigins(java.util.List.of("*")); // En producción podrías poner solo el dominio de Vercel
+                corsConfiguration.setAllowedOrigins(java.util.List.of("https://emprendedores-ucc-electiva.vercel.app", "http://localhost:3000")); // Agregamos tu dominio de Vercel específicamente
                 corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
+                corsConfiguration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
+                corsConfiguration.setAllowCredentials(true);
                 return corsConfiguration;
             }))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // PERMITIR TODOS LOS OPTIONS
                 .requestMatchers("/api/auth/**").permitAll() // Rutas públicas de autenticación
                 .requestMatchers("/api/usuarios/verificar-telefono/**").permitAll() // Verificación de teléfono
                 .requestMatchers("/api/usuarios/verificar-correo/**").permitAll() // Verificación de correo
