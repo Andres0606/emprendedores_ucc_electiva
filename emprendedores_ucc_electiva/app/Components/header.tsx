@@ -28,9 +28,13 @@ export default function Header() {
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
+        const fullNombre = user.nombre && user.apellido 
+          ? `${user.nombre} ${user.apellido}` 
+          : (user.nombre || userName || 'Usuario');
+          
         setUsuarioActual({
           id: user.id || user._id || sessionStorage.getItem('usuarioId') || '',
-          nombre: user.nombre || userName || 'Usuario',
+          nombre: fullNombre,
           tipoUsuario: user.tipoUsuario || tipoUsuario || undefined
         });
       } catch {

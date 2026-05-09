@@ -50,13 +50,45 @@ export default function ConfiguracionPage() {
   useEffect(() => {
     const guardado = sessionStorage.getItem("usuario");
     if (!guardado) { router.push("/autenticacion/login"); return; }
+    
     const u: Usuario = JSON.parse(guardado);
-    setUsuario(u);
-    // Concatenar nombre y apellido para el input de "Nombre completo"
-    const nombreCompleto = `${u.nombre || ""} ${u.apellido || ""}`.trim();
-    setNombre(nombreCompleto);
-    setTelefono(u.telefono || "");
-    setLoading(false);
+    const uid = u.id || u._id || sessionStorage.getItem("usuarioId");
+
+    async function cargarDatosReales() {
+      try {
+        const res = await fetch(`${API_URL}/api/usuarios/${uid}`);
+        if (res.ok) {
+          const datos: Usuario = await res.json();
+          setUsuario(datos);
+          const nombreCompleto = `${datos.nombre || ""} ${datos.apellido || ""}`.trim();
+          setNombre(nombreCompleto);
+          setTelefono(datos.telefono || "");
+          // Actualizar sesión con datos frescos
+          sessionStorage.setItem("usuario", JSON.stringify(datos));
+        } else {
+          // Si falla el fetch, usamos lo que tenemos en session
+          setUsuario(u);
+          const nombreCompleto = `${u.nombre || ""} ${u.apellido || ""}`.trim();
+          setNombre(nombreCompleto);
+          setTelefono(u.telefono || "");
+        }
+      } catch (err) {
+        setUsuario(u);
+        setNombre(`${u.nombre || ""} ${u.apellido || ""}`.trim());
+        setTelefono(u.telefono || "");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (uid) {
+      cargarDatosReales();
+    } else {
+      setUsuario(u);
+      setNombre(`${u.nombre || ""} ${u.apellido || ""}`.trim());
+      setTelefono(u.telefono || "");
+      setLoading(false);
+    }
   }, []);
 
   // ── Guardar perfil ────────────────────────────
@@ -87,7 +119,14 @@ export default function ConfiguracionPage() {
       if (!res.ok) throw new Error("No se pudo guardar.");
       const actualizado: Usuario = await res.json();
       setUsuario(actualizado);
+      
+      // Actualizar todas las llaves de la sesión para sincronizar todo el sitio
       sessionStorage.setItem("usuario", JSON.stringify(actualizado));
+      sessionStorage.setItem("nombreUsuario", `${actualizado.nombre} ${actualizado.apellido}`.trim());
+      if (actualizado.telefono) {
+        sessionStorage.setItem("telefonoUsuario", actualizado.telefono);
+      }
+      
       setSavedPerfil(true);
       setTimeout(() => setSavedPerfil(false), 2500);
     } catch (e: any) {

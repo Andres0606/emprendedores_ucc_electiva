@@ -98,7 +98,8 @@ export default function InicioEmprendedorPage() {
 
     const u: Usuario = JSON.parse(guardado);
     setUsuario(u);
-    setNombreUsuario(`${u.nombre} ${u.apellido}`);
+    const nombreCompleto = `${u.nombre || ""} ${u.apellido || ""}`.trim();
+    setNombreUsuario(nombreCompleto || "Emprendedor");
 
     const uid = u.userId || u.id || u._id;
     if (!uid) {
@@ -223,7 +224,7 @@ export default function InicioEmprendedorPage() {
           <div className={styles.heroContent}>
             <span className={styles.heroBadge}>Panel del emprendedor</span>
             <h1 className={styles.heroTitle}>
-              Hola, <span className={styles.heroName}>{usuario?.nombre || "Emprendedor"}</span>
+              Hola, <span className={styles.heroName}>{nombreUsuario || "Emprendedor"}</span>
             </h1>
             <p className={styles.heroSub}>
               Gestiona tu emprendimiento, productos y configuración desde aquí.
