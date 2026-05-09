@@ -1083,87 +1083,86 @@ Gracias por apoyar los emprendimientos UCC`;
                   Contactar por WhatsApp
                 </a>
               )}
-              {usuario?.correo && (
-                <a href={`mailto:${usuario.correo}?subject=Interés en ${emprendimiento.nombre}`} className={styles.emailButton}>
-                  <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 7L12 13 2 7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  Enviar correo
-                </a>
-              )}
             </div>
           </div>
         </div>
 
-        {emprendimiento.productos?.length > 0 && (
-          <section className={styles.productsSection}>
-            <div className={styles.productsHeader}>
-              <h2>Productos y Servicios</h2>
-              <p>{emprendimiento.productos.length} producto{emprendimiento.productos.length !== 1 ? "s" : ""} disponible{emprendimiento.productos.length !== 1 ? "s" : ""}</p>
-            </div>
-
-            <div className={styles.productsGrid}>
-              {emprendimiento.productos.map((producto, idx) => {
-                const estado = estadoCarrito[idx];
-                const agotado = producto.stock <= 0;
-
-                return (
-                  <div key={idx} className={styles.productCard}>
-                    {producto.imagen && (
-                      <div className={styles.productImage}>
-                        <img src={producto.imagen} alt={producto.nombre} />
-                      </div>
-                    )}
-                    <div className={styles.productInfo}>
-                      <h3 className={styles.productName}>{producto.nombre}</h3>
-                      <p className={styles.productPrice}>{formatearPrecio(producto.precio)}</p>
-                      {!agotado
-                        ? <span className={styles.productStock}>Stock: {producto.stock} unidades</span>
-                        : <span className={styles.productOutOfStock}>Agotado</span>}
-
-                      {!agotado && (
-                        <>
-                          {!estado?.mostrarSelector ? (
-                            <button className={styles.addToCartButton} onClick={() => abrirSelectorCantidad(idx)}>
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                              </svg>
-                              Agregar al carrito
-                            </button>
-                          ) : (
-                            <div className={styles.cantidadSelector}>
-                              <p className={styles.cantidadLabel}>¿Cuántas unidades?</p>
-                              <div className={styles.cantidadControles}>
-                                <button className={styles.cantidadBtn} onClick={() => cambiarCantidad(idx, (estado.cantidad || 1) - 1, producto.stock)} disabled={(estado.cantidad || 1) <= 1}>−</button>
-                                <span className={styles.cantidadNumero}>{estado.cantidad || 1}</span>
-                                <button className={styles.cantidadBtn} onClick={() => cambiarCantidad(idx, (estado.cantidad || 1) + 1, producto.stock)} disabled={(estado.cantidad || 1) >= producto.stock}>+</button>
-                              </div>
-                              <p className={styles.cantidadSubtotal}>Subtotal: <strong>{formatearPrecio(producto.precio * (estado.cantidad || 1))}</strong></p>
-                              <div className={styles.cantidadAcciones}>
-                                <button className={styles.cancelarBtn} onClick={() => cancelarSeleccion(idx)}>Cancelar</button>
-                                <button className={styles.confirmarCarritoBtn} onClick={(e) => confirmarAgregarAlCarrito(idx, producto, e)}>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-                                    <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                                  </svg>
-                                  Agregar al carrito
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
+        <div className={styles.productsSection}>
+          <div className={styles.productsHeader}>
+            <h2>Catálogo de Productos</h2>
+            <p>{emprendimiento.productos.length} productos disponibles</p>
+          </div>
+          <div className={styles.productsGrid}>
+            {emprendimiento.productos.map((prod, idx) => (
+              <div key={idx} className={styles.productCard}>
+                <div className={styles.productImage}>
+                  {prod.imagen ? (
+                    <img src={prod.imagen} alt={prod.nombre} />
+                  ) : (
+                    <div className={styles.noImage}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
+                  )}
+                </div>
+                <div className={styles.productInfo}>
+                  <h3 className={styles.productName}>{prod.nombre}</h3>
+                  <p className={styles.productPrice}>${prod.precio.toLocaleString()}</p>
+                  {prod.stock > 0 ? (
+                    <span className={styles.productStock}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      En stock
+                    </span>
+                  ) : (
+                    <span className={styles.productOutOfStock}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      Agotado
+                    </span>
+                  )}
 
-        <div className={styles.backSection}>
-          <Link href="/emprendimientos" className={styles.backToList}>← Ver todos los emprendimientos</Link>
+                  {!estadoCarrito[idx]?.mostrarSelector ? (
+                    <button
+                      className={styles.addToCartButton}
+                      onClick={(e) => abrirSelectorCantidad(idx)}
+                      disabled={prod.stock <= 0}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                      Agregar
+                    </button>
+                  ) : (
+                    <div className={styles.cantidadSelector}>
+                      <p className={styles.cantidadLabel}>Cantidad</p>
+                      <div className={styles.cantidadControles}>
+                        <button
+                          className={styles.cantidadBtn}
+                          onClick={() => cambiarCantidad(idx, estadoCarrito[idx].cantidad - 1, prod.stock)}
+                          disabled={estadoCarrito[idx].cantidad <= 1}
+                        >-</button>
+                        <span className={styles.cantidadNumero}>{estadoCarrito[idx].cantidad}</span>
+                        <button
+                          className={styles.cantidadBtn}
+                          onClick={() => cambiarCantidad(idx, estadoCarrito[idx].cantidad + 1, prod.stock)}
+                          disabled={estadoCarrito[idx].cantidad >= prod.stock}
+                        >+</button>
+                      </div>
+                      <p className={styles.cantidadSubtotal}>
+                        Subtotal: <strong>${(prod.precio * (estadoCarrito[idx]?.cantidad || 1)).toLocaleString()}</strong>
+                      </p>
+                      <div className={styles.cantidadAcciones}>
+                        <button className={styles.cancelarBtn} onClick={() => cancelarSeleccion(idx)}>Cancelar</button>
+                        <button
+                          className={styles.confirmarCarritoBtn}
+                          onClick={(e) => confirmarAgregarAlCarrito(idx, prod, e)}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          Confirmar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
 
@@ -1171,7 +1170,10 @@ Gracias por apoyar los emprendimientos UCC`;
         <div className={styles.modalOverlay} onClick={() => setMostrarModalWhatsApp(false)}>
           <div className={styles.modalWhatsApp} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3>📦 Confirma tu pedido</h3>
+              <h3>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                Confirma tu pedido
+              </h3>
               <button className={styles.modalClose} onClick={() => setMostrarModalWhatsApp(false)}>✕</button>
             </div>
 
@@ -1185,7 +1187,9 @@ Gracias por apoyar los emprendimientos UCC`;
               {Object.values(productosAgrupados).map((emp: any) => (
                 <div key={emp.id} className={styles.empresaCard}>
                   <div className={styles.empresaHeader}>
-                    <span className={styles.empresaIcon}>🏪</span>
+                    <div className={styles.empresaIcon}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#009FE3' }}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    </div>
                     <div>
                       <h4 className={styles.empresaNombre}>{emp.nombre}</h4>
                       <p className={styles.empresaTotal}>Total: ${emp.total.toLocaleString()}</p>
@@ -1217,7 +1221,8 @@ Gracias por apoyar los emprendimientos UCC`;
                       className={styles.finalizarEmpresaBtn}
                       onClick={() => finalizarPedidoPorEmpresa(emp)}
                     >
-                      ✅ Finalizar pedido
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      Finalizar pedido
                     </button>
                   </div>
                 </div>
@@ -1230,7 +1235,8 @@ Gracias por apoyar los emprendimientos UCC`;
               </button>
               {Object.keys(productosAgrupados).length > 1 && (
                 <button className={styles.btnFinalizarTodos} onClick={finalizarTodosLosPedidos}>
-                  ✅ Finalizar todos
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  Finalizar todos
                 </button>
               )}
             </div>
