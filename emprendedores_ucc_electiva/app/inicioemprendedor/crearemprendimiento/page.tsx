@@ -158,7 +158,16 @@ export default function CrearEmprendimientoPage() {
     const guardado = sessionStorage.getItem("usuario");
     if (!guardado) { router.push("/autenticacion/login"); return; }
     const usuario = JSON.parse(guardado);
-    const uid = usuario.id || usuario._id;
+    
+    // 🔥 CORRECCIÓN: Usar userId que es el que viene del login
+    const uid = usuario.userId || usuario.id || usuario._id;
+    const token = sessionStorage.getItem("token");
+
+    if (!uid) {
+      setErrorGlobal("No se encontró tu ID de usuario. Por favor, cierra sesión y vuelve a entrar.");
+      setEnviando(false);
+      return;
+    }
 
     const payload = {
       nombre:      form.nombre.trim(),
@@ -176,10 +185,21 @@ export default function CrearEmprendimientoPage() {
     try {
       const res = await fetch(`${API_URL}/api/emprendimientos`, {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
         body:    JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Error al crear el emprendimiento.");
+
+      const result = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const msg = result.message || result.error || "Error al crear el emprendimiento.";
+        throw new Error(msg);
+      }
+      
+      alert("✅ ¡Emprendimiento creado con éxito!");
       router.push("/inicioemprendedor/misemprendimientos");
     } catch (e: any) {
       setErrorGlobal(e.message || "Error inesperado.");
