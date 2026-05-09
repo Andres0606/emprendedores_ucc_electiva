@@ -21,12 +21,17 @@ public class EmailService {
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setDoOutput(true);
 
-        // Resend en modo prueba (onboarding) solo permite enviar desde onboarding@resend.dev
-        // y hacia el correo con el que te registraste en Resend.
-        String jsonInputString = String.format(
-            "{\"from\": \"onboarding@resend.dev\", \"to\": \"%s\", \"subject\": \"%s\", \"text\": \"%s\"}",
-            to, subject, body.replace("\n", "\\n")
-        );
+        // Escapar caracteres básicos para evitar que el JSON se rompa
+        String safeTo = to.replace("\"", "\\\"");
+        String safeSubject = subject.replace("\"", "\\\"");
+        String safeBody = body.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
+
+        String jsonInputString = "{" +
+            "\"from\": \"onboarding@resend.dev\"," +
+            "\"to\": \"" + safeTo + "\"," +
+            "\"subject\": \"" + safeSubject + "\"," +
+            "\"text\": \"" + safeBody + "\"" +
+            "}";
 
         try (OutputStream os = conn.getOutputStream()) {
             byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
