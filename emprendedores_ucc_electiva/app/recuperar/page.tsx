@@ -16,16 +16,21 @@ export default function RecuperarPage() {
     setIsLoading(true);
     
     try {
-      // Por ahora simulamos el envío, ya que requiere servicio de correo en el backend
-      // En una fase siguiente implementaremos el servicio de JavaMail
-      console.log("Solicitando recuperación para:", correo);
-      
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setIsSent(true);
+      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correo }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setIsSent(true);
+      } else {
+        alert(data.message || "Error al procesar la solicitud");
+      }
     } catch (error) {
-      alert("Error al procesar la solicitud");
+      alert("Error de conexión con el servidor");
     } finally {
       setIsLoading(false);
     }

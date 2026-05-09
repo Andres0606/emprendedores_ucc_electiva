@@ -95,7 +95,11 @@ export default function InicioAdminPage() {
     const usuarioGuardado = sessionStorage.getItem("usuario");
     if (!usuarioGuardado) { router.push("/autenticacion/login"); return; }
     const user = JSON.parse(usuarioGuardado);
-    if (user.tipoUsuario !== "admin") { router.push("/"); return; }
+    
+    // 🔥 CORREGIDO: Soporta tanto tipoUsuario como role (del backend)
+    const rol = user.tipoUsuario || user.role;
+    if (rol !== "admin") { router.push("/"); return; }
+    
     setUsuario(user);
     cargarDatos();
   }, [router]);
