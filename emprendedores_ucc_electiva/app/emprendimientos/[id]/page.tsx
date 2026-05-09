@@ -754,11 +754,9 @@ const carritoActual: ItemCarrito[] = JSON.parse(localStorage.getItem(carritoKey)
     if (!emprendimiento) return;
     try {
       const empId = emprendimiento.id || emprendimiento._id;
-      const r = await fetch(`${API_URL}/api/seguimientos/total/${empId}`);
-      console.log("📡 Respuesta pública seguidores:", r.status);
+      const r = await fetch(`${API_URL}/api/seguimientos/total?emprendimientoId=${empId}`);
       if (r.ok) {
         const d = await r.json();
-        console.log("📊 Datos recibidos:", d);
         setTotalSeguidores(d.totalSeguidores || 0);
       } else {
         console.warn("⚠️ Falló la consulta pública de seguidores");

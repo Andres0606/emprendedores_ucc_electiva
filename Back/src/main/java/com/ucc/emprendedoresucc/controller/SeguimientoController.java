@@ -158,22 +158,27 @@ public class SeguimientoController {
         }
     }
 
-    // Nuevo endpoint público para obtener el total de seguidores
-    @GetMapping("/total/{emprendimientoId}")
-    public ResponseEntity<?> obtenerTotalSeguidores(@PathVariable String emprendimientoId) {
+    // Endpoint público para obtener el total de seguidores (soporta parámetro o path)
+    @GetMapping("/total")
+    public ResponseEntity<?> obtenerTotalSeguidoresPublico(@RequestParam(required = false) String emprendimientoId) {
         try {
-            System.out.println("🔍 Consultando total seguidores para ID: " + emprendimientoId);
+            if (emprendimientoId == null) {
+                return ResponseEntity.badRequest().body("Falta emprendimientoId");
+            }
             long total = seguimientoService.contarSeguidores(emprendimientoId);
-            System.out.println("📊 Total encontrado: " + total);
             Map<String, Object> response = new HashMap<>();
             response.put("totalSeguidores", total);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al obtener total de seguidores");
-            error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
+    }
+
+    @GetMapping("/total/{emprendimientoId}")
+    public ResponseEntity<?> obtenerTotalSeguidoresPath(@PathVariable String emprendimientoId) {
+        return obtenerTotalSeguidoresPublico(emprendimientoId);
     }
 
     // Obtener todos los seguimientos de un usuario (con fecha)
