@@ -57,7 +57,12 @@ export default function SeguidosPage() {
 
   const obtenerSeguidos = async (usuarioId: string): Promise<Emprendimiento[]> => {
     try {
-      const res = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`);
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/seguimientos/usuario/${usuarioId}/emprendimientos`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       
       if (!res.ok) {
         console.log("⚠️ Error al obtener seguidos, status:", res.status);
@@ -81,9 +86,13 @@ export default function SeguidosPage() {
         return;
       }
 
+      const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/seguimientos/dejar-de-seguir`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ usuarioId, emprendimientoId })
       });
 

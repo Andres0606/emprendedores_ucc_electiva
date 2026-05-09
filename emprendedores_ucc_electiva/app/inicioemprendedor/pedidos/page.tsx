@@ -105,7 +105,12 @@ export default function PedidosEmprendedorPage() {
     console.log("🔍 Tipo de UID:", typeof uid);
 
     try {
-      const res = await fetch(`${API_URL}/api/transacciones/vendedor/${uid}`);
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/transacciones/vendedor/${uid}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
       const data: Transaccion[] = await res.json();
       
@@ -142,9 +147,13 @@ export default function PedidosEmprendedorPage() {
   /* ── Cambiar estado rápido ── */
   const cambiarEstado = async (id: string, nuevoEstado: string) => {
     try {
+      const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/transacciones/${id}/estado`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ estado: nuevoEstado }),
       });
       if (!res.ok) throw new Error();
@@ -164,9 +173,13 @@ export default function PedidosEmprendedorPage() {
     try {
       // Actualizar estado
       if (estadoEdit !== detalle.estado) {
+        const token = sessionStorage.getItem("token");
         const r1 = await fetch(`${API_URL}/api/transacciones/${detalle.id}/estado`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
           body: JSON.stringify({ estado: estadoEdit }),
         });
         if (!r1.ok) throw new Error("Error al actualizar estado.");
@@ -174,9 +187,13 @@ export default function PedidosEmprendedorPage() {
 
       // Actualizar método de pago
       if (metodoEdit !== detalle.metodoPago) {
+        const token = sessionStorage.getItem("token");
         const r2 = await fetch(`${API_URL}/api/transacciones/${detalle.id}/metodo-pago`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
           body: JSON.stringify({ metodoPago: metodoEdit }),
         });
         if (!r2.ok) throw new Error("Error al actualizar método de pago.");

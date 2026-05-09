@@ -411,11 +411,15 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
   };
   
   try {
-  const response = await fetch(`${API_URL}/api/transacciones`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(transaccionData)
-  });
+    const token = sessionStorage.getItem("token");
+    const response = await fetch(`${API_URL}/api/transacciones`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(transaccionData)
+    });
   
   if (response.ok) {
     console.log(`✅ Transacción guardada para ${emp.nombre}`);
