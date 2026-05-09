@@ -163,7 +163,7 @@ export default function MiEmprendimientoPage() {
       return;
     }
     const usuario = JSON.parse(usuarioGuardado);
-    if (!usuario.id && !usuario._id) {
+    if (!usuario.userId && !usuario.id && !usuario._id) {
       alert("Sesión inválida. Vuelve a iniciar sesión.");
       router.push("/autenticacion/login");
       return;
@@ -342,7 +342,7 @@ export default function MiEmprendimientoPage() {
       return;
     }
 
-    const usuarioId = usuario.id ?? usuario._id;
+    const usuarioId = usuario.userId || usuario.id || usuario._id;
     if (!usuarioId) {
       alert("No se encontró el ID del usuario. Vuelve a iniciar sesión.");
       setIsPublishing(false);
