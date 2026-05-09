@@ -35,7 +35,11 @@ export default function GestionCategoriasPage() {
     const usr = sessionStorage.getItem("usuario");
     if (!usr) { router.push("/autenticacion/login"); return; }
     const u = JSON.parse(usr);
-    if (u.tipoUsuario !== "admin") { router.push("/"); return; }
+    
+    // 🔥 CORREGIDO: Soporta tanto tipoUsuario como role (del backend)
+    const rol = u.tipoUsuario || u.role;
+    if (rol !== "admin") { router.push("/"); return; }
+    
     cargarCategorias();
     cargarEmprendimientos();
   }, []);
