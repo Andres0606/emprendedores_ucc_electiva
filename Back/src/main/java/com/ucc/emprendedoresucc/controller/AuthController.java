@@ -35,18 +35,37 @@ public class AuthController {
         }
 
         try {
-            String subject = "Recuperación de Contraseña - EmprendedoresUCC";
+            // Generar PIN real
+            String pin = usuarioService.generarTokenRecuperacion(correo);
+            
+            String subject = "Código de Recuperación: " + pin;
             String body = "Hola " + usuario.getNombre() + ",\n\n" +
-                          "Hemos recibido una solicitud para restablecer tu contraseña en EmprendedoresUCC.\n" +
-                          "Este es un correo de prueba para confirmar que el servicio de mensajería está activo.\n\n" +
+                          "Tu código de seguridad para restablecer tu contraseña es:\n\n" +
+                          "👉 " + pin + " 👈\n\n" +
+                          "Este código expirará en 15 minutos.\n" +
                           "Si no solicitaste esto, puedes ignorar este correo.\n\n" +
                           "Atentamente,\nEquipo de EmprendedoresUCC";
             
             emailService.enviarCorreo(correo, subject, body);
             
-            return ResponseEntity.ok(Map.of("message", "Correo de recuperación enviado con éxito"));
+            return ResponseEntity.ok(Map.of("message", "Código enviado con éxito"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("message", "Error al enviar el correo: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String correo = request.get("correo");
+        String pin = request.get("pin");
+        String nuevaPassword = request.get("nuevaPassword");
+
+        boolean exito = usuarioService.restablecerPassword(correo, pin, nuevaPassword);
+        
+        if (exito) {
+            return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente"));
+        } else {
+            return ResponseEntity.status(400).body(Map.of("message", "Código inválido o expirado"));
         }
     }
 

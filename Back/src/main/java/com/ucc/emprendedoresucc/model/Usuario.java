@@ -13,8 +13,12 @@ public class Usuario {
     private String apellido;
     private String correo;
     private String telefono;
-    private String tipoUsuario;
+    private String tipoUsuario; // EMPRENDEDOR, ESTUDIANTE, ADMIN
     private String carrera;
+
+    // Campos para recuperación de contraseña
+    private String recoveryToken;
+    private java.util.Date tokenExpiry;
     private String password;
 
         // 🔥 NUEVO CAMPO: estado del usuario

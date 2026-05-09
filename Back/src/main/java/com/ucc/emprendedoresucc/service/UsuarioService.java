@@ -203,4 +203,33 @@ public class UsuarioService {
                 })
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
     }
-}
+    public String generarTokenRecuperacion(String correo) {
+        Usuario usuario = obtenerPorCorreo(correo);
+        if (usuario != null) {
+            // Generar PIN de 6 dígitos
+            String pin = String.format("%06d", new java.util.Random().nextInt(999999));
+            usuario.setRecoveryToken(pin);
+            // Expira en 15 minutos
+            usuario.setTokenExpiry(new java.util.Date(System.currentTimeMillis() + 15 * 60 * 1000));
+            usuarioRepository.save(usuario);
+            return pin;
+        }
+        return null;
+    }
+
+    public boolean restablecerPassword(String correo, String token, String nuevaPassword) {
+        Usuario usuario = obtenerPorCorreo(correo);
+        if (usuario != null && 
+            token.equals(usuario.getRecoveryToken()) && 
+            usuario.getTokenExpiry() != null && 
+            usuario.getTokenExpiry().after(new java.util.Date())) {
+            
+            usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+            usuario.setRecoveryToken(null);
+            usuario.setTokenExpiry(null);
+            usuarioRepository.save(usuario);
+            return true;
+        }
+        return false;
+    }
+}
