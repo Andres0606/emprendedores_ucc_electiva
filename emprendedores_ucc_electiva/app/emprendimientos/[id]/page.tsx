@@ -153,9 +153,13 @@ export default function DetalleEmprendimientoPage() {
         total: items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0)
       };
       
+      const token = sessionStorage.getItem("token");
       const response = await fetch(`${API_URL}/api/carrito`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(carritoData)
       });
       
@@ -179,7 +183,12 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
     }
 
     // ✅ Solo si no existe carrito local, se intenta cargar desde backend
-    const response = await fetch(`${API_URL}/api/carrito/${usuarioId}`);
+    const token = sessionStorage.getItem("token");
+    const response = await fetch(`${API_URL}/api/carrito/${usuarioId}`, {
+      headers: {
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      }
+    });
 
     if (response.ok) {
       const carritoBackend = await response.json();
