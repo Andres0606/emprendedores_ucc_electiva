@@ -169,7 +169,6 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
       return;
     }
 
-    // ✅ Solo si no existe carrito local, se intenta cargar desde backend
     const token = sessionStorage.getItem("token");
     const response = await fetch(`${API_URL}/api/carrito/${usuarioId}`, {
       headers: {
@@ -190,18 +189,20 @@ const cargarCarritoDesdeBackend = async (usuarioId: string) => {
           emprendimientoNombre: p.emprendimientoNombre || ""
         }));
 
-        // ✅ Aquí estaba el error: antes decía 'carrito'
         localStorage.setItem(`carrito_${usuarioId}`, JSON.stringify(itemsCarritoFrontend));
         setItemsCarrito(itemsCarritoFrontend);
       } else {
         localStorage.setItem(`carrito_${usuarioId}`, "[]");
         setItemsCarrito([]);
       }
-    } else if (response.status !== 404) {
-      console.error('Error al cargar carrito desde backend');
+    } else if (response.status === 404) {
+      localStorage.setItem(`carrito_${usuarioId}`, "[]");
+      setItemsCarrito([]);
+    } else {
+      console.error('Error al cargar carrito desde backend:', response.status);
     }
   } catch (error) {
-    console.error("Error al cargar carrito desde backend:", error);
+    // Silencio en producción para evitar bucles de logs
   }
 };
 

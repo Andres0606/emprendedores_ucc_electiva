@@ -112,9 +112,15 @@ public class SeguimientoController {
             
             List<Emprendimiento> emprendimientos = new ArrayList<>();
             for (Seguimiento seg : seguimientos) {
-                Optional<Emprendimiento> empOpt = emprendimientoService.obtenerPorId(seg.getEmprendimientoId());
-                if (empOpt.isPresent()) {
-                    emprendimientos.add(empOpt.get());
+                try {
+                    Optional<Emprendimiento> empOpt = emprendimientoService.obtenerPorId(seg.getEmprendimientoId());
+                    if (empOpt.isPresent()) {
+                        emprendimientos.add(empOpt.get());
+                    } else {
+                        System.out.println("⚠️ Seguimiento encontrado para emprendimiento inexistente: " + seg.getEmprendimientoId());
+                    }
+                } catch (Exception e) {
+                    System.err.println("❌ Error al obtener emprendimiento " + seg.getEmprendimientoId() + ": " + e.getMessage());
                 }
             }
             
