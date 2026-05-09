@@ -23,6 +23,7 @@ interface Emprendimiento {
     stock: number;
     imagen: string;
   }>;
+  totalVentas?: number;
 }
 
 interface Usuario {
@@ -1303,6 +1304,50 @@ useEffect(() => {
               </div>
             </div>
           </div>
+
+          {/* 🔥 SECCIÓN: LOS MÁS VENDIDOS */}
+          {!loading && !busqueda && categoriaSeleccionada === "Todas" && (
+            <div className={styles.rankingSection}>
+              <h2 className={styles.rankingTitle}>
+                <span>Los más vendidos</span> 🔥
+              </h2>
+              <div className={styles.rankingGrid}>
+                {[...emprendimientos]
+                  .filter(e => e.estado === "activo" && (e.totalVentas || 0) > 0)
+                  .sort((a, b) => (b.totalVentas || 0) - (a.totalVentas || 0))
+                  .slice(0, 5)
+                  .map((emp, index) => {
+                    const nombreCategoria = getNombreCategoria(emp.categoriaId);
+                    const rankClass = index === 0 ? styles.rankingCardGold : index === 1 ? styles.rankingCardSilver : index === 2 ? styles.rankingCardBronze : "";
+                    
+                    return (
+                      <Link 
+                        key={emp.id || emp._id} 
+                        href={`/emprendimientos/${emp.id || emp._id}`}
+                        className={`${styles.rankingCard} ${rankClass}`}
+                      >
+                        <div className={styles.rankingBadge}>#{index + 1}</div>
+                        <div className={styles.rankingInfo}>
+                          {emp.imagenes?.[0] ? (
+                            <img src={emp.imagenes[0]} alt={emp.nombre} className={styles.rankingImg} />
+                          ) : (
+                            <div className={styles.rankingImgPlaceholder}>🛍️</div>
+                          )}
+                          <div className={styles.rankingContent}>
+                            <h4 className={styles.rankingName}>{emp.nombre}</h4>
+                            <p className={styles.rankingVentas}>{emp.totalVentas} ventas</p>
+                            <span className={styles.cardCat} style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem' }}>
+                              {nombreCategoria}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })
+                }
+              </div>
+            </div>
+          )}
 
 {loading ? (
   <div className={styles.empty}>
