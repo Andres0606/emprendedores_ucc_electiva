@@ -204,18 +204,22 @@ public class SeguimientoController {
     public ResponseEntity<?> obtenerSeguimientosPorUsuario(@PathVariable String usuarioId) {
         try {
             List<Seguimiento> seguimientos = seguimientoService.obtenerSeguimientosPorUsuario(usuarioId);
-            System.out.println("📊 Seguimientos encontrados para usuario " + usuarioId + ": " + seguimientos.size());
-            
+            List<Seguimiento> seguimientosValidos = new ArrayList<>();
+
             for (Seguimiento seg : seguimientos) {
-                System.out.println("  - Emprendimiento: " + seg.getEmprendimientoId() + ", Fecha: " + seg.getFecha());
+                if (emprendimientoService.obtenerPorId(seg.getEmprendimientoId()).isPresent()) {
+                    seguimientosValidos.add(seg);
+                } else {
+                    System.out.println("🧹 Limpiando seguimiento fantasma en lista: " + seg.getEmprendimientoId());
+                    seguimientoService.dejarDeSeguir(usuarioId, seg.getEmprendimientoId());
+                }
             }
             
-            return ResponseEntity.ok(seguimientos);
+            return ResponseEntity.ok(seguimientosValidos);
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error al obtener seguimientos");
-            error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
