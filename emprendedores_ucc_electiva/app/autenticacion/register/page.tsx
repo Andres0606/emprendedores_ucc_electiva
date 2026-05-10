@@ -140,7 +140,7 @@ export default function RegisterPage() {
         body: JSON.stringify(usuario),
       });
       if (res.ok) {
-        alert("✅ Usuario registrado correctamente");
+        alert("Usuario registrado correctamente");
         router.push("/autenticacion/login");
       } else {
         const data = await res.json();

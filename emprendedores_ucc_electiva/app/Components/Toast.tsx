@@ -33,6 +33,22 @@ export default function ToastContainer() {
 
   useEffect(() => {
     showToastGlobal = addToast;
+    
+    // Override native alert
+    window.alert = (message: string) => {
+      // Determine type based on common keywords
+      let type: ToastType = 'info';
+      const msg = message.toLowerCase();
+      if (msg.includes('error') || msg.includes('falló') || msg.includes('incorrecto') || msg.includes('inválido')) {
+        type = 'error';
+      } else if (msg.includes('éxito') || msg.includes('correcto') || msg.includes('bien') || msg.includes('actualizado') || msg.includes('registrado') || msg.includes('publicado')) {
+        type = 'success';
+      } else if (msg.includes('cuidado') || msg.includes('atención') || msg.includes('advertencia')) {
+        type = 'warning';
+      }
+      
+      addToast(message, type);
+    };
   }, [addToast]);
 
   const removeToast = (id: number) => {

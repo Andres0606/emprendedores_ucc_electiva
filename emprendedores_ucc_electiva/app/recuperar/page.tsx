@@ -90,7 +90,22 @@ export default function RecuperarPage() {
         <div className={styles.formBox}>
           {isSuccess ? (
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>✅</div>
+              <div style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "center" }}>
+                <div style={{ 
+                  width: "64px", 
+                  height: "64px", 
+                  borderRadius: "50%", 
+                  backgroundColor: "#8DC63F15", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center",
+                  color: "#8DC63F"
+                }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              </div>
               <h1 className={styles.formTitle}>Contraseña cambiada</h1>
               <p className={styles.formSub} style={{ marginBottom: "2rem" }}>
                 Tu acceso ha sido restaurado con éxito.
