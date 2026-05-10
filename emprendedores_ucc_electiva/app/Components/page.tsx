@@ -591,53 +591,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* EMPRENDIMIENTOS DESTACADOS */}
-        <section className={styles.featured}>
-          <div className={styles.featuredInner}>
-            <div className={styles.featuredHeader}>
-              <Link href="/emprendimientos" className={styles.seeAll} style={{ marginLeft: 'auto' }}>
-                Ver todos →
-              </Link>
-            </div>
-
-            <div className={styles.venturesGrid}>
-              {loading ? (
-                <p>Cargando...</p>
-              ) : featuredVentures.length === 0 ? (
-                <p>No hay emprendimientos activos por el momento.</p>
-              ) : (
-                featuredVentures.map((v) => (
-                <div key={v.id} className={styles.ventureCard}>
-                  <div className={styles.ventureTop}>
-                    <span className={styles.ventureCat}>
-                      <CategoryIcon nombre={v.category} size={14} />
-                      {v.category}
-                    </span>
-                  </div>
-                  <h3 className={styles.ventureName}>{v.name}</h3>
-                  <p className={styles.ventureDesc}>{v.description}</p>
-                  <div className={styles.ventureMeta}>
-                    <div className={styles.ventureAuthor}>
-                      <span className={styles.ventureAvatarLetter}>{v.author.charAt(0)}</span>
-                      <div>
-                        <p className={styles.ventureAuthorName}>{v.author}</p>
-                        <p className={styles.ventureAuthorSem}>{v.semester}</p>
-                      </div>
-                    </div>
-                    <span className={styles.venturePrice}>{v.price}</span>
-                  </div>
-                  
-                  <div className={styles.ventureButtons}>
-                    <Link href={`/emprendimientos/${v.id}`} className={styles.ventureBtn}>
-                      Ver más
-                    </Link>
-                  </div>
-                </div>
-              ))
-            )}
-            </div>
-          </div>
-        </section>
 
         {/* CTA */}
         <section className={styles.cta}>
