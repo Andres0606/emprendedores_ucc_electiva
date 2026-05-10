@@ -347,11 +347,13 @@ export default function PedidosEmprendedorPage() {
                     {/* Cliente */}
                     <div className={styles.pedidoClienteRow}>
                       <div className={styles.pedidoClienteAvatar}>
-                        {pedido.comprador.nombre[0]?.toUpperCase()}
+                        {pedido.comprador.nombre ? pedido.comprador.nombre[0]?.toUpperCase() : "U"}
                       </div>
                       <div>
                         <p className={styles.pedidoClienteNombre}>
-                          {pedido.comprador.nombre} {pedido.comprador.apellido}
+                          { (pedido.comprador.nombre || pedido.comprador.apellido) 
+                            ? `${pedido.comprador.nombre || ""} ${pedido.comprador.apellido || ""}`.trim() 
+                            : "Estudiante UCC" }
                         </p>
                         {pedido.comprador.telefono && (
                           <p className={styles.pedidoClienteMeta}>{pedido.comprador.telefono}</p>
@@ -441,11 +443,13 @@ export default function PedidosEmprendedorPage() {
                 <p className={styles.modalSecLabel}>CLIENTE</p>
                 <div className={styles.modalClienteCard}>
                   <div className={styles.modalClienteAvatar}>
-                    {detalle.comprador.nombre[0]?.toUpperCase()}
+                    {detalle.comprador.nombre ? detalle.comprador.nombre[0]?.toUpperCase() : "U"}
                   </div>
                   <div className={styles.modalClienteInfo}>
                     <p className={styles.modalClienteNombre}>
-                      {detalle.comprador.nombre} {detalle.comprador.apellido}
+                      { (detalle.comprador.nombre || detalle.comprador.apellido) 
+                        ? `${detalle.comprador.nombre || ""} ${detalle.comprador.apellido || ""}`.trim() 
+                        : "Estudiante UCC" }
                     </p>
                     {detalle.comprador.telefono && (
                       <p className={styles.modalClienteMeta}>{detalle.comprador.telefono}</p>
