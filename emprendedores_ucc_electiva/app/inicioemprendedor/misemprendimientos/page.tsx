@@ -305,7 +305,7 @@ export default function MisEmprendimientosPage() {
         <div className={styles.heroContent}>
           <span className={styles.heroBadge}>Mis emprendimientos</span>
           <h1 className={styles.heroTitle}>
-            Hola, <span className={styles.heroName}>{usuario?.nombre || "Emprendedor"}</span>
+            Hola, <span className={styles.heroName}>{emp ? emp.nombre : (usuario?.nombre || "Emprendedor")}</span>
           </h1>
           <p className={styles.heroSub}>
             Administra, edita y controla el estado de tus emprendimientos registrados en la plataforma.

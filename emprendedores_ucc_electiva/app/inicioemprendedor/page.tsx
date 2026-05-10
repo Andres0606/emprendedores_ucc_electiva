@@ -225,7 +225,7 @@ export default function InicioEmprendedorPage() {
           <div className={styles.heroContent}>
             <span className={styles.heroBadge}>Panel del emprendedor</span>
             <h1 className={styles.heroTitle}>
-              Hola, <span className={styles.heroName}>{nombreUsuario || "Emprendedor"}</span>
+              Hola, <span className={styles.heroName}>{ultimoEmprendimiento ? ultimoEmprendimiento.nombre : nombreUsuario}</span>
             </h1>
             <p className={styles.heroSub}>
               Gestiona tu emprendimiento, productos y configuración desde aquí.
