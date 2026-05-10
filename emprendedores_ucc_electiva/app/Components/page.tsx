@@ -182,9 +182,9 @@ export default function HomePage() {
   
   // Estadísticas reales
   const [stats, setStats] = useState([
-    { value: "0", label: "Emprendimientos activos", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> },
-    { value: "0", label: "Productos publicados", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> },
-    { value: "0", label: "Facultades UCC", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> },
+    { value: "0", label: "Emprendimientos activos" },
+    { value: "0", label: "Productos publicados" },
+    { value: "0", label: "Facultades UCC" },
   ]);
 
   // Función para formatear número de WhatsApp
@@ -419,9 +419,9 @@ export default function HomePage() {
         const totalFacultades = facultadesUnicas.size || 5;
         
         setStats([
-          { value: totalActivos.toString(), label: "Emprendimientos activos", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> },
-          { value: totalProductos.toString(), label: "Productos publicados", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> },
-          { value: totalFacultades.toString(), label: "Facultades UCC", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> },
+          { value: totalActivos.toString(), label: "Emprendimientos activos" },
+          { value: totalProductos.toString(), label: "Productos publicados" },
+          { value: totalFacultades.toString(), label: "Facultades UCC" },
         ]);
         
       } catch (error) {
@@ -502,7 +502,6 @@ export default function HomePage() {
           <div className={styles.statsInner}>
             {stats.map((s) => (
               <div key={s.label} className={styles.statCard}>
-                <div className={styles.statIcon}>{s.icon}</div>
                 <span className={styles.statValue}>{s.value}</span>
                 <span className={styles.statLabel}>{s.label}</span>
               </div>
