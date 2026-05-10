@@ -595,10 +595,7 @@ export default function HomePage() {
         <section className={styles.featured}>
           <div className={styles.featuredInner}>
             <div className={styles.featuredHeader}>
-              <div>
-                <h2 className={styles.sectionTitle}>Los más vendidos</h2>
-              </div>
-              <Link href="/emprendimientos" className={styles.seeAll}>
+              <Link href="/emprendimientos" className={styles.seeAll} style={{ marginLeft: 'auto' }}>
                 Ver todos →
               </Link>
             </div>
