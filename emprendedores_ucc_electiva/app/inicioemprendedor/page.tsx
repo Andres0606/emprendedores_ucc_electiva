@@ -99,13 +99,41 @@ export default function InicioEmprendedorPage() {
 
     const u: Usuario = JSON.parse(guardado);
     setUsuario(u);
-    const nombreCompleto = `${u.nombre || ""} ${u.apellido || ""}`.trim();
-    setNombreUsuario(nombreCompleto || "Emprendedor");
+    
+    // 🔥 Intentar obtener el nombre de varias fuentes
+    const nombreEnSesion = sessionStorage.getItem("nombreUsuario");
+    const nombreDesdeObj = `${u.nombre || ""} ${u.apellido || ""}`.trim();
+    
+    let nombreParaMostrar = nombreDesdeObj || nombreEnSesion || "Usuario";
+    
+    // Si el nombre parece ser un tipo de usuario (fallback común), lo marcamos como "necesita actualización"
+    const esTipoUsuario = ["emprendedor", "estudiante", "administrativo", "admin"].includes(nombreParaMostrar.toLowerCase());
+    
+    setNombreUsuario(nombreParaMostrar);
 
     const uid = u.userId || u.id || u._id;
     if (!uid) {
       setLoading(false);
       return;
+    }
+
+    // 🔥 ENRIQUECIMIENTO: Si el nombre está vacío o es un tipo de usuario, traerlo de la API
+    if (!nombreDesdeObj || esTipoUsuario || nombreParaMostrar === "Usuario") {
+      try {
+        const resUsr = await fetch(`${API_URL}/api/usuarios/${uid}`);
+        if (resUsr.ok) {
+          const usrData = await resUsr.json();
+          const nombreReal = `${usrData.nombre || ""} ${usrData.apellido || ""}`.trim();
+          if (nombreReal && nombreReal.toLowerCase() !== "usuario") {
+            setNombreUsuario(nombreReal);
+            sessionStorage.setItem("nombreUsuario", nombreReal);
+            // Actualizar el objeto usuario también
+            sessionStorage.setItem("usuario", JSON.stringify({ ...u, nombre: usrData.nombre, apellido: usrData.apellido }));
+          }
+        }
+      } catch (err) {
+        console.warn("No se pudo recuperar el nombre del usuario:", err);
+      }
     }
 
     try {

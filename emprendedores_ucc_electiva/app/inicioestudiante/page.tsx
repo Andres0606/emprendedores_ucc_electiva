@@ -921,27 +921,49 @@ const finalizarTodosLosPedidos = async () => {
   useEffect(() => {
     const cargarDatos = async () => {
       const tipo = sessionStorage.getItem("tipoUsuario") || "estudiante";
-      const nombre = sessionStorage.getItem("nombreUsuario") || "Usuario";
+      const nombreEnSesion = sessionStorage.getItem("nombreUsuario");
       const usuarioIdStorage = sessionStorage.getItem("usuarioId");
       const usuarioGuardado = sessionStorage.getItem("usuario");
       
-      let nombreCompleto = nombre;
-      if (usuarioGuardado && (!nombre || nombre === "Usuario" || nombre.split(" ").length === 1)) {
+      let nombreParaMostrar = nombreEnSesion || "Usuario";
+      let nombreDesdeObj = "";
+
+      if (usuarioGuardado) {
         try {
           const usuario = JSON.parse(usuarioGuardado);
-          if (usuario.nombre && usuario.apellido) {
-            nombreCompleto = `${usuario.nombre} ${usuario.apellido}`;
-            sessionStorage.setItem("nombreUsuario", nombreCompleto);
-          } else if (usuario.nombre) {
-            nombreCompleto = usuario.nombre;
-          }
+          nombreDesdeObj = `${usuario.nombre || ""} ${usuario.apellido || ""}`.trim();
+          if (nombreDesdeObj) nombreParaMostrar = nombreDesdeObj;
         } catch (e) {
           console.error("Error al parsear usuario:", e);
         }
       }
+
+      // Si el nombre parece ser un tipo de usuario, lo marcamos para actualizar
+      const esTipoUsuario = ["emprendedor", "estudiante", "administrativo", "admin"].includes(nombreParaMostrar.toLowerCase());
       
       setTipoUsuario(tipo.toLowerCase());
-      setNombreUsuario(nombreCompleto);
+      setNombreUsuario(nombreParaMostrar);
+
+      // 🔥 ENRIQUECIMIENTO: Si el nombre está vacío o es un tipo de usuario, traerlo de la API
+      if ((!nombreDesdeObj || esTipoUsuario || nombreParaMostrar === "Usuario") && usuarioIdStorage) {
+        try {
+          const resUsr = await fetch(`${API_URL}/api/usuarios/${usuarioIdStorage}`);
+          if (resUsr.ok) {
+            const usrData = await resUsr.json();
+            const nombreReal = `${usrData.nombre || ""} ${usrData.apellido || ""}`.trim();
+            if (nombreReal && nombreReal.toLowerCase() !== "usuario") {
+              setNombreUsuario(nombreReal);
+              sessionStorage.setItem("nombreUsuario", nombreReal);
+              if (usuarioGuardado) {
+                const u = JSON.parse(usuarioGuardado);
+                sessionStorage.setItem("usuario", JSON.stringify({ ...u, nombre: usrData.nombre, apellido: usrData.apellido }));
+              }
+            }
+          }
+        } catch (err) {
+          console.warn("No se pudo recuperar el nombre del usuario:", err);
+        }
+      }
       
       obtenerProximosEventos();
       

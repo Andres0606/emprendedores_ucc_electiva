@@ -854,28 +854,43 @@ const finalizarTodosLosPedidos = async () => {
       console.log("🚀 INICIANDO CARGA DE DATOS");
       
       const usuarioIdStorage = sessionStorage.getItem("usuarioId");
-      console.log("📌 Usuario ID:", usuarioIdStorage);
-      
+      const nombreEnSesion = sessionStorage.getItem("nombreUsuario");
+      const usuarioGuardado = sessionStorage.getItem("usuario");
+
+      let nombreParaMostrar = nombreEnSesion || "Usuario";
+      let nombreDesdeObj = "";
+
+      if (usuarioGuardado) {
+        try {
+          const u = JSON.parse(usuarioGuardado);
+          nombreDesdeObj = `${u.nombre || ""} ${u.apellido || ""}`.trim();
+          if (nombreDesdeObj) nombreParaMostrar = nombreDesdeObj;
+        } catch {}
+      }
+
+      const esTipoUsuario = ["emprendedor", "estudiante", "administrativo", "admin"].includes(nombreParaMostrar.toLowerCase());
+      setNombreUsuario(nombreParaMostrar);
+
       // Obtener nombre del backend
-      let nombreCompleto = "Usuario";
-      if (usuarioIdStorage) {
+      if (usuarioIdStorage && (!nombreDesdeObj || esTipoUsuario || nombreParaMostrar === "Usuario")) {
         try {
           const resUser = await fetch(`${API_URL}/api/usuarios/${usuarioIdStorage}`);
           if (resUser.ok) {
             const userData = await resUser.json();
-            if (userData.nombre && userData.apellido) {
-              nombreCompleto = `${userData.nombre} ${userData.apellido}`;
-            } else if (userData.nombre) {
-              nombreCompleto = userData.nombre;
+            const nombreReal = `${userData.nombre || ""} ${userData.apellido || ""}`.trim();
+            if (nombreReal && nombreReal.toLowerCase() !== "usuario") {
+              setNombreUsuario(nombreReal);
+              sessionStorage.setItem("nombreUsuario", nombreReal);
+              if (usuarioGuardado) {
+                const u = JSON.parse(usuarioGuardado);
+                sessionStorage.setItem("usuario", JSON.stringify({ ...u, nombre: userData.nombre, apellido: userData.apellido }));
+              }
             }
-            sessionStorage.setItem("nombreUsuario", nombreCompleto);
           }
         } catch (e) {
           console.error("Error cargando usuario:", e);
         }
       }
-      
-      setNombreUsuario(nombreCompleto);
       obtenerProximosEventos();
       
       if (usuarioIdStorage) {
