@@ -389,9 +389,11 @@ export default function PedidosPage() {
                 </div>
                 <div className={styles.modalVendedorRow}>
                   <span className={styles.modalInfoLabel}>VENDEDOR</span>
-                  <p className={styles.modalInfoVal}>
-                    {detalle.vendedor.nombre} {detalle.vendedor.apellido}
-                  </p>
+                    <p className={styles.modalInfoVal}>
+                      { (detalle.vendedor.nombre || detalle.vendedor.apellido) 
+                        ? `${detalle.vendedor.nombre || ""} ${detalle.vendedor.apellido || ""}`.trim() 
+                        : "Emprendedor UCC" }
+                    </p>
                 </div>
                 {detalle.vendedor.telefono && (
                   <div className={styles.modalVendedorRow}>
