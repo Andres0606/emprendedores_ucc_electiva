@@ -14,7 +14,7 @@ interface Producto {
 }
 
 interface Persona {
-  id: string;
+  id?: string;
   _id?: string;
   nombre: string;
   apellido: string;
@@ -93,49 +93,88 @@ export default function PedidosEmprendedorPage() {
   const [metodoEdit,  setMetodoEdit]  = useState("");
 
   /* ── Carga ── */
- useEffect(() => {
-  const cargar = async () => {
-    const guardado = sessionStorage.getItem("usuario");
-    if (!guardado) { router.push("/autenticacion/login"); return; }
+  useEffect(() => {
+    const cargar = async () => {
+      const guardado = sessionStorage.getItem("usuario");
+      if (!guardado) { router.push("/autenticacion/login"); return; }
 
-    const u = JSON.parse(guardado);
-    const uid = u.userId || u.id || u._id;
-    
-    console.log("UID del emprendedor:", uid);
-    console.log("Tipo de UID:", typeof uid);
-
-    try {
-      const token = sessionStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/transacciones/vendedor/${uid}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
-      const data: Transaccion[] = await res.json();
+      const u = JSON.parse(guardado);
+      const uid = u.userId || u.id || u._id;
       
-      console.log("Todos los pedidos recibidos:", data.length);
-      console.log("Datos completos:", JSON.stringify(data, null, 2));
+      try {
+        const token = sessionStorage.getItem("token");
+        const res = await fetch(`${API_URL}/api/transacciones/vendedor/${uid}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
+        const data: Transaccion[] = await res.json();
+        
+        let ordenados = data
+          .filter(t => {
+              const vendedorId = t.vendedor?.id || t.vendedor?._id;
+              return vendedorId === uid || String(vendedorId) === String(uid);
+          })
+          .sort((a, b) => b.numeroPedido - a.numeroPedido);
 
-      const ordenados = data
-        .filter(t => {
-            const vendedorId = t.vendedor?.id || t.vendedor?._id;
-            console.log(`Pedido ${t.numeroPedido}: vendedorId=${vendedorId}, uid=${uid}`);
-            return vendedorId === uid || String(vendedorId) === String(uid);
-        })
-        .sort((a, b) => b.numeroPedido - a.numeroPedido);
+        // 🔥 ENRIQUECIMIENTO: Si faltan nombres, intentar recuperarlos de /api/usuarios
+        const idsSinNombre = Array.from(new Set(
+          ordenados
+            .filter(t => !t.comprador?.nombre || t.comprador.nombre.trim() === "")
+            .map(t => t.comprador?.id || t.comprador?._id)
+            .filter(Boolean)
+        ));
 
-      console.log("Pedidos filtrados:", ordenados.length);
-      setPedidos(ordenados);
-    } catch (e: any) {
-      console.error("Error:", e);
-      setError(e.message || "Error inesperado.");
-    } finally {
-      setLoading(false);
-    }
-  };
-  cargar();
-}, []);
+        if (idsSinNombre.length > 0) {
+          try {
+            const resUsr = await fetch(`${API_URL}/api/usuarios`);
+            if (resUsr.ok) {
+              const resJson = await resUsr.json();
+              // 🔥 Seguridad: Asegurar que sea un array
+              const usuarios: Persona[] = Array.isArray(resJson) ? resJson : (resJson.data || []);
+              
+              if (Array.isArray(usuarios)) {
+                const mapUsr = new Map();
+                usuarios.forEach(user => {
+                  const id = user.id || user._id;
+                  if (id) mapUsr.set(String(id), user);
+                });
+
+                ordenados = ordenados.map(t => {
+                  const cid = String(t.comprador?.id || t.comprador?._id || "");
+                  const userFull = mapUsr.get(cid);
+                  if (userFull && (!t.comprador?.nombre || t.comprador.nombre.trim() === "")) {
+                    return {
+                      ...t,
+                      comprador: {
+                        ...t.comprador,
+                        nombre: userFull.nombre,
+                        apellido: userFull.apellido,
+                        telefono: t.comprador.telefono || userFull.telefono,
+                        correo: t.comprador.correo || userFull.correo
+                      }
+                    };
+                  }
+                  return t;
+                });
+              }
+            }
+          } catch (err) {
+            console.warn("No se pudo enriquecer la data de usuarios:", err);
+          }
+        }
+
+        setPedidos(ordenados);
+      } catch (e: any) {
+        console.error("Error:", e);
+        setError(e.message || "Error inesperado.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    cargar();
+  }, []);
 
   /* ── Abrir modal ── */
   const abrirDetalle = (p: Transaccion) => {

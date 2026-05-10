@@ -14,7 +14,8 @@ interface Producto {
 }
 
 interface Persona {
-  id: string;
+  id?: string;
+  _id?: string;
   nombre: string;
   apellido: string;
   telefono?: string;
@@ -103,9 +104,56 @@ export default function PedidosPage() {
         if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
         const data: Transaccion[] = await res.json();
 
-        const ordenados = data
-          .filter(t => t.comprador?.id === uid)
+        let ordenados = data
+          .filter(t => (t.comprador?.id === uid || t.comprador?._id === uid))
           .sort((a, b) => b.numeroPedido - a.numeroPedido);
+
+        // 🔥 ENRIQUECIMIENTO: Si faltan nombres de vendedores, recuperar de /api/usuarios
+        const idsSinNombre = Array.from(new Set(
+          ordenados
+            .filter(t => !t.vendedor?.nombre || t.vendedor.nombre.trim() === "")
+            .map(t => t.vendedor?.id || t.vendedor?._id)
+            .filter(Boolean)
+        ));
+
+        if (idsSinNombre.length > 0) {
+          try {
+            const resUsr = await fetch(`${API_URL}/api/usuarios`);
+            if (resUsr.ok) {
+              const resJson = await resUsr.json();
+              // 🔥 Seguridad: Asegurar que sea un array
+              const usuarios: Persona[] = Array.isArray(resJson) ? resJson : (resJson.data || []);
+              
+              if (Array.isArray(usuarios)) {
+                const mapUsr = new Map();
+                usuarios.forEach(user => {
+                  const id = user.id || user._id;
+                  if (id) mapUsr.set(String(id), user);
+                });
+
+                ordenados = ordenados.map(t => {
+                  const vid = String(t.vendedor?.id || t.vendedor?._id || "");
+                  const userFull = mapUsr.get(vid);
+                  if (userFull && (!t.vendedor?.nombre || t.vendedor.nombre.trim() === "")) {
+                    return {
+                      ...t,
+                      vendedor: {
+                        ...t.vendedor,
+                        nombre: userFull.nombre,
+                        apellido: userFull.apellido,
+                        telefono: t.vendedor.telefono || userFull.telefono,
+                        correo: t.vendedor.correo || userFull.correo
+                      }
+                    };
+                  }
+                  return t;
+                });
+              }
+            }
+          } catch (err) {
+            console.warn("No se pudo enriquecer la data de vendedores:", err);
+          }
+        }
 
         setPedidos(ordenados);
       } catch (e: any) {

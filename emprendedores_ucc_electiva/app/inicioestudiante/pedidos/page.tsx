@@ -14,7 +14,8 @@ interface Producto {
 }
 
 interface Persona {
-  id: string;
+  id?: string;
+  _id?: string;
   nombre: string;
   apellido: string;
   telefono?: string;
@@ -43,11 +44,11 @@ interface Transaccion {
 
 /* ── Config de estados ── */
 const ESTADO_CONFIG: Record<string, { label: string; cls: string }> = {
-  pendiente:   { label: "Pendiente",   cls: "estadoPendiente"   },
-  confirmado:  { label: "Confirmado",  cls: "estadoConfirmado"  },
-  pagado:      { label: "Pagado",      cls: "estadoPagado"      },
-  entregado:   { label: "Entregado",   cls: "estadoEntregado"   },
-  cancelado:   { label: "Cancelado",   cls: "estadoCancelado"   },
+  pendiente: { label: "Pendiente", cls: "estadoPendiente" },
+  confirmado: { label: "Confirmado", cls: "estadoConfirmado" },
+  pagado: { label: "Pagado", cls: "estadoPagado" },
+  entregado: { label: "Entregado", cls: "estadoEntregado" },
+  cancelado: { label: "Cancelado", cls: "estadoCancelado" },
 };
 
 const FILTROS = ["todos", "pendiente", "confirmado", "pagado", "entregado", "cancelado"];
@@ -60,8 +61,8 @@ const fmt = (n: number) => {
 
 const fmtFecha = (f: string) => {
   const [y, m, d] = f.split("-");
-  const meses = ["enero","febrero","marzo","abril","mayo","junio",
-                  "julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
   return `${parseInt(d)} de ${meses[parseInt(m) - 1]} de ${y}`;
 };
 
@@ -78,11 +79,11 @@ const numPedido = (n: number) => `#UCC-${String(n).padStart(6, "0")}`;
 export default function PedidosPage() {
   const router = useRouter();
 
-  const [pedidos,    setPedidos]    = useState<Transaccion[]>([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState<string | null>(null);
-  const [filtro,     setFiltro]     = useState("todos");
-  const [detalle,    setDetalle]    = useState<Transaccion | null>(null);
+  const [pedidos, setPedidos] = useState<Transaccion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState("todos");
+  const [detalle, setDetalle] = useState<Transaccion | null>(null);
 
   /* ── Carga ── */
   useEffect(() => {
@@ -103,9 +104,56 @@ export default function PedidosPage() {
         if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
         const data: Transaccion[] = await res.json();
 
-        const ordenados = data
-          .filter(t => t.comprador?.id === uid)
+        let ordenados = data
+          .filter(t => (t.comprador?.id === uid || t.comprador?._id === uid))
           .sort((a, b) => b.numeroPedido - a.numeroPedido);
+
+        // 🔥 ENRIQUECIMIENTO: Si faltan nombres de vendedores, recuperar de /api/usuarios
+        const idsSinNombre = Array.from(new Set(
+          ordenados
+            .filter(t => !t.vendedor?.nombre || t.vendedor.nombre.trim() === "")
+            .map(t => t.vendedor?.id || t.vendedor?._id)
+            .filter(Boolean)
+        ));
+
+        if (idsSinNombre.length > 0) {
+          try {
+            const resUsr = await fetch(`${API_URL}/api/usuarios`);
+            if (resUsr.ok) {
+              const resJson = await resUsr.json();
+              // 🔥 Seguridad: Asegurar que sea un array
+              const usuarios: Persona[] = Array.isArray(resJson) ? resJson : (resJson.data || []);
+              
+              if (Array.isArray(usuarios)) {
+                const mapUsr = new Map();
+                usuarios.forEach(user => {
+                  const id = user.id || user._id;
+                  if (id) mapUsr.set(String(id), user);
+                });
+
+                ordenados = ordenados.map(t => {
+                  const vid = String(t.vendedor?.id || t.vendedor?._id || "");
+                  const userFull = mapUsr.get(vid);
+                  if (userFull && (!t.vendedor?.nombre || t.vendedor.nombre.trim() === "")) {
+                    return {
+                      ...t,
+                      vendedor: {
+                        ...t.vendedor,
+                        nombre: userFull.nombre,
+                        apellido: userFull.apellido,
+                        telefono: t.vendedor.telefono || userFull.telefono,
+                        correo: t.vendedor.correo || userFull.correo
+                      }
+                    };
+                  }
+                  return t;
+                });
+              }
+            }
+          } catch (err) {
+            console.warn("No se pudo enriquecer la data de vendedores:", err);
+          }
+        }
 
         setPedidos(ordenados);
       } catch (e: any) {
@@ -124,20 +172,20 @@ export default function PedidosPage() {
 
   const contactarWhatsApp = (pedido: Transaccion) => {
     let telefono = pedido.telefonoEmprendimiento?.replace(/\D/g, "") || "";
-    
+
     if (!telefono) {
       telefono = pedido.vendedor?.telefono?.replace(/\D/g, "") || "";
     }
-    
+
     if (!telefono) {
       alert(`No hay número de teléfono disponible para ${pedido.emprendimiento.nombre}`);
       return;
     }
-    
+
     const msg = encodeURIComponent(
       `Hola, soy estudiante de la UCC. Me comunico por el pedido ${numPedido(pedido.numeroPedido)} de "${pedido.emprendimiento.nombre}". ¿Podemos coordinar el pago y la entrega?`
     );
-    
+
     window.open(`https://wa.me/${telefono}?text=${msg}`, "_blank");
   };
 
@@ -145,18 +193,18 @@ export default function PedidosPage() {
     if (!confirm("¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.")) {
       return;
     }
-    
+
     try {
       const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/transacciones/${id}/estado`, {
         method: "PATCH",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ estado: "cancelado" })
       });
-      
+
       if (res.ok) {
         alert("Pedido cancelado exitosamente");
         window.location.reload();
@@ -389,11 +437,11 @@ export default function PedidosPage() {
                 </div>
                 <div className={styles.modalVendedorRow}>
                   <span className={styles.modalInfoLabel}>VENDEDOR</span>
-                    <p className={styles.modalInfoVal}>
-                      { (detalle.vendedor.nombre || detalle.vendedor.apellido) 
-                        ? `${detalle.vendedor.nombre || ""} ${detalle.vendedor.apellido || ""}`.trim() 
-                        : "Emprendedor UCC" }
-                    </p>
+                  <p className={styles.modalInfoVal}>
+                    {(detalle.vendedor.nombre || detalle.vendedor.apellido)
+                      ? `${detalle.vendedor.nombre || ""} ${detalle.vendedor.apellido || ""}`.trim()
+                      : "Emprendedor UCC"}
+                  </p>
                 </div>
                 {detalle.vendedor.telefono && (
                   <div className={styles.modalVendedorRow}>
