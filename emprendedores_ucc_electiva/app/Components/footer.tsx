@@ -109,7 +109,7 @@ export default function Footer() {
           <div className={styles.contactCol}>
             <h4 className={styles.colTitle}>Contacto</h4>
             <p className={styles.contactItem}>
-              <span></span> Calle 50A #4-197, Bello, Antioquia
+              <span></span> Cra 22 No. 7 – 06 Sur, La Rosita, Villavicencio, Meta
             </p>
             <p className={styles.contactItem}>
               <span></span> emprendedores@ucc.edu.co
