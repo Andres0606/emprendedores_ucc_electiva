@@ -494,7 +494,7 @@ export default function HomePage() {
                 Explorar catálogo
               </Link>
               <Link href="/miemprendimiento" className={styles.btnGhost}>
-                Publicar mi idea →
+                Publicar mi idea
               </Link>
             </div>
           </div>
@@ -524,7 +524,7 @@ export default function HomePage() {
                 <strong>EmprendedoresUCC</strong> es el espacio oficial para conectar los emprendimientos de la comunidad UCC sede Villavicencio.
               </p>
               <Link href="/nosotros" className={styles.btnPrimary}>
-                Conocer más →
+                Conocer más
               </Link>
             </div>
 

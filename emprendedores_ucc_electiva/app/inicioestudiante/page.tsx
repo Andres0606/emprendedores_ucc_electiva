@@ -1144,7 +1144,6 @@ const finalizarTodosLosPedidos = async () => {
                 <div className={styles.facturaContainer}>
                   <div className={styles.facturaHeader}>
                     <div className={styles.facturaHeaderTop}>
-                      <span className={styles.facturaLogo}>🎓</span>
                       <div className={styles.facturaHeaderInfo}>
                         <h3>EmprendedoresUCC</h3>
                         <span className={styles.facturaSubtitulo}>Universidad Cooperativa de Colombia</span>
@@ -1178,7 +1177,7 @@ const finalizarTodosLosPedidos = async () => {
                     <div className={`${styles.facturaTotalFila} ${styles.facturaTotalFilaFinal}`}><span>TOTAL A PAGAR</span><span className={styles.facturaTotalMonto}>{fmt(subtotal)}</span></div>
                   </div>
 
-                  <div className={styles.facturaAviso}>⚠️ Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.</div>
+                  <div className={styles.facturaAviso}>Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.</div>
                   <div className={styles.facturaPie}><span>Gracias por apoyar los emprendimientos estudiantiles</span><span>EmprendedoresUCC · Universidad Cooperativa de Colombia · Villavicencio</span></div>
                   <div className={styles.facturaAcciones}>
                     <button className={styles.facturaVaciarBtn} onClick={cerrarFactura}>← Volver</button>
@@ -1187,7 +1186,7 @@ const finalizarTodosLosPedidos = async () => {
                       {creandoPedido ? "Procesando..." : pedidoCreado ? "✓ Pedido creado" : " Confirmar pedido"}
                     </button>
                   </div>
-                  {pedidoCreado && <div className={styles.facturaExito}><span>🎉 ¡Pedido confirmado! Puedes imprimir esta factura como comprobante.</span></div>}
+                  {pedidoCreado && <div className={styles.facturaExito}><span>¡Pedido confirmado! Puedes imprimir esta factura como comprobante.</span></div>}
                 </div>
               </div>
             ) : (
@@ -1195,7 +1194,6 @@ const finalizarTodosLosPedidos = async () => {
                 <div className={styles.drawerBody}>
                   {itemsCarrito.length === 0 ? (
                     <div className={styles.drawerEmpty}>
-                      <span className={styles.drawerEmptyEmoji}>🛒</span>
                       <p>Tu carrito está vacío</p>
                       <span>Explora los emprendimientos y agrega productos</span>
                     </div>
@@ -1203,9 +1201,6 @@ const finalizarTodosLosPedidos = async () => {
                     <div className={styles.drawerItems}>
                       {itemsCarrito.map((item, idx) => (
                         <div key={idx} className={styles.drawerItem}>
-                          <div className={styles.drawerItemImg}>
-                            {item.imagen && item.imagen.startsWith('http') ? <img src={item.imagen} alt={item.nombre} /> : <span>🛍️</span>}
-                          </div>
                           <div className={styles.drawerItemInfo}>
                             <p className={styles.drawerItemNombre}>{item.nombre}</p>
                             <p className={styles.drawerItemEmp}>{item.emprendimientoNombre}</p>
@@ -1218,7 +1213,7 @@ const finalizarTodosLosPedidos = async () => {
                               <span className={styles.drawerCantNum}>{item.cantidad}</span>
                               <button className={styles.drawerCantBtn} onClick={() => cambiarCantidad(idx, 1)} disabled={item.cantidad >= item.stock}>+</button>
                             </div>
-                            <button className={styles.drawerItemEliminar} onClick={() => eliminarItem(idx)}>🗑</button>
+                            <button className={styles.drawerItemEliminar} onClick={() => eliminarItem(idx)}>Eliminar</button>
                           </div>
                         </div>
                       ))}
@@ -1235,7 +1230,7 @@ const finalizarTodosLosPedidos = async () => {
                     <div className={styles.drawerAcciones}>
                       <button className={styles.drawerVaciarBtn} onClick={vaciarCarrito}>Vaciar</button>
                       <button className={styles.drawerPagarBtn} onClick={mostrarFactura} disabled={creandoPedido}>
-                        {creandoPedido ? "Procesando..." : "💳 Pagar"}
+                        {creandoPedido ? "Procesando..." : "Pagar"}
                       </button>
                     </div>
                   </div>
@@ -1249,7 +1244,7 @@ const finalizarTodosLosPedidos = async () => {
       <main className={styles.main}>
         <section className={styles.heroBanner}>
           <div className={styles.heroContent}>
-            <span className={styles.heroBadge}>👋 Bienvenido de nuevo</span>
+            <span className={styles.heroBadge}>Bienvenido de nuevo</span>
             <h1 className={styles.heroTitle}>Hola, <span className={styles.heroName}>{nombreUsuario}</span></h1>
             <p className={styles.heroSub}>Descubre emprendimientos, sigue los que te inspiran y gestiona tu perfil.</p>
             <div className={styles.heroActions}>
@@ -1364,7 +1359,6 @@ const finalizarTodosLosPedidos = async () => {
                 <div className={styles.loadingText}>Cargando actividad...</div>
               ) : actividades.length === 0 ? (
                 <div className={styles.activityPlaceholder}>
-                  <span className={styles.placeholderIcon}>✨</span>
                   <h3 className={styles.placeholderTitle}>Aún no hay actividad</h3>
                   <p className={styles.placeholderDesc}>Comienza a seguir emprendimientos o agrega productos al carrito para ver tu actividad.</p>
                   <Link href="/emprendimientos" className={styles.btnLink} style={{ marginTop: "12px" }}>Explorar emprendimientos →</Link>
@@ -1406,7 +1400,6 @@ const finalizarTodosLosPedidos = async () => {
               {Object.values(productosAgrupados).map((emp: any) => (
                 <div key={emp.id} className={styles.empresaCard}>
                   <div className={styles.empresaHeader}>
-                    <span className={styles.empresaIcon}>🏪</span>
                     <div>
                       <h4 className={styles.empresaNombre}>{emp.nombre}</h4>
                       <p className={styles.empresaTotal}>Total: ${emp.total.toLocaleString()}</p>

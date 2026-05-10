@@ -5,13 +5,13 @@
 
 /* ── Variables ── */
 :root {
-  --blue-dark:   #006fa8;
-  --blue-main:   #009FE3;
-  --blue-light:  #00b8f0;
-  --blue-soft:   #e6f6fd;
-  --blue-border: #b3e5fc;
-  --green:       #7cb342;
-  --green-soft:  #f1f8e9;
+  --blue-dark:   #1e293b;
+  --blue-main:   #334155;
+  --blue-light:  #64748b;
+  --blue-soft:   #f8fafc;
+  --blue-border: #e2e8f0;
+  --green:       #166534;
+  --green-soft:  #f0fdf4;
   --text-dark:   #0d1b2a;
   --text-mid:    #37474f;
   --text-muted:  #78909c;
@@ -37,7 +37,7 @@
 .heroBanner {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #006fa8 0%, #009FE3 50%, #00b4ef 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   padding: 32px 56px 28px;
 }
 
@@ -71,7 +71,7 @@
 }
 
 .heroName {
-  color: #8DC63F;
+  color: #a3e635;
 }
 
 .heroSub {
@@ -598,7 +598,7 @@
   z-index: 1100;
   width: 52px;
   height: 52px;
-  background: #1a2e44;
+  background: #0f172a;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -608,7 +608,7 @@
   transition: transform 0.2s ease, background 0.2s ease;
 }
 .carritoFlotante:hover {
-  background: #003865;
+  background: #1e293b;
   transform: scale(1.08);
 }
 .carritoFlotante svg {
@@ -633,7 +633,7 @@
   position: absolute;
   top: -5px;
   right: -5px;
-  background: #ef4444;
+  background: #dc2626;
   color: #fff;
   font-size: 0.68rem;
   font-weight: 700;
@@ -695,7 +695,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.3rem 1.5rem;
-  background: #1a2e44;
+  background: #0f172a;
   flex-shrink: 0;
 }
 .drawerHeaderLeft {
@@ -714,7 +714,7 @@
   letter-spacing: -0.01em;
 }
 .drawerBadge {
-  background: #009FE3;
+  background: #64748b;
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -954,7 +954,7 @@
 .drawerPagarBtn {
   flex: 2;
   padding: 0.7rem;
-  background: linear-gradient(135deg, #8DC63F, #6fa52e);
+  background: linear-gradient(135deg, #166534, #14532d);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -1032,8 +1032,8 @@
 .facturaNumero {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #009FE3;
-  background: #e6f6fd;
+  color: #475569;
+  background: #f1f5f9;
   padding: 0.2rem 0.8rem;
   border-radius: 100px;
   border: 1px solid rgba(0,159,227,0.2);
@@ -1190,7 +1190,7 @@
 .facturaPrintBtn {
   flex: 2;
   padding: 10px 12px;
-  background: #1a2e44;
+  background: #0f172a;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -1204,12 +1204,12 @@
   gap: 6px;
 }
 .facturaPrintBtn:hover {
-  background: #003865;
+  background: #1e293b;
   transform: translateY(-1px);
 }
 
 .facturaConfirmarBtn {
-  background-color: #3b82f6;
+  background-color: #166534;
   color: white;
   border: none;
   padding: 10px 12px;
@@ -1222,7 +1222,7 @@
   gap: 0.5rem;
 }
 .facturaConfirmarBtn:hover:not(:disabled) {
-  background-color: #2563eb;
+  background-color: #15803d;
   transform: translateY(-1px);
 }
 .facturaConfirmarBtn:disabled {

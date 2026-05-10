@@ -6,12 +6,12 @@
 
 /* ── Variables locales ── */
 :root {
-  --blue:       #009FE3;
-  --blue-dark:  #0087c2;
-  --blue-light: #e6f6fd;
-  --green:      #8DC63F;
-  --green-dark: #6fa52e;
-  --green-light:#f0f7e6;
+  --blue:       #1e293b;
+  --blue-dark:  #0f172a;
+  --blue-light: #f1f5f9;
+  --green:      #166534;
+  --green-dark: #14532d;
+  --green-light:#f0fdf4;
   --navy:       #1a2e44;
   --gray:       #64748b;
   --gray-light: #f1f5f9;
@@ -91,7 +91,7 @@
 ══════════════════════════════ */
 .hero {
   position: relative;
-  background: linear-gradient(135deg, #003865 0%, #005a9e 50%, #009FE3 100%);
+  background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -164,7 +164,7 @@
   letter-spacing: -0.04em;
 }
 
-.heroAccent { color: #8DC63F; }
+.heroAccent { color: #a3e635; }
 
 .heroSub {
   font-size: 1.05rem;
@@ -498,7 +498,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #009FE3, #8DC63F);
+  background: linear-gradient(90deg, #1e293b, #166534);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
