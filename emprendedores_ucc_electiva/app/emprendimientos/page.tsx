@@ -579,9 +579,11 @@ export default function EmprendimientosPage() {
            (p >= r.min && p <= r.max);
   });
 
-  if (error) return (
-    <><Header /><main className={styles.main}><div style={{textAlign:"center",padding:"4rem",color:"#dc2626"}}><p>❌ {error}</p><button onClick={()=>window.location.reload()} style={{marginTop:"1rem",padding:"0.5rem 1rem",backgroundColor:"#3b82f6",color:"white",border:"none",borderRadius:"0.5rem",cursor:"pointer"}}>Reintentar</button></div></main><Footer /></>
-  );
+    <><Header /><main className={styles.main}><div style={{textAlign:"center",padding:"4rem",color:"#dc2626"}}>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 1rem' }}>
+        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+      <p>{error}</p><button onClick={()=>window.location.reload()} style={{marginTop:"1rem",padding:"0.5rem 1rem",backgroundColor:"#3b82f6",color:"white",border:"none",borderRadius:"0.5rem",cursor:"pointer"}}>Reintentar</button></div></main><Footer /></>
 
   return (
     <>
@@ -650,7 +652,11 @@ export default function EmprendimientosPage() {
                             <span>{item.cantidad}</span>
                             <button className={styles.drawerCantBtn} onClick={() => cambiarCantidad(idx, 1)}>+</button>
                           </div>
-                          <button onClick={() => eliminarItem(idx)}>🗑</button>
+                          <button onClick={() => eliminarItem(idx)} title="Eliminar" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                            </svg>
+                          </button>
                         </div>
                       </div>
                     ))}

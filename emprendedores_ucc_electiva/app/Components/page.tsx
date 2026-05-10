@@ -425,7 +425,7 @@ export default function HomePage() {
         ]);
         
       } catch (error) {
-        console.error("❌ Error al cargar datos:", error);
+        console.error("Error al cargar datos:", error);
         setError("No se pudieron cargar los emprendimientos. Por favor, intenta de nuevo.");
       } finally {
         setLoading(false);
@@ -443,7 +443,10 @@ export default function HomePage() {
         <Header />
         <main className={styles.main}>
           <div style={{ textAlign: "center", padding: "4rem", color: "#dc2626" }}>
-            <p>❌ {error}</p>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 1rem' }}>
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <p>{error}</p>
             <button 
               onClick={() => window.location.reload()}
               style={{

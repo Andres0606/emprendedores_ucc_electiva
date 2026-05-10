@@ -169,7 +169,7 @@ export default function MiEmprendimientoPage() {
       return;
     }
     if (usuario.tipoUsuario !== "emprendedor") {
-      alert("⚠️ Solo los usuarios registrados como EMPRENDEDORES pueden crear emprendimientos.\n\nTu tipo de usuario es: " + usuario.tipoUsuario);
+      alert("Solo los usuarios registrados como EMPRENDEDORES pueden crear emprendimientos.\n\nTu tipo de usuario es: " + usuario.tipoUsuario);
       router.push("/");
       return;
     }
@@ -238,20 +238,20 @@ export default function MiEmprendimientoPage() {
 
   const agregarProducto = () => {
     if (!prodNombre.trim()) {
-      alert("⚠️ El nombre del producto es obligatorio");
+      alert("El nombre del producto es obligatorio");
       return;
     }
     if (!prodPrecio.trim()) {
-      alert("⚠️ El precio del producto es obligatorio");
+      alert("El precio del producto es obligatorio");
       return;
     }
     if (Number(prodPrecio) <= 0) {
-      alert("⚠️ El precio debe ser mayor a 0");
+      alert("El precio debe ser mayor a 0");
       return;
     }
     
     if (prodImagen && !validarURLImagen(prodImagen)) {
-      alert("⚠️ La URL de la imagen del producto debe comenzar con http:// o https://");
+      alert("La URL de la imagen del producto debe comenzar con http:// o https://");
       return;
     }
     
@@ -299,7 +299,7 @@ export default function MiEmprendimientoPage() {
   const validarImagenesEmprendimiento = () => {
     const imagenesValidas = imagenes.filter(img => img.trim() !== "" && validarURLImagen(img));
     if (imagenesValidas.length === 0) {
-      alert("⚠️ Debes agregar al menos una imagen válida para tu emprendimiento (URL que comience con http:// o https://)");
+      alert("Debes agregar al menos una imagen válida para tu emprendimiento (URL que comience con http:// o https://)");
       return false;
     }
     return true;
@@ -307,7 +307,7 @@ export default function MiEmprendimientoPage() {
 
   const validarProductos = () => {
     if (productos.length === 0) {
-      alert("⚠️ Debes agregar al menos un producto a tu emprendimiento");
+      alert("Debes agregar al menos un producto a tu emprendimiento");
       return false;
     }
     return true;
@@ -320,7 +320,7 @@ export default function MiEmprendimientoPage() {
     if (!validarImagenesEmprendimiento()) return;
     
     if (telefonoError) {
-      alert("⚠️ " + telefonoError);
+      alert(telefonoError);
       setPaso(1);
       return;
     }
@@ -336,7 +336,7 @@ export default function MiEmprendimientoPage() {
 
     const usuario = JSON.parse(usuarioGuardado);
     if (usuario.tipoUsuario !== "emprendedor") {
-      alert("⚠️ No tienes permisos para crear emprendimientos.");
+      alert("No tienes permisos para crear emprendimientos.");
       setIsPublishing(false);
       router.push("/");
       return;
@@ -351,7 +351,7 @@ export default function MiEmprendimientoPage() {
 
     const telefonoLimpio = telefono.replace(/\D/g, '');
     if (telefonoLimpio.length !== 10) {
-      alert("⚠️ El teléfono debe tener EXACTAMENTE 10 dígitos numéricos");
+      alert("El teléfono debe tener EXACTAMENTE 10 dígitos numéricos");
       setPaso(1);
       setIsPublishing(false);
       return;
@@ -359,7 +359,7 @@ export default function MiEmprendimientoPage() {
 
     const imagenesValidas = imagenes.filter(img => img.trim() !== "" && validarURLImagen(img));
     if (imagenesValidas.length === 0) {
-      alert("⚠️ Debes agregar al menos una imagen válida para tu emprendimiento");
+      alert("Debes agregar al menos una imagen válida para tu emprendimiento");
       setPaso(3);
       setIsPublishing(false);
       return;
@@ -367,7 +367,7 @@ export default function MiEmprendimientoPage() {
 
     const categoriaId = categoriaToId[categoria];
     if (!categoriaId) {
-      alert("⚠️ Por favor selecciona una categoría válida");
+      alert("Por favor selecciona una categoría válida");
       setPaso(1);
       setIsPublishing(false);
       return;
@@ -403,12 +403,12 @@ export default function MiEmprendimientoPage() {
       const result = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        alert("✅ ¡Emprendimiento publicado correctamente!");
+        alert("¡Emprendimiento publicado correctamente!");
         router.push("/inicioemprendedor");
       } else {
         const errorMsg = result.message || result.error || JSON.stringify(result) || "Error desconocido";
         console.error("Server Error:", result);
-        alert("⚠️ Error del servidor (400): " + errorMsg);
+        alert("Error del servidor (400): " + errorMsg);
       }
     } catch (error) {
       console.error("Connection Error:", error);
@@ -420,7 +420,7 @@ export default function MiEmprendimientoPage() {
 
   const puedeAvanzarPaso2 = () => {
     if (productos.length === 0) {
-      alert("⚠️ Debes agregar al menos un producto antes de continuar");
+      alert("Debes agregar al menos un producto antes de continuar");
       return false;
     }
     return true;
@@ -554,14 +554,14 @@ export default function MiEmprendimientoPage() {
                   )}
                   {telefono && telefono.length > 0 && (
                     <small className={`${styles.helperText} ${telefono.length === 10 ? styles.validText : styles.invalidText}`}>
-                      {telefono.length}/10 dígitos {telefono.length === 10 ? "✅" : "— deben ser exactamente 10"}
+                      {telefono.length}/10 dígitos {telefono.length === 10 ? "" : "— deben ser exactamente 10"}
                     </small>
                   )}
                   {telefonoError && (
                     <small className={styles.errorText}>{telefonoError}</small>
                   )}
                   {telefono && telefono.length === 10 && !telefonoError && !verificandoTelefono && (
-                    <small className={styles.successText}>✓ Teléfono disponible</small>
+                    <small className={styles.successText}>Teléfono disponible</small>
                   )}
                 </div>
 
@@ -602,7 +602,7 @@ export default function MiEmprendimientoPage() {
                 <span className={styles.formTag}>Paso 2 de 3</span>
                 <h1 className={styles.formTitle}>Productos</h1>
                 <p className={styles.formSub}>Agrega los productos de tu emprendimiento</p>
-                <p className={styles.formWarning}>⚠️ Debes agregar al menos un producto para continuar</p>
+                <p className={styles.formWarning}>Debes agregar al menos un producto para continuar</p>
               </div>
 
               <div className={styles.prodForm}>
@@ -659,7 +659,7 @@ export default function MiEmprendimientoPage() {
                       />
                     </div>
                     {prodImagen && !validarURLImagen(prodImagen) && (
-                      <small className={styles.errorText}>⚠️ La URL debe comenzar con http:// o https://</small>
+                      <small className={styles.errorText}>La URL debe comenzar con http:// o https://</small>
                     )}
                   </div>
                 </div>
@@ -676,7 +676,11 @@ export default function MiEmprendimientoPage() {
                   <p className={styles.prodListTitle}>{productos.length} producto{productos.length > 1 ? "s" : ""} agregado{productos.length > 1 ? "s" : ""}</p>
                   {productos.map((p) => (
                     <div key={p.id} className={styles.prodItem}>
-                      <div className={styles.prodItemIcon}>📦</div>
+                      <div className={styles.prodItemIcon}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                      </div>
                       <div className={styles.prodItemInfo}>
                         <span className={styles.prodItemNombre}>{p.nombre}</span>
                         <span className={styles.prodItemMeta}>
@@ -718,7 +722,7 @@ export default function MiEmprendimientoPage() {
                 <span className={styles.formTag}>Paso 3 de 3</span>
                 <h1 className={styles.formTitle}>Imágenes</h1>
                 <p className={styles.formSub}>Agrega las URLs de las imágenes de tu emprendimiento</p>
-                <p className={styles.formWarning}>⚠️ Debes agregar al menos una imagen válida (URL que comience con http:// o https://)</p>
+                <p className={styles.formWarning}>Debes agregar al menos una imagen válida (URL que comience con http:// o https://)</p>
               </div>
 
               <div className={styles.fields}>
@@ -745,7 +749,7 @@ export default function MiEmprendimientoPage() {
                           <small className={styles.errorText}>{imagenesErrores[i]}</small>
                         )}
                         {img && !imagenesErrores[i] && validarURLImagen(img) && (
-                          <small className={styles.successText}>✓ URL válida</small>
+                          <small className={styles.successText}>URL válida</small>
                         )}
                       </div>
                       {imagenes.length > 1 && (

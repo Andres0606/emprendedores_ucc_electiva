@@ -315,7 +315,7 @@ export default function InicioAdminPage() {
                 Eventos <span className={styles.tabCount}>{eventos.length}</span>
               </button>
               <button className={`${styles.tab} ${activeTab === "ranking" ? styles.tabActive : ""}`} onClick={() => setActiveTab("ranking")}>
-                Ranking 🔥
+                Ranking
               </button>
             </div>
 
@@ -375,7 +375,7 @@ export default function InicioAdminPage() {
                         <span className={styles.metaTag}>{getNombreEmprendedor(emp.usuarioId)}</span>
                         <span className={styles.metaTag}>{emp.productos?.length || 0} productos</span>
                         <span className={`${styles.metaTag} ${styles.metaActivo}`}>Activo</span>
-                        <span className={`${styles.metaTag} ${styles.metaVentas}`}>🔥 {emp.totalVentas || 0} ventas</span>
+                        <span className={`${styles.metaTag} ${styles.metaVentas}`}>{emp.totalVentas || 0} ventas</span>
                       </div>
                     </div>
                     <div className={styles.empActions}>
@@ -651,7 +651,7 @@ export default function InicioAdminPage() {
                 </div>
               </div>
               <div className={styles.guiaNota}>
-                <p>💡 <strong>Consejo:</strong> Puedes previsualizar la imagen pegando la URL en el campo y viendo si aparece correctamente en la tarjeta del evento.</p>
+                <p><strong>Consejo:</strong> Puedes previsualizar la imagen pegando la URL en el campo y viendo si aparece correctamente en la tarjeta del evento.</p>
               </div>
             </div>
             <div className={styles.modalFooter}>

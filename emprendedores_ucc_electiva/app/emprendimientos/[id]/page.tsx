@@ -69,14 +69,85 @@ interface ItemCarrito {
   emprendimientoNombre: string;
 }
 
-const categoriaEmoji: Record<string, string> = {
-  "Tecnología": "💻",
-  "Gastronomía": "🍽️",
-  "Comida": "🍔",
-  "Moda y Diseño": "👗",
-  "Salud y Bienestar": "🧘",
-  "Arte y Cultura": "🎨",
-  "Servicios": "🛠️",
+const CategoryIcon = ({ nombre, size = 20 }: { nombre: string; size?: number }) => {
+  const getColors = (n: string) => {
+    switch (n) {
+      case "Tecnología": return { bg: "#e0f2fe", border: "#bae6fd", icon: "#0369a1" };
+      case "Gastronomía":
+      case "Comida": return { bg: "#fef2f2", border: "#fecaca", icon: "#991b1b" };
+      case "Moda y Diseño": return { bg: "#f5f3ff", border: "#ddd6fe", icon: "#5b21b6" };
+      case "Salud y Bienestar": return { bg: "#f0fdf4", border: "#bbf7d0", icon: "#166534" };
+      case "Arte y Cultura": return { bg: "#fff7ed", border: "#fed7aa", icon: "#9a3412" };
+      case "Servicios": return { bg: "#f8fafc", border: "#e2e8f0", icon: "#334155" };
+      case "Educación": return { bg: "#ecfeff", border: "#cffafe", icon: "#0891b2" };
+      case "Sostenibilidad": return { bg: "#f0fdf4", border: "#dcfce7", icon: "#166534" };
+      default: return { bg: "#f1f5f9", border: "#e2e8f0", icon: "#475569" };
+    }
+  };
+
+  const colors = getColors(nombre);
+  const iconProps: React.SVGProps<SVGSVGElement> = {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: colors.icon,
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
+
+  const renderIcon = () => {
+    switch (nombre) {
+      case "Tecnología":
+        return (
+          <svg {...iconProps}>
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+        );
+      case "Gastronomía":
+      case "Comida":
+        return (
+          <svg {...iconProps}>
+            <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+            <path d="M7 2v20" />
+            <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+          </svg>
+        );
+      case "Moda y Diseño":
+        return (
+          <svg {...iconProps}>
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+            <path d="M3 6h18" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+          </svg>
+        );
+      default:
+        return (
+          <svg {...iconProps}>
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        );
+    }
+  };
+
+  return (
+    <div style={{
+      width: size + 12,
+      height: size + 12,
+      backgroundColor: colors.bg,
+      border: `1px solid ${colors.border}`,
+      borderRadius: '10px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: '8px'
+    }}>
+      {renderIcon()}
+    </div>
+  );
 };
 
 const formatearNumeroWhatsApp = (telefono: string): string => {
@@ -279,7 +350,7 @@ export default function DetalleEmprendimientoPage() {
         agrupado[item.emprendimientoId].total += subtotal;
       }
 
-      console.log("📦 Productos agrupados:", agrupado);
+      console.log("Productos agrupados:", agrupado);
 
       setProductosAgrupados(agrupado);
       setMostrarModalWhatsApp(true);
@@ -296,7 +367,7 @@ export default function DetalleEmprendimientoPage() {
   };
 
   const enviarWhatsApp = (emprendimientoId: string, nombreEmp: string, productos: any[], total: number, telefono: string) => {
-    console.log("📞 Teléfono recibido:", telefono, "para:", nombreEmp);
+    console.log("Teléfono recibido:", telefono, "para:", nombreEmp);
 
     if (!telefono || telefono === "") {
       alert(`No hay número de teléfono disponible para ${nombreEmp}. El emprendedor debe actualizar su perfil.`);
@@ -419,7 +490,7 @@ Gracias por apoyar los emprendimientos UCC`;
       });
 
       if (response.ok) {
-        console.log(`✅ Transacción guardada para ${emp.nombre}`);
+        console.log(`Transacción guardada para ${emp.nombre}`);
 
         const nuevosItems = itemsCarrito.filter(item => item.emprendimientoId !== emp.id);
         guardarCarrito(nuevosItems);
@@ -437,7 +508,7 @@ Gracias por apoyar los emprendimientos UCC`;
           setVistaFactura(false);
         }
 
-        alert(`✅ Pedido de "${emp.nombre}" realizado exitosamente!`);
+        alert(`Pedido de "${emp.nombre}" realizado exitosamente!`);
       } else {
         const error = await response.text();
         alert(`Error al guardar el pedido de "${emp.nombre}": ${error}`);
@@ -457,7 +528,7 @@ Gracias por apoyar los emprendimientos UCC`;
     setCarritoAbierto(false);
     setVistaFactura(false);
 
-    alert('🎉 ¡Todos los pedidos realizados exitosamente!');
+    alert('¡Todos los pedidos realizados exitosamente!');
   };
 
   const cerrarFactura = () => {
@@ -728,11 +799,11 @@ Gracias por apoyar los emprendimientos UCC`;
         console.log("✅ Total seguidores recibido:", d.totalSeguidores);
         setTotalSeguidores(d.totalSeguidores || 0);
       } else {
-        console.warn("⚠️ Falló la consulta pública de seguidores, status:", r.status);
+        console.warn("Falló la consulta pública de seguidores, status:", r.status);
         setTotalSeguidores(0);
       }
     } catch (e) {
-      console.error("❌ Error en fetch público de seguidores:", e);
+      console.error("Error en fetch público de seguidores:", e);
       setTotalSeguidores(0);
     }
   };
@@ -763,7 +834,7 @@ Gracias por apoyar los emprendimientos UCC`;
         const d = await r.json();
         setSiguiendo(!siguiendo);
         setTotalSeguidores(d.totalSeguidores);
-        alert(siguiendo ? "✅ Has dejado de seguir este emprendimiento" : "✅ ¡Ahora sigues este emprendimiento!");
+        alert(siguiendo ? "Has dejado de seguir este emprendimiento" : "¡Ahora sigues este emprendimiento!");
       } else {
         const err = await r.json();
         alert(err.message || "Error al procesar seguimiento");
@@ -806,9 +877,12 @@ Gracias por apoyar los emprendimientos UCC`;
   const formatearPrecio = (precio: number) => `$${precio.toLocaleString()}`;
 
   if (loading) return (<><Header /><main className={styles.main}><div className={styles.loadingContainer}><div className={styles.spinner}></div><p>Cargando emprendimiento...</p></div></main><Footer /></>);
-  if (error || !emprendimiento) return (<><Header /><main className={styles.main}><div className={styles.errorContainer}><span className={styles.errorEmoji}>😔</span><h2>{error || "Emprendimiento no encontrado"}</h2><p>El emprendimiento que buscas no existe o ha sido eliminado.</p><Link href="/emprendimientos" className={styles.backButton}>← Volver a emprendimientos</Link></div></main><Footer /></>);
+  if (error || !emprendimiento) return (<><Header /><main className={styles.main}><div className={styles.errorContainer}><span className={styles.errorEmoji}>
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+    </svg>
+  </span><h2>{error || "Emprendimiento no encontrado"}</h2><p>El emprendimiento que buscas no existe o ha sido eliminado.</p><Link href="/emprendimientos" className={styles.backButton}>← Volver a emprendimientos</Link></div></main><Footer /></>);
 
-  const emojiCategoria = categoriaEmoji[categoria?.nombre || ""] || "🚀";
   const telefonoContacto = emprendimiento.telefono || usuario?.telefono;
 
   return (
@@ -910,7 +984,10 @@ Gracias por apoyar los emprendimientos UCC`;
                   </div>
 
                   <div className={styles.facturaAviso}>
-                    ⚠️ Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    Esta factura es un comprobante de intención de compra. Coordina el pago directamente con cada emprendedor.
                   </div>
 
                   <div className={styles.facturaPie}>
@@ -920,15 +997,30 @@ Gracias por apoyar los emprendimientos UCC`;
 
                   <div className={styles.facturaAcciones}>
                     <button className={styles.facturaVaciarBtn} onClick={cerrarFactura}>← Volver</button>
-                    <button className={styles.facturaPrintBtn} onClick={() => window.print()}>🖨️ Imprimir factura</button>
+                    <button className={styles.facturaPrintBtn} onClick={() => window.print()}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                        <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                      </svg>
+                      Imprimir factura
+                    </button>
                     {!pedidoConfirmado && (
                       <button className={styles.facturaConfirmarBtn} onClick={confirmarPedido} disabled={creandoPedido}>
-                        {creandoPedido ? "⏳ Procesando..." : "✅ Confirmar pedido"}
+                        {creandoPedido ? (
+                          <div className={styles.spinnerSmall}></div>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        )}
+                        {creandoPedido ? "Procesando..." : "Confirmar pedido"}
                       </button>
                     )}
                     {pedidoConfirmado && (
                       <div className={styles.facturaExito}>
-                        <span>🎉 ¡Pedido confirmado! Puedes imprimir esta factura como comprobante.</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <span>¡Pedido confirmado! Puedes imprimir esta factura como comprobante.</span>
                       </div>
                     )}
                   </div>
@@ -939,7 +1031,11 @@ Gracias por apoyar los emprendimientos UCC`;
                 <div className={styles.drawerBody}>
                   {itemsCarrito.length === 0 ? (
                     <div className={styles.drawerEmpty}>
-                      <span className={styles.drawerEmptyEmoji}>🛒</span>
+                      <span className={styles.drawerEmptyEmoji}>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                        </svg>
+                      </span>
                       <p>Tu carrito está vacío</p>
                       <span>Agrega productos desde esta página</span>
                     </div>
@@ -950,7 +1046,11 @@ Gracias por apoyar los emprendimientos UCC`;
                           <div className={styles.drawerItemImg}>
                             {item.imagen && item.imagen.startsWith('http')
                               ? <img src={item.imagen} alt={item.nombre} />
-                              : <span>🛍️</span>}
+                              : <div className={styles.itemPlaceholder}>
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                                  </svg>
+                                </div>}
                           </div>
                           <div className={styles.drawerItemInfo}>
                             <p className={styles.drawerItemNombre}>{item.nombre}</p>
@@ -964,7 +1064,11 @@ Gracias por apoyar los emprendimientos UCC`;
                               <span className={styles.drawerCantNum}>{item.cantidad}</span>
                               <button className={styles.drawerCantBtn} onClick={() => cambiarCantidadDrawer(idx, 1)} disabled={item.cantidad >= item.stock}>+</button>
                             </div>
-                            <button className={styles.drawerItemEliminar} onClick={() => eliminarItemDrawer(idx)} title="Eliminar">🗑</button>
+                            <button className={styles.drawerItemEliminar} onClick={() => eliminarItemDrawer(idx)} title="Eliminar">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                              </svg>
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -986,7 +1090,12 @@ Gracias por apoyar los emprendimientos UCC`;
                     </div>
                     <div className={styles.drawerAcciones}>
                       <button className={styles.drawerVaciarBtn} onClick={vaciarCarrito}>Vaciar</button>
-                      <button className={styles.drawerPagarBtn} onClick={mostrarFactura}>💳 Pagar</button>
+                      <button className={styles.drawerPagarBtn} onClick={mostrarFactura}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                        </svg>
+                        Pagar
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1009,7 +1118,9 @@ Gracias por apoyar los emprendimientos UCC`;
         >
           {p.imagen && p.imagen.startsWith('http')
             ? <img src={p.imagen} alt="" />
-            : <span>🛒</span>}
+            : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>}
         </div>
       ))}
 
@@ -1027,7 +1138,12 @@ Gracias por apoyar los emprendimientos UCC`;
                 <img src={emprendimiento.imagenes[imagenSeleccionada]} alt={emprendimiento.nombre}
                   onError={(e) => { (e.target as HTMLImageElement).src = "/images/placeholder.png"; }} />
               ) : (
-                <div className={styles.noImage}><span>📷</span><p>Sin imagen</p></div>
+                <div className={styles.noImage}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  <p>Sin imagen</p>
+                </div>
               )}
             </div>
             {emprendimiento.imagenes?.length > 1 && (
@@ -1045,7 +1161,10 @@ Gracias por apoyar los emprendimientos UCC`;
 
           <div className={styles.info}>
             <div className={styles.header}>
-              <span className={styles.category}>{emojiCategoria} {categoria?.nombre || "Sin categoría"}</span>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <CategoryIcon nombre={categoria?.nombre || ""} />
+                <span className={styles.categoryName}>{categoria?.nombre || "Sin categoría"}</span>
+              </div>
               <span className={`${styles.status} ${styles.statusActive}`}>{emprendimiento.estado === "activo" ? "Activo" : "Pausado"}</span>
             </div>
             <h1 className={styles.title}>{emprendimiento.nombre}</h1>
@@ -1055,12 +1174,32 @@ Gracias por apoyar los emprendimientos UCC`;
               <button onClick={toggleSeguimiento}
                 className={`${styles.followButton} ${siguiendo ? styles.followingButton : styles.notFollowingButton}`}
                 disabled={cargandoSeguimiento}>
-                {cargandoSeguimiento ? <span className={styles.spinnerSmall}>⏳</span>
-                  : !usuarioActual?.id ? <><span>🔒</span> Inicia sesión para seguir</>
-                    : siguiendo ? <><span>✓</span> Siguiendo</>
-                      : <><span>+</span> Seguir emprendimiento</>}
+                {cargandoSeguimiento ? <div className={styles.spinnerSmall}></div>
+                  : !usuarioActual?.id ? <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                      Inicia sesión para seguir
+                    </>
+                    : siguiendo ? <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Siguiendo
+                      </>
+                      : <>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                          </svg>
+                          Seguir emprendimiento
+                        </>}
               </button>
-              <div className={styles.followersCount}><span>👥</span> {totalSeguidores} seguidor{totalSeguidores !== 1 ? 'es' : ''}</div>
+              <div className={styles.followersCount}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                {totalSeguidores} seguidor{totalSeguidores !== 1 ? 'es' : ''}
+              </div>
             </div>
 
             <div className={styles.entrepreneur}>

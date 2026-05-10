@@ -158,7 +158,7 @@ export default function PedidosPage() {
       });
       
       if (res.ok) {
-        alert("✅ Pedido cancelado exitosamente");
+        alert("Pedido cancelado exitosamente");
         window.location.reload();
       } else {
         const error = await res.json();

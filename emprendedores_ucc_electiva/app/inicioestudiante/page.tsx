@@ -241,7 +241,7 @@ const confirmarPedido = async () => {
             // 🔥 PRIORIDAD 1: Teléfono del emprendimiento (si existe)
             if (emprendimiento.telefono && emprendimiento.telefono !== "") {
               telefono = emprendimiento.telefono;
-              console.log(`📞 Teléfono del emprendimiento "${emprendimiento.nombre}": ${telefono}`);
+              console.log(`Teléfono del emprendimiento "${emprendimiento.nombre}": ${telefono}`);
             } 
             // 🔥 PRIORIDAD 2: Teléfono del usuario emprendedor
             else if (emprendimiento.usuarioId) {
@@ -249,7 +249,7 @@ const confirmarPedido = async () => {
               if (resUser.ok) {
                 const usuario = await resUser.json();
                 telefono = usuario.telefono || "";
-                console.log(`📞 Teléfono del usuario emprendedor: ${telefono}`);
+                console.log(`Teléfono del usuario emprendedor: ${telefono}`);
               }
             }
           }
@@ -276,7 +276,7 @@ const confirmarPedido = async () => {
       agrupado[item.emprendimientoId].total += subtotal;
     }
 
-    console.log("📦 Productos agrupados:", JSON.stringify(agrupado, null, 2));
+    console.log("Productos agrupados:", JSON.stringify(agrupado, null, 2));
     
     setProductosAgrupados(agrupado);
     setMostrarModalWhatsApp(true);
@@ -293,7 +293,7 @@ const confirmarPedido = async () => {
 };
 
 const enviarWhatsApp = (emprendimientoId: string, nombreEmp: string, productos: any[], total: number, telefono: string) => {
-  console.log("📞 Teléfono recibido:", telefono, "para:", nombreEmp); // 🔥 Para depurar
+  console.log("Teléfono recibido:", telefono, "para:", nombreEmp); // Para depurar
   
   if (!telefono || telefono === "") {
     alert(`No hay número de teléfono disponible para ${nombreEmp}. El emprendedor debe actualizar su perfil.`);
@@ -422,7 +422,7 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
     });
   
   if (response.ok) {
-    console.log(`✅ Transacción guardada para ${emp.nombre}`);
+    console.log(`Transacción guardada para ${emp.nombre}`);
     
     // 🔥 ELIMINAR SOLO LOS PRODUCTOS DE ESTE EMPRENDIMIENTO DEL CARRITO
     const nuevosItems = itemsCarrito.filter(item => item.emprendimientoId !== emp.id);
@@ -440,7 +440,7 @@ const finalizarPedidoPorEmpresa = async (emp: any) => {
       setVistaFactura(false);
     }
     
-    alert(`✅ Pedido de "${emp.nombre}" realizado exitosamente!`);
+    alert(`Pedido de "${emp.nombre}" realizado exitosamente!`);
   } else {
     const error = await response.text();
     alert(`Error al guardar el pedido de "${emp.nombre}": ${error}`);
@@ -722,7 +722,7 @@ const finalizarTodosLosPedidos = async () => {
           
           <!-- Aviso -->
           <div class="aviso">
-            ⚠️ Esta factura es un comprobante de intención de compra. 
+            Esta factura es un comprobante de intención de compra. 
             Coordina el pago directamente con cada emprendedor.
           </div>
           
